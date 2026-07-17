@@ -70,6 +70,7 @@ typedef struct node {
     };
     struct node *left;
     struct node *right;
+    struct node *next;
 
 } node;
 
@@ -96,7 +97,7 @@ node * parse_identifier(parser * parse);
 
 node * parse_affectation(parser *parse) ;
  
-void write_in_error_buffer(parser *parse, int line, int character, int count, ...);
+void write_in_error_buffer(parser *parse, int line, int character, char * message);
 
 void free_tree_node(node *n);
 

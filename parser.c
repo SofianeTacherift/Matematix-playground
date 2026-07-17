@@ -7,6 +7,7 @@
 
 #define RET_NULL_IF_ERROR if (parse->parsing_status== PARSING_ERROR ) { return NULL; }
 
+#define DEBUG_PRINT printf("\n-----------------------------------------\n");
 
 
 node * new_node() {
@@ -50,21 +51,74 @@ parser * new_parser(token_array_list * tokens) {
     return result;
 }
 
+node * token_num_to_node(token t) {
+    node * node=new_node();
+    switch (t.type) {
+    case INT:
+        node->type=INT_NODE;
+        node->int_val=t.int_val;
+        break;
+    case FLOAT:
+        node->type=FLOAT_NODE;
+        node->float_val=t.float_val;
+        break;
+    case DOUBLE:
+        node->type=DOUBLE_NODE;
+        node->double_val=t.double_val;
+        break;
+    default:
+        return NULL;
+    return node;
+    }
+}
+
+
+bool is_unary_operator_token(token t ) {
+    return t.type==UNARY_MINUS;
+}
+
+node * unary_token_to_node(token t) {
+
+    node * result = new_node();
+    if (t.type=UNARY_MINUS) {
+        result->type=UNARY_NODE;
+        result->operation=UNARY_MINUS;
+    }
+    return result;
+}
+
 node * begin_parsement(parser *parse) {
     if (parse->tokens==NULL) {return NULL;}
     return parse_statement(parse);
 }
 
-
 node * parse_statement(parser *parse) {
     token current = get_current_token(parse);
-    if (current.type=IDENTIFIER) {
-        node * result= (get_next_token(parse).type==AFFECTATION) ? parse_affectation(parse) : parse_expression(parse);
-        return result;
+    node * result;
+    if (current.type==IDENTIFIER) {
+        result = (get_next_token(parse).type==AFFECTATION) ? parse_affectation(parse) : parse_expression(parse);
     }
     else {    
-        return parse_expression(parse);
+        result = parse_expression(parse);
     }
+    RET_NULL_IF_ERROR
+    token t =get_current_token(parse);
+    if (t.type!=DELIMITER) {
+        write_in_error_buffer(parse, t.line, t.character, "expected ';'");
+        parse->parsing_status=PARSING_ERROR;
+        return NULL;
+    }
+    advance(parse);
+    t=get_current_token(parse);
+    if (t.type!=END) {
+        result->next=parse_statement(parse);
+        return result;
+    }
+    else {
+        return result;
+    }
+    
+
 }
 
 
@@ -101,93 +155,48 @@ node * parse_identifier(parser * parse) {
 }
 
 
-
-
-
-
-node * token_num_to_node(token t) {
-    node * node=new_node();
-    switch (t.type) {
-    case INT:
-        node->type=INT_NODE;
-        node->int_val=t.int_val;
-        break;
-    case FLOAT:
-        node->type=FLOAT_NODE;
-        node->float_val=t.float_val;
-        break;
-    case DOUBLE:
-        node->type=DOUBLE_NODE;
-        node->double_val=t.double_val;
-        break;
-    default:
-        return NULL;
-    return node;
-    }
-}
-
-
-bool is_unary_operator_token(token t ) {
-
-    return t.type==UNARY_MINUS;
-}
-
-node * unary_token_to_node(token t) {
-
-    node * result = new_node();
-    if (t.type=UNARY_MINUS) {
-        result->type=UNARY_NODE;
-        result->operation=UNARY_MINUS;
-    }
-    return result;
-}
-
-
-node * parse_unary(parser * parse) {
+node * parse_additive(parser *parse) {
     RET_NULL_IF_ERROR
-    token t = get_current_token(parse);
-    node * res = unary_token_to_node(t);
-    advance(parse);
-    res->right=parse_primary(parse);
-    return res;
-}
-node * parse_primary(parser * parse) {
+    node *left=parse_multiplicative(parse);
     RET_NULL_IF_ERROR
-    token current = get_current_token(parse);
-    node * result;
-    if (is_num_token(current)) {
-        result=token_num_to_node(current);
-        advance(parse);
-    }
-    else if (is_unary_operator_token(current)) {
-        result = parse_unary(parse);
-    }
-    else if (current.type==IDENTIFIER) {
-        result=parse_identifier(parse);
-    }
-    else if (current.type==OPENING_PARENTHESE) {
-        advance(parse);
-        token t= get_current_token(parse);
+    node *center=NULL;
+    token current;
+    while ((current = get_current_token(parse)   ).type==ADD || current.type==SUB ) {
 
-        result=parse_expression(parse);
+        node * new_center =new_node();
+        new_center->type=BINARY_NODE;
 
+        new_center->operation=(current.type==ADD) ? ADD_OPERATOR : SUB_OPERATOR;
+        if (center==NULL) {
+            new_center->left=left;
+        }
+        else {
+            new_center->left=center;
+        }
         advance(parse);
+        new_center->right=parse_multiplicative(parse);
+        RET_NULL_IF_ERROR
+        center=new_center;
     }
-    else {
-        int line=current.line;
-        int character=current.character;
-        write_in_error_buffer(parse, line, character, 1, "a number, identifier, unary, or opening parenthese");
+    if (center==NULL) {center = left;}
+
+    
+    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
         parse->parsing_status=PARSING_ERROR;
+        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
+        free_tree_node(center);
         return NULL;
     }
-    return result;
-}
 
+    return center;
+
+
+}
 
 node * parse_multiplicative(parser * parse) {
     RET_NULL_IF_ERROR
     node *left = parse_primary(parse);
-
+    RET_NULL_IF_ERROR
     node *center=NULL;
     token current;
 
@@ -205,6 +214,7 @@ node * parse_multiplicative(parser * parse) {
         }
         advance(parse);
         new_center->right=parse_primary(parse);
+        RET_NULL_IF_ERROR
         center=new_center;
     }
 
@@ -213,7 +223,7 @@ node * parse_multiplicative(parser * parse) {
     if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
         parse->parsing_status=PARSING_ERROR;
 
-        write_in_error_buffer(parse, current.line, current.character,4,"an operator","a closing parenthese","';'", "EOF" );
+        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
         free_tree_node(center);
         return NULL;
     }
@@ -222,44 +232,59 @@ node * parse_multiplicative(parser * parse) {
     return center;
 }
 
-
-
-node * parse_additive(parser *parse) {
+node * parse_unary(parser * parse) {
     RET_NULL_IF_ERROR
-    node *left=parse_multiplicative(parse);
-    node *center=NULL;
-    token current;
-    while ((current = get_current_token(parse)   ).type==ADD || current.type==SUB ) {
+    token t = get_current_token(parse);
+    node * res = unary_token_to_node(t);
+    advance(parse);
+    res->right=parse_primary(parse);
+    return res;
+}
 
-        node * new_center =new_node();
-        new_center->type=BINARY_NODE;
-
-        new_center->operation=(current.type==ADD) ? ADD_OPERATOR : SUB_OPERATOR;
-        if (center==NULL) {
-            new_center->left=left;
-        }
-        else {
-            new_center->left=center;
+node * parse_primary(parser * parse) {
+    RET_NULL_IF_ERROR
+    token current = get_current_token(parse);
+    node * result;
+    if (is_num_token(current)) {
+        result=token_num_to_node(current);
+        advance(parse);
+    }
+    else if (is_unary_operator_token(current)) {
+        result = parse_unary(parse);
+    }
+    else if (current.type==IDENTIFIER) {
+        result=parse_identifier(parse);
+    }
+    else if (current.type==OPENING_PARENTHESE) {
+        advance(parse);
+        result=parse_expression(parse);
+        token t=get_current_token(parse);
+        if (t.type!=CLOSING_PARENTHESE) {
+            parse->parsing_status=PARSING_ERROR;
+            write_in_error_buffer(parse, t.line, t.character, "expected ')'");
+            return NULL;
         }
         advance(parse);
-        new_center->right=parse_multiplicative(parse);
-        center=new_center;
     }
-    if (center==NULL) {center = left;}
+    else {
 
-    
-    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
+        int line=current.line;
+        int character=current.character;
+
+        write_in_error_buffer(parse, line, character, "expected a number, an identifier, an unary, or  an opening parenthese");
         parse->parsing_status=PARSING_ERROR;
 
-        write_in_error_buffer(parse, current.line, current.character,4,"an operator","a closing parenthese","';'", "EOF" );
-        free_tree_node(center);
         return NULL;
     }
-
-    return center;
-
-
+    return result;
 }
+
+
+
+
+
+
+
 
 
 
@@ -341,6 +366,10 @@ void display_tree_node(node * n) {
     if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
         printf(") ");
     }
+    if (n->next!=NULL) {
+        printf("--> ");
+        display_tree_node(n->next);
+    }
 }
 
 
@@ -375,30 +404,35 @@ void free_tree_node(node *n) {
     free_tree_node(right);
 }
 
-void write_in_error_buffer(parser *parse, int line, int character, int count, ...) {
-    va_list expected;
-    va_start(expected, count);
-    #define buffer parse->parsing_error_buffer
-    char * expected_string[count];
-    snprintf(buffer, sizeof(buffer), "Error during parsing, expected ");
-    for (int i=0,j=0; i<count && j<sizeof(buffer);i++, j=strlen(buffer)) {
-        // expected_string[i]=TOKEN_TYPE_NAMES[va_arg(expected, int)];
-        char * current = va_arg(expected, char *);
-        char * end = buffer + strlen(buffer);
-        if (i<count-2) {
-            snprintf(end, sizeof(buffer) - j, "%s, ",  current);
-        }
-        else if (i==count-1) {
-            snprintf(end, sizeof(buffer) - j, "%s ",  current);
-        }
-        else {
-            snprintf(end, sizeof(buffer) - j, "%s or ", current);
-        }
-    }
-    int len=strlen(buffer);
-    snprintf(buffer+len, sizeof(buffer) - len, "at line %d, character %d.", line+1, character+1);
-    va_end(expected); 
-    #undef buffer
+// void write_in_error_buffer(parser *parse, int line, int , int count, ...) {
+//     va_list expected;
+//     va_start(expected, count);
+//     #define buffer parse->parsing_error_buffer
+//     char * expected_string[count];
+//     snprintf(buffer, sizeof(buffer), "Error during parsing, expected ");
+//     for (int i=0,j=0; i<count && j<sizeof(buffer);i++, j=strlen(buffer)) {
+//         // expected_string[i]=TOKEN_TYPE_NAMES[va_arg(expected, int)];
+//         char * current = va_arg(expected, char *);
+//         char * end = buffer + strlen(buffer);
+//         if (i<count-2) {
+//             snprintf(end, sizeof(buffer) - j, "%s, ",  current);
+//         }
+//         else if (i==count-1) {
+//             snprintf(end, sizeof(buffer) - j, "%s ",  current);
+//         }
+//         else {
+//             snprintf(end, sizeof(buffer) - j, "%s or ", current);
+//         }
+//     }
+//     int len=strlen(buffer);
+//     snprintf(buffer+len, sizeof(buffer) - len, "at line %d, character %d.", line+1, character+1);
+//     va_end(expected); 
+//     #undef buffer
+// }
+
+
+void write_in_error_buffer(parser *parse, int line, int character, char * message) {
+    snprintf(parse->parsing_error_buffer, sizeof(parse->parsing_error_buffer), "Error in parsing at line %d character %d : %s.\n", line+1, character+1, message);
 }
 
 

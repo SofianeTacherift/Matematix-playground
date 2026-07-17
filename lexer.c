@@ -56,7 +56,7 @@ int lexe_number(lexer *lexe, char *code, int start, int str_end) {
         if (charI=='.') {
             if (type==DOUBLE) {
                 lexe->lexing_status=LEXING_ERROR;
-                write_in_lexing_error_buffer(lexe, "invalid number");
+                write_in_lexing_error_buffer(lexe, "invalid number\n");
                 return -1;
             }
             type=DOUBLE;
@@ -91,7 +91,7 @@ int lexe_number(lexer *lexe, char *code, int start, int str_end) {
         t.double_val=atof(number);
         break;
     }
-    
+
     add_token(lexe->tokens_list, t);
     return i;
 
@@ -243,9 +243,15 @@ token_array_list * lexe_code(char * code) {
             i=lexe_closing_parenthese(lexe, code, i, end);
         }
 
-        else {
+        else if (charI==' '){
             i++;
             LEXER_ADV_UPDATE(lexe, charI)
+        }
+        else {
+            lexe->lexing_status=LEXING_ERROR;
+            char buffer[100];
+            snprintf(buffer, sizeof(buffer),"Character %c is not valid", charI );
+            write_in_lexing_error_buffer(lexe, buffer);
         }
 
         if (lexe->lexing_status==LEXING_ERROR) {
@@ -265,5 +271,5 @@ token_array_list * lexe_code(char * code) {
 
 
 void write_in_lexing_error_buffer(lexer *lexe, char *message) {
-    snprintf(lexe->error_buffer, sizeof(lexe->error_buffer),"Error during lexing at line %d character %d : %s.",lexe->current_line+1, lexe->current_char+1, message );
+    snprintf(lexe->error_buffer, sizeof(lexe->error_buffer),"Error during lexing at line %d character %d : %s.\n",lexe->current_line+1, lexe->current_char+1, message );
 }

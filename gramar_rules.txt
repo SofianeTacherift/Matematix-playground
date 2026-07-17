@@ -1,6 +1,6 @@
 
 
-expression :: ( identifier "="  ) | calculation
+statement :: ( identifier "="  ) | calculation | (if '(' condition ')' { } )
 
 calculation :: multiplicative ('+' | '-') multiplicative
 
