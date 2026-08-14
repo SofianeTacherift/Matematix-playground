@@ -73,6 +73,7 @@ node * token_num_to_node(token t) {
 }
 
 
+
 bool is_unary_operator_token(token t ) {
     return t.type==UNARY_MINUS;
 }
@@ -85,6 +86,32 @@ node * unary_token_to_node(token t) {
         result->operation=UNARY_MINUS;
     }
     return result;
+}
+
+
+node *  comparaison_token_to_node(token t) {
+    node * res = new_node();
+    res->type=BINARY_NODE;
+    switch (t.type) {
+    case EQUALS:
+        res->operation=EQUALS_OPERATOR;
+        break;
+    case GREATER_THAN:
+        res->operation=GREATER_THAN_OPERATOR;
+        break;
+    case GREATER_OR_EQUAL:
+        res->operation=GREATER_OR_EQUAL_OPERATOR;
+        break;
+    case LESS_THAN:
+        res->operation=LESS_THAN_OPERATOR;
+        break;
+    case LESS_OR_EQUAL:
+        res->operation=LESS_OR_EQUAL_OPERATOR;
+        break;
+    default:
+        res->type=NONE;
+    }
+    return res;
 }
 
 node * begin_parsement(parser *parse) {
@@ -141,7 +168,7 @@ node * parse_affectation(parser *parse) {
 
 node *parse_expression(parser *parse) {
     RET_NULL_IF_ERROR
-    return parse_additive(parse);
+    return parse_logical_or(parse);
 }
 
 
@@ -156,8 +183,105 @@ node * parse_identifier(parser * parse) {
     return res;
 }
 
+node * parse_logical_or(parser *parse) {
+    RET_NULL_IF_ERROR
+    node *left=parse_logical_and(parse);
+    RET_NULL_IF_ERROR
+    node *center=NULL;
+    token current;
+    while ((current = get_current_token(parse)   ).type==OR) {
+
+        node * new_center =new_node();
+        new_center->type=BINARY_NODE;
+
+        new_center->operation=OR_OPERATOR;
+        if (center==NULL) {
+            new_center->left=left;
+        }
+        else {
+            new_center->left=center;
+        }
+        advance(parse);
+        new_center->right=parse_logical_and(parse);
+        RET_NULL_IF_ERROR
+        center=new_center;
+    }
+    if (center==NULL) {center = left;}
+
+    
+    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
+        parse->parsing_status=PARSING_ERROR;
+        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
+        free_tree_node(center);
+        return NULL;
+    }
+
+    return center;
 
 
+}
+
+node * parse_logical_and(parser *parse) {
+    RET_NULL_IF_ERROR
+    node *left=parse_comparaison(parse);
+    RET_NULL_IF_ERROR
+    node *center=NULL;
+    token current;
+    while ((current = get_current_token(parse)   ).type==AND) {
+
+        node * new_center =new_node();
+        new_center->type=BINARY_NODE;
+
+        new_center->operation=AND_OPERATOR;
+        if (center==NULL) {
+            new_center->left=left;
+        }
+        else {
+            new_center->left=center;
+        }
+        advance(parse);
+        new_center->right=parse_comparaison(parse);
+        RET_NULL_IF_ERROR
+        center=new_center;
+    }
+    if (center==NULL) {center = left;}
+
+    
+    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
+        parse->parsing_status=PARSING_ERROR;
+        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
+        free_tree_node(center);
+        return NULL;
+    }
+
+    return center;
+}
+
+node * parse_comparaison(parser * parse) {
+    RET_NULL_IF_ERROR
+    node * left = parse_additive(parse);
+    RET_NULL_IF_ERROR
+    node *center=NULL;
+    token current=get_current_token(parse);
+    if (is_comparaison_operator_token(current)) {
+        center = comparaison_token_to_node(current);
+        center->left=left;
+        advance(parse);
+        center->right=parse_additive(parse);
+        RET_NULL_IF_ERROR
+    }
+    else {
+        center=left;   
+    }
+
+    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
+        parse->parsing_status=PARSING_ERROR;
+        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
+        free_tree_node(center);
+        return NULL;
+    }
+    return center;
+}
 
 node * parse_additive(parser *parse) {
     RET_NULL_IF_ERROR
@@ -309,9 +433,31 @@ void print_operation(operator op) {
     case DIVIDE_OPERATOR:
         printf("/");
         break;
-    case UNARY_MINUS:
-        printf("unary -");
+    case UNARY_MINUS_OPERATOR:
+        printf("-");
         break;
+    case EQUALS_OPERATOR:
+        printf("==");
+        break;
+    case GREATER_THAN_OPERATOR:
+        printf(">");
+        break;
+    case GREATER_OR_EQUAL_OPERATOR:
+        printf(">=");
+        break;
+    case LESS_THAN_OPERATOR:
+        printf("<");
+        break;
+    case LESS_OR_EQUAL_OPERATOR:
+        printf("<=");
+        break;
+    case OR_OPERATOR:
+        printf("|");
+        break;
+    case AND_OPERATOR:
+        printf("&");
+        break;
+        
     }
 }
 
@@ -336,9 +482,9 @@ void display_node(node * n) {
     if (n==NULL) {printf("NULL");}
     printf("node[ type=%s ", NODE_TYPE_STR[n->type]);
     if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
-        printf("operation=");
+        printf("operation='");
         print_operation(n->operation);
-        printf(" ");
+        printf("' ");
     }
     if (n->type==VARIABLE_NODE) {
         printf("name=%s ", n->string_val);

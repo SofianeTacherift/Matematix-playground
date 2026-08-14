@@ -109,7 +109,7 @@ bool is_multiply_minus(token previous_token);
 
 bool is_num_token(token t);
 
-
+bool is_comparaison_operator_token(token t);
 
 
 

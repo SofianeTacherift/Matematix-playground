@@ -57,6 +57,8 @@ typedef enum operator {
     LESS_THAN_OPERATOR,
     GREATER_OR_EQUAL_OPERATOR,
     LESS_OR_EQUAL_OPERATOR,
+    OR_OPERATOR,
+    AND_OPERATOR
 } operator;
 
 
@@ -89,10 +91,13 @@ node * parse_primary(parser * parse);
 
 node * parse_multiplicative(parser * parse);
 
+node * parse_logical(parser *parse);
 
 node *parse_expression(parser *parse);
 
 void display_node(node * n);
+
+node * parse_comparaison(parser * parse);
 
 node * parse_additive(parser *parse);
 
@@ -109,4 +114,8 @@ void free_tree_node(node *n);
 void display_tree_node(node * node);
 
 node * begin_parsement(parser *parse);
+
+node * parse_logical_and(parser *parse);
+
+node * parse_logical_or(parser *parse);
 #endif

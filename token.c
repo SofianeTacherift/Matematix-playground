@@ -89,6 +89,13 @@ bool is_operator_token(token t) {
     case SUB:
     case DIVIDE:
     case UNARY_MINUS:
+    case EQUALS:
+    case GREATER_THAN:
+    case GREATER_OR_EQUAL:
+    case LESS_THAN:
+    case LESS_OR_EQUAL:
+    case AND:
+    case OR:
         return true;
     default:
         return false;
@@ -106,6 +113,21 @@ bool is_num_token(token t) {
     case FLOAT:
     case DOUBLE:
         return true;
+    default:
+        return false;
+    }
+}
+
+bool is_comparaison_operator_token(token t) {
+    switch (t.type)
+    {
+    case EQUALS:
+    case GREATER_THAN:
+    case GREATER_OR_EQUAL:
+    case LESS_THAN:
+    case LESS_OR_EQUAL:
+        return true;
+
     default:
         return false;
     }

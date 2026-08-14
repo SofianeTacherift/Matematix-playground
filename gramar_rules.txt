@@ -1,8 +1,12 @@
 
 
-statement :: ( identifier "="  ) | calculation | (if '(' condition ')' { } )
+statement :: ( identifier "=" additive ) | additive | (if '(' condition ')' { } )
 
-calculation :: multiplicative ('+' | '-') multiplicative
+logic :: equality ('&' | '|' ) equality
+
+equality :: additive ('==' | '<' | '>' | '<=' | '>=' ) additive 
+
+additive :: multiplicative ('+' | '-') multiplicative
 
 multiplicative :: primary ('*' | '/') primary 
 

@@ -214,7 +214,7 @@ int lexe_closing_parenthese(lexer *lexe, char *code, int i, int str_end) {
     return i+1;
 }
 
-int lexe_equality(lexer *lexe, char *code, int i, int str_end) {
+int lexe_comparaison(lexer *lexe, char *code, int i, int str_end) {
     if (i<str_end && code[i+1]=='=') {
         switch (code[i]) {
         case '=':
@@ -269,7 +269,7 @@ token_array_list * lexe_code(char * code) {
             case '=':
             case '<':
             case '>':
-                i=lexe_equality(lexe, code, i, end);
+                i=lexe_comparaison(lexe, code, i, end);
                 break;
             case '&':
                 add_token(lexe->tokens_list, (token) {.type=AND ,.line=lexe->current_line, .character=lexe->current_char  }); 
