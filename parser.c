@@ -92,6 +92,8 @@ node * begin_parsement(parser *parse) {
     return parse_statement(parse);
 }
 
+
+
 node * parse_statement(parser *parse) {
     token current = get_current_token(parse);
     node * result;
@@ -153,6 +155,8 @@ node * parse_identifier(parser * parse) {
     advance(parse);
     return res;
 }
+
+
 
 
 node * parse_additive(parser *parse) {

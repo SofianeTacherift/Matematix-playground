@@ -38,6 +38,10 @@ bool is_new_token(char c) {
     case '(':
     case ')':
     case DELIMITATION:
+    case '<':
+    case '>':
+    case '&':
+    case '|':
         return true;
     default:
         return false;
@@ -120,7 +124,13 @@ int lexe_string(lexer *lexe, char *code, int start, int str_end) {
 
     }
     str[i-start]='\0';
-    token t = {.string_val=str, .type=IDENTIFIER ,.line=line, .character=character};
+    token t;
+    if (strcmp("if", str)==0) {
+        t.type=IF; t.line=line, t.character=character;
+    }
+    else {
+        t.string_val=str; t.type=IDENTIFIER ; t.line=line; t.character=character;
+    }
     add_token(lexe->tokens_list, t);
     t.line=line;
     t.character=character;
@@ -204,6 +214,43 @@ int lexe_closing_parenthese(lexer *lexe, char *code, int i, int str_end) {
     return i+1;
 }
 
+int lexe_equality(lexer *lexe, char *code, int i, int str_end) {
+    if (i<str_end && code[i+1]=='=') {
+        switch (code[i]) {
+        case '=':
+            add_token(lexe->tokens_list, (token) {.type=EQUALS, .character=lexe->current_char, .line=lexe->current_line});
+            break;
+        case '>':
+            add_token(lexe->tokens_list, (token) {.type=GREATER_OR_EQUAL, .character=lexe->current_char, .line=lexe->current_line});
+            break;
+        case '<':
+            add_token(lexe->tokens_list, (token) {.type=LESS_OR_EQUAL, .character=lexe->current_char, .line=lexe->current_line}); 
+            break;
+        default:
+            break;
+        }
+        lexe->current_char+=2;
+        return i+2;
+    }
+    else {
+        switch (code[i]) {
+        case '=':
+            add_token(lexe->tokens_list, (token) {.type=AFFECTATION, .character=lexe->current_char, .line=lexe->current_line});
+            break;
+        case '>':
+            add_token(lexe->tokens_list, (token) {.type=GREATER_THAN, .character=lexe->current_char, .line=lexe->current_line});
+            break;
+        case '<':
+            add_token(lexe->tokens_list, (token) {.type=LESS_THAN, .character=lexe->current_char, .line=lexe->current_line}); 
+            break;
+        default:
+            break;
+        }
+        lexe->current_char++;
+        return i+1;       
+    }
+}
+
 
 
 token_array_list * lexe_code(char * code) {
@@ -217,43 +264,67 @@ token_array_list * lexe_code(char * code) {
         charI=code[i];
         // printf("i=%d - charI='%c' - list=\n", i, charI);
         // print_token_list(tokens_list);
-        if (isalpha(charI)) {
-            i=lexe_string(lexe, code, i, end);
-        }
-        else if (isdigit(charI)) {
-            i=lexe_number(lexe, code, i, end);
-        }
-        else if (is_operator(charI)) {
-            i=lexe_operator(lexe, code, i, end);
-        }
-        else if (charI=='=') {
-            add_token(lexe->tokens_list, ((token) {.type=AFFECTATION, .line=lexe->current_line, .character=lexe->current_char}));
-            LEXER_ADV_UPDATE(lexe, charI)
-            i++;
-        }
-        else if (charI==DELIMITATION) {
-            add_token(lexe->tokens_list, (token) {.type=DELIMITER ,.line=lexe->current_line, .character=lexe->current_char  });
-            LEXER_ADV_UPDATE(lexe, charI)
-            i++;
-        }
-        else if (charI=='(') {
-            i=lexe_opening_parenthese(lexe, code, i, end);
-        }
-        else if (charI==')') {
-            i=lexe_closing_parenthese(lexe, code, i, end);
-        }
 
-        else if (charI==' '){
-            i++;
-            LEXER_ADV_UPDATE(lexe, charI)
+        switch (charI) {
+            case '=':
+            case '<':
+            case '>':
+                i=lexe_equality(lexe, code, i, end);
+                break;
+            case '&':
+                add_token(lexe->tokens_list, (token) {.type=AND ,.line=lexe->current_line, .character=lexe->current_char  }); 
+                lexe->current_char++;  
+                i++;
+                break;
+            case '|':
+                add_token(lexe->tokens_list, (token) {.type=OR ,.line=lexe->current_line, .character=lexe->current_char  }); 
+                lexe->current_char++;  
+                i++;
+                break;
+            case DELIMITATION:
+                add_token(lexe->tokens_list, (token) {.type=DELIMITER ,.line=lexe->current_line, .character=lexe->current_char  });
+                LEXER_ADV_UPDATE(lexe, charI)
+                i++;
+                break;
+            case '(':
+                i=lexe_opening_parenthese(lexe, code, i, end);
+                break;
+            case ')':
+                i=lexe_closing_parenthese(lexe, code, i, end);
+                break;
+            case ' ':
+                i++;
+                LEXER_ADV_UPDATE(lexe, charI);
+                break;
+            case '{':
+                i++;
+                add_token(lexe->tokens_list, (token){.type=OPENING_SCOPE, .line=lexe->current_line, .character=lexe->current_char});
+                LEXER_ADV_UPDATE(lexe, charI);
+                break;
+            case '}':
+                i++;
+                add_token(lexe->tokens_list, (token){.type=CLOSING_SCOPE, .line=lexe->current_line, .character=lexe->current_char});
+                LEXER_ADV_UPDATE(lexe, charI);
+                break;
+            
+            default:
+                if (isalpha(charI)) {
+                i=lexe_string(lexe, code, i, end);
+                }
+                else if (isdigit(charI)) {
+                    i=lexe_number(lexe, code, i, end);
+                }
+                else if (is_operator(charI)) {
+                    i=lexe_operator(lexe, code, i, end);
+                }
+                else {
+                    lexe->lexing_status=LEXING_ERROR;
+                    char buffer[100];
+                    snprintf(buffer, sizeof(buffer),"Character %c is not valid", charI );
+                    write_in_lexing_error_buffer(lexe, buffer);
+                }
+                break;
         }
-        else {
-            lexe->lexing_status=LEXING_ERROR;
-            char buffer[100];
-            snprintf(buffer, sizeof(buffer),"Character %c is not valid", charI );
-            write_in_lexing_error_buffer(lexe, buffer);
-        }
-
         if (lexe->lexing_status==LEXING_ERROR) {
             fwrite(lexe->error_buffer, sizeof(char), 1024, stderr);
             return NULL;

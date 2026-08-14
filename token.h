@@ -17,8 +17,6 @@ static char * TOKEN_TYPE_NAMES[] = {
     "DOUBLE",
     "CHAR",
     "AFFECTATION",
-    "EQUALS",
-    "NOT",
     "ADD",
     "SUB",
     "MULTIPLY",
@@ -29,7 +27,17 @@ static char * TOKEN_TYPE_NAMES[] = {
     "UNARY_MINUS",
     "OPENING_PARENTHESE",
     "CLOSING_PARENTHESE",
-    "END"
+    "END",
+    "OPENING_SCOPE",
+    "CLOSING_SCOPE",
+    "EQUALS",
+    "GREATER_THAN",
+    "LESS_THAN",
+    "GREATER_OR_EQUAL",
+    "LESS_OR_EQUAL",
+    "AND",
+    "OR",
+    "NOT"
 };
 
 typedef enum {
@@ -39,8 +47,6 @@ typedef enum {
     DOUBLE,
     CHAR,
     AFFECTATION,
-    EQUALS,
-    NOT,
     ADD,
     SUB,
     MULTIPLY,
@@ -51,7 +57,17 @@ typedef enum {
     UNARY_MINUS,
     OPENING_PARENTHESE,
     CLOSING_PARENTHESE,
-    END
+    END,
+    OPENING_SCOPE,
+    CLOSING_SCOPE,
+    EQUALS,
+    GREATER_THAN,
+    LESS_THAN,
+    GREATER_OR_EQUAL,
+    LESS_OR_EQUAL,
+    AND,
+    OR,
+    NOT
 } token_type;
 
 
