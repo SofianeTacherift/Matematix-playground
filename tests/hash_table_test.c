@@ -1,4 +1,4 @@
-#include "hash.h"
+#include "hash_table.h"
 #include <stdio.h>
 
 int main(void) {
@@ -17,7 +17,7 @@ put_entry(table, PSTR(chaine_9), PINT(9));
 put_entry(table, PSTR(chaine_10), PINT(10));
 put_entry(table, PSTR(chaine_11), PINT(11));
 
-printf("Before resizing :\n");
+printf("table : ");
 print_hash_table(table, &print_str, &print_int);
 
 put_entry(table, PSTR(chaine_12), PINT(12)); 

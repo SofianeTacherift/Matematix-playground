@@ -139,6 +139,7 @@ node * parse_statement(parser *parse) {
     }
     advance(parse);
     t=get_current_token(parse);
+
     if (t.type!=END) {
         result->next=parse_statement(parse);
         return result;

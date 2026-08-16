@@ -1,10 +1,10 @@
 
 
-statement :: ( identifier "=" additive ) | additive | (if '(' condition ')' { } )
+statement :: ( identifier "=" logical ) | logical | (if '(' logical ')' { statement* } )
 
-logic :: equality ('&' | '|' ) equality
+logical :: comparaison ('&' | '|' ) comparaison
 
-equality :: additive ('==' | '<' | '>' | '<=' | '>=' ) additive 
+comparaison :: additive ('==' | '<' | '>' | '<=' | '>=' ) additive 
 
 additive :: multiplicative ('+' | '-') multiplicative
 
