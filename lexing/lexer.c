@@ -193,18 +193,18 @@ int lexe_minus(lexer *lexe, char *code, int i, int str_end) {
     return i+1;
 }
 int lexe_operator(lexer *lexe, char *code, int i, int str_end) {
-    char operator=code[i];
+    char parsing_operator=code[i];
     int line=lexe->current_line;
     int character = lexe->current_char;
-    if (operator!='-') {
+    if (parsing_operator!='-') {
         LEXER_ADV_UPDATE(lexe, code[i]);
-        token result=operator_to_token(operator);
+        token result=operator_to_token(parsing_operator);
         result.character=character;
         result.line=line;
         add_token(lexe->tokens_list, result);
         return i+1;
     }
-    else if (operator=='-') {
+    else if (parsing_operator=='-') {
         return lexe_minus(lexe, code, i, str_end);
     }
 

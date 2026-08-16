@@ -1,7 +1,8 @@
 #ifndef PARSER_H
 #define PARSER_H
-#include "token.h"
 #include <stdlib.h>
+#include "token.h"
+#include "parsing_node.h"
 
 
 
@@ -22,99 +23,40 @@ typedef struct parser {
 } parser;
 
 
-static char* NODE_TYPE_STR[]= {
-    "NONE",
-    "BINARY",
-    "AFFECTATION",
-    "INT",
-    "FLOAT",
-    "DOUBLE",
-    "VARIABLE",
-    "UNARY"
-};
-
-typedef enum node_type {
-    NONE,
-    BINARY_NODE,
-    AFFECTATION_NODE,
-    INT_NODE,
-    FLOAT_NODE,
-    DOUBLE_NODE,
-    VARIABLE_NODE,
-    UNARY_NODE
-
-
-} node_type;
-
-typedef enum operator {
-    ADD_OPERATOR,
-    SUB_OPERATOR,
-    MULTIPLY_OPERATOR,
-    DIVIDE_OPERATOR,
-    UNARY_MINUS_OPERATOR,
-    EQUALS_OPERATOR,
-    GREATER_THAN_OPERATOR,
-    LESS_THAN_OPERATOR,
-    GREATER_OR_EQUAL_OPERATOR,
-    LESS_OR_EQUAL_OPERATOR,
-    OR_OPERATOR,
-    AND_OPERATOR
-} operator;
-
-
-
-
-
-
-
-typedef struct node {
-    node_type type;
-    operator operation;
-    union {
-        int int_val;
-        float float_val;
-        double double_val;
-        char * string_val;
-    };
-    struct node *left;
-    struct node *right;
-    struct node *next;
-
-} node;
 
 parser * new_parser(token_array_list * token);
 
 
 
 
-node * parse_primary(parser * parse); 
+parsing_node * parse_primary(parser * parse); 
 
-node * parse_multiplicative(parser * parse);
+parsing_node * parse_multiplicative(parser * parse);
 
 
-node *parse_expression(parser *parse);
+parsing_node *parse_expression(parser *parse);
 
-void display_node(node * n);
+void display_node(parsing_node * n);
 
-node * parse_comparaison(parser * parse);
+parsing_node * parse_comparaison(parser * parse);
 
-node * parse_additive(parser *parse);
+parsing_node * parse_additive(parser *parse);
 
-node * parse_statement(parser *parse) ;
+parsing_node * parse_statement(parser *parse) ;
 
-node * parse_identifier(parser * parse);
+parsing_node * parse_identifier(parser * parse);
 
-node * parse_affectation(parser *parse) ;
+parsing_node * parse_affectation(parser *parse) ;
  
 void write_in_error_buffer(parser *parse, int line, int character, char * message);
 
-void free_tree_node(node *n);
+void free_tree_node(parsing_node *n);
 
-void display_tree_node(node * node);
+void display_tree_node(parsing_node * parsing_node);
 
-node * begin_parsement(parser *parse);
+parsing_node * begin_parsement(parser *parse);
 
-node * parse_logical_and(parser *parse);
+parsing_node * parse_logical_and(parser *parse);
 
-node * parse_logical_or(parser *parse);
+parsing_node * parse_logical_or(parser *parse);
 #endif
