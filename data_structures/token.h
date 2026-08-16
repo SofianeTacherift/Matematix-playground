@@ -24,10 +24,11 @@ static char * TOKEN_TYPE_NAMES[] = {
     "DELIMITER",
     "IDENTIFIER",
     "IF",
+    "ELIF",
+    "ELSE",
     "UNARY_MINUS",
     "OPENING_PARENTHESE",
     "CLOSING_PARENTHESE",
-    "END",
     "OPENING_SCOPE",
     "CLOSING_SCOPE",
     "EQUALS",
@@ -37,7 +38,8 @@ static char * TOKEN_TYPE_NAMES[] = {
     "LESS_OR_EQUAL",
     "AND",
     "OR",
-    "NOT"
+    "NOT",
+    "END"
 };
 
 typedef enum {
@@ -54,10 +56,11 @@ typedef enum {
     DELIMITER,
     IDENTIFIER,
     IF,
+    ELIF,
+    ELSE,
     UNARY_MINUS,
     OPENING_PARENTHESE,
     CLOSING_PARENTHESE,
-    END,
     OPENING_SCOPE,
     CLOSING_SCOPE,
     EQUALS,
@@ -67,7 +70,8 @@ typedef enum {
     LESS_OR_EQUAL,
     AND,
     OR,
-    NOT
+    NOT,
+    END
 } token_type;
 
 

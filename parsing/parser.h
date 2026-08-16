@@ -66,6 +66,7 @@ typedef enum operator {
 
 
 
+
 typedef struct node {
     node_type type;
     operator operation;
@@ -81,7 +82,6 @@ typedef struct node {
 
 } node;
 
-
 parser * new_parser(token_array_list * token);
 
 
@@ -91,7 +91,6 @@ node * parse_primary(parser * parse);
 
 node * parse_multiplicative(parser * parse);
 
-node * parse_logical(parser *parse);
 
 node *parse_expression(parser *parse);
 

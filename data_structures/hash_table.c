@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "hash.h"
+#include "hash_table.h"
 #include <stdbool.h>
 #include <math.h>
 

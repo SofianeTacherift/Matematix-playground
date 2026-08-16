@@ -42,6 +42,8 @@ bool is_new_token(char c) {
     case '>':
     case '&':
     case '|':
+    case '{':
+    case '}':
         return true;
     default:
         return false;
@@ -128,6 +130,14 @@ int lexe_string(lexer *lexe, char *code, int start, int str_end) {
     if (strcmp("if", str)==0) {
         t.type=IF; t.line=line, t.character=character;
     }
+    else if (strcmp("elif", str)==0) {
+        t.type=ELIF, t.line=line, t.character=character;
+    }
+
+    else if (strcmp("else", str)==0) {
+        t.type=ELSE, t.line=line, t.character=character;
+    }
+
     else {
         t.string_val=str; t.type=IDENTIFIER ; t.line=line; t.character=character;
     }
@@ -335,6 +345,8 @@ token_array_list * lexe_code(char * code) {
     }
     printf("\ncode lexed\n");
     add_token(lexe->tokens_list, (token) {.type=END, .line=lexe->current_line, .character=lexe->current_char});
+
+
     return lexe->tokens_list;
 
 

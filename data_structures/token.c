@@ -34,6 +34,7 @@ void write_in_token_buffer(token t) {
             snprintf(TOKEN_DISPLAY,TOKEN_DISPLAY_SIZE(), "token[ type=IDENTIFIER - value=%s - line=%d - char=%d ]", t.string_val, t.line, t.character );
             break;
         default:
+  
             snprintf(TOKEN_DISPLAY,TOKEN_DISPLAY_SIZE(), "token[ type=%s - line=%d - char=%d ]", TOKEN_TYPE_NAMES[t.type], t.line, t.character);
             break;
     }
