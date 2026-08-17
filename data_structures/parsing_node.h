@@ -85,9 +85,9 @@ typedef struct parsing_node {
             struct parsing_node *right;
         };
         struct { // conditional_node 
+            struct parsing_node *condition;
             struct parsing_node_linked_list *true_condition;
             struct parsing_node_linked_list *false_condition;
-            struct parsing_node *condition;
         };
 
 

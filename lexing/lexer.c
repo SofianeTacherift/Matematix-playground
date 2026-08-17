@@ -182,9 +182,8 @@ int lexe_minus(lexer *lexe, char *code, int i, int str_end) {
 
     token_array_list *tokens_list = lexe->tokens_list;
 
-    if (tokens_list->size==0 || is_multiply_minus(tokens_list->elements[tokens_list->size-1])) {
+    if (tokens_list->size==0 || is_unary_minus(tokens_list->elements[tokens_list->size-1])) {
         char next_char = code[non_space_index];
-        // if (isalpha(next_char) || isdigit(next_char) || next_char=='(' ){
             add_token(tokens_list, (token) {.type=UNARY_MINUS, .line=line, .character=character});
             return i+1;
           

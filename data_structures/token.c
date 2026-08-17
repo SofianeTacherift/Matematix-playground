@@ -103,8 +103,8 @@ bool is_operator_token(token t) {
     }
 }
 
-bool is_multiply_minus(token previous_token) {
-    return (is_operator_token(previous_token) || previous_token.type==AFFECTATION);
+bool is_unary_minus(token previous_token) {
+    return (!is_num_token(previous_token) && previous_token.type!=IDENTIFIER);
 }
 
 bool is_num_token(token t) {

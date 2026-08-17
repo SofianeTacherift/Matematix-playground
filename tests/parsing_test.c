@@ -25,12 +25,22 @@ int main(int argc, char ** argv) {
         printf("%s\n", parse->parsing_error_buffer);
         return 2;
     }
-    printf("parsing result : ");
-    
+
+    printf("parsing result :\n ");
+
+    display_tree_node(res);
+
+
+    printf("\n\n");
+
+    printf("parsing result (readable) :\n");
+
     display_tree_node_readable(res);
 
 
     printf("\n");
+
+
 
     free_tree_node(res);
     free_token_array_list(list);

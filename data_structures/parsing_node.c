@@ -42,7 +42,7 @@ parsing_node * unary_token_to_node(token t) {
     parsing_node * result = new_parsing_node();
     if (t.type=UNARY_MINUS) {
         result->type=UNARY_NODE;
-        result->operation=UNARY_MINUS;
+        result->operation=UNARY_MINUS_OPERATOR;
     }
     return result;
 }
@@ -149,7 +149,7 @@ void display_node_readable(parsing_node *n) {
         print_operation(n->operation);
     }
     if (n->type==VARIABLE_NODE) {
-        printf(" %s ", n->string_val);
+        printf("%s", n->string_val);
     }
     if (is_num_node(n)) {
         print_num_val(n);
@@ -193,6 +193,9 @@ void display_tree_node(parsing_node * n) {
     if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
         printf(") ");
     }
+    if (n->type==OPENING_SCOPE_NODE) {
+        printf("}");
+    }
     if (n->next!=NULL) {
         printf("--> ");
         display_tree_node(n->next);
@@ -205,7 +208,7 @@ void display_tree_node_readable(parsing_node *n) {
         return;
     }
 
-    if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
+    if (n->type==BINARY_NODE) {
         printf("(");
     }
 
@@ -217,11 +220,17 @@ void display_tree_node_readable(parsing_node *n) {
     display_node_readable(n);
     PRINT_SPACE
 
+    if (n->type==UNARY_NODE) {
+        printf("( ");
+    }
     if (n->right!=NULL) {
         display_tree_node_readable(n->right);
     }
     if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
         printf(") ");
+    }
+    if (n->type==OPENING_SCOPE_NODE) {
+        printf("}");
     }
 
     if (n->next!=NULL) {

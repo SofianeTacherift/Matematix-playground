@@ -58,24 +58,15 @@ bool is_unary_operator_token(token t ) {
 
 parsing_node * parse_code(parser *parse) {
     if (parse->tokens==NULL) {return NULL;}
-    parsing_node_linked_list * last_scope=NULL;
-    parsing_node *res;
+    parsing_node_linked_list * linked_list = new_parsing_node_linked_list();
     while (get_current_token(parse).type!=END) {
-        parsing_node_linked_list *current_scope = parse_scope(parse);
+        parsing_node *statement= parse_statement(parse);
         RET_NULL_IF_ERROR
-        if (last_scope==NULL) {
-
-            last_scope=current_scope;
-            res=current_scope->head;
-        }
-        else {
-            last_scope->end->next=current_scope->head;
-            current_scope->head->previous=last_scope->end;
-            free(last_scope);
-            last_scope=current_scope;
-        }
+        add_parsing_node(linked_list, statement);
     }
-    return res;
+    parsing_node *result= linked_list->head;
+    free(linked_list);
+    return result;
 }
 
 parsing_node_linked_list * parse_scope(parser * parse) {
@@ -87,9 +78,7 @@ parsing_node_linked_list * parse_scope(parser * parse) {
         parse->parsing_status=PARSING_ERROR;
         return NULL;
     }
-    parsing_node *opening_scope = new_parsing_node();
-    opening_scope->type=OPENING_SCOPE_NODE;
-    add_parsing_node(res, opening_scope);
+
     advance(parse);
     while ((current=get_current_token(parse)).type!=END && current.type!=CLOSING_SCOPE) {
         parsing_node * statement = parse_statement(parse);
@@ -101,9 +90,6 @@ parsing_node_linked_list * parse_scope(parser * parse) {
         parse->parsing_status=PARSING_ERROR;
         return NULL;
     }
-    parsing_node *closing_scope = new_parsing_node();
-    closing_scope->type=CLOSING_SCOPE_NODE;
-    add_parsing_node(res, closing_scope);
     advance(parse);
 
     return res;
@@ -115,22 +101,33 @@ parsing_node * parse_statement(parser *parse) {
     RET_NULL_IF_ERROR
     token current = get_current_token(parse);
     parsing_node * result;
-    if (current.type==IDENTIFIER) {
-        result = (get_next_token(parse).type==AFFECTATION) ? parse_affectation(parse) : parse_expression(parse);
+
+    print_token(current);
+    P_NEW_LINE
+
+    if (current.type==OPENING_SCOPE) {
+        parsing_node_linked_list * scope = parse_scope(parse);
+        RET_NULL_IF_ERROR
+        result = new_parsing_node_of(OPENING_SCOPE_NODE);
+        result->right=scope->head;
+        free(scope);
     }
     else {    
-        result = parse_expression(parse);
+        if (current.type==IDENTIFIER) {
+        result = (get_next_token(parse).type==AFFECTATION) ? parse_affectation(parse) : parse_expression(parse);
+        }
+        else {
+            result = parse_expression(parse);
+        }
+        token t =get_current_token(parse);
+        if (t.type!=DELIMITER) {
+            write_in_error_buffer(parse, t.line, t.character, "expected ';'");
+            parse->parsing_status=PARSING_ERROR;
+            return NULL;
+        }
+        advance(parse);
     }
-    RET_NULL_IF_ERROR
-    token t =get_current_token(parse);
-    if (t.type!=DELIMITER) {
-        write_in_error_buffer(parse, t.line, t.character, "expected ';'");
-        parse->parsing_status=PARSING_ERROR;
-        return NULL;
-    }
-    advance(parse);
-
-
+  
     return result;
     
     
