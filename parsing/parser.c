@@ -62,7 +62,10 @@ parsing_node * parse_code(parser *parse) {
     while (get_current_token(parse).type!=END) {
         parsing_node *statement= parse_statement(parse);
         RET_NULL_IF_ERROR
-        add_parsing_node(linked_list, statement);
+        if (conditional_node(statement)) {
+            skip_conditional_node(linked_list, statement);
+        }
+        else {add_parsing_node_to_linked_list(linked_list, statement);}
     }
     parsing_node *result= linked_list->head;
     free(linked_list);
@@ -83,7 +86,11 @@ parsing_node_linked_list * parse_scope(parser * parse) {
     while ((current=get_current_token(parse)).type!=END && current.type!=CLOSING_SCOPE) {
         parsing_node * statement = parse_statement(parse);
         RET_NULL_IF_ERROR
-        add_parsing_node(res, statement);
+        if (conditional_node(statement)) {
+            skip_conditional_node(res, statement);
+        }
+        else {add_parsing_node_to_linked_list(res, statement);}
+        
     }
     if (current.type!=CLOSING_SCOPE) {
         write_in_error_buffer(parse, current.line, current.character, "expected }");
@@ -102,7 +109,7 @@ parsing_node * parse_statement(parser *parse) {
     token current = get_current_token(parse);
     parsing_node * result;
 
-    print_token(current);
+
     P_NEW_LINE
 
     if (current.type==OPENING_SCOPE) {
@@ -112,6 +119,21 @@ parsing_node * parse_statement(parser *parse) {
         result->right=scope->head;
         free(scope);
     }
+    else if (current.type==IF) {
+        result = parse_if_statement(parse);
+        RET_NULL_IF_ERROR
+        token current_token = get_current_token(parse);
+        if (current_token.type!=END && current_token.type!=CLOSING_SCOPE) {
+            parsing_node * current_node = result;
+            parsing_node * jump = parse_statement(parse);
+            while (current_node->next!=NULL) {
+                current_node->jump=jump;
+                current_node=current_node->next;
+            }
+            current_node->next=jump;
+            current_node->jump=jump;
+        }
+    }
     else {    
         if (current.type==IDENTIFIER) {
         result = (get_next_token(parse).type==AFFECTATION) ? parse_affectation(parse) : parse_expression(parse);
@@ -120,11 +142,13 @@ parsing_node * parse_statement(parser *parse) {
             result = parse_expression(parse);
         }
         token t =get_current_token(parse);
-        if (t.type!=DELIMITER) {
-            write_in_error_buffer(parse, t.line, t.character, "expected ';'");
+        RET_NULL_IF_ERROR
+        if (t.type!=DELIMITER ) {
+            write_in_error_buffer(parse, t.line, t.character, "(STATEMENT) expected ';'");
             parse->parsing_status=PARSING_ERROR;
             return NULL;
         }
+        RET_NULL_IF_ERROR
         advance(parse);
     }
   
@@ -135,8 +159,65 @@ parsing_node * parse_statement(parser *parse) {
 }
 
 parsing_node * parse_if_statement(parser *parse) {
+    token current_token = get_current_token(parse);
+    if (current_token.type!=IF) {
+        write_in_error_buffer(parse, current_token.line, current_token.character, "expected 'if'");
+        parse->parsing_status=PARSING_ERROR;
+        return NULL;
+    }
+    advance(parse);
+    parsing_node * result = new_parsing_node_of(IF_NODE);
+    result->condition=parse_logical_or(parse);
 
-    return NULL;
+    RET_NULL_IF_ERROR
+
+    result->true_condition=parse_statement(parse);
+    RET_NULL_IF_ERROR
+    if (get_current_token(parse).type==ELIF) {
+        result->next=parse_elif_statement(parse);
+    }
+    else if (get_current_token(parse).type==ELSE) {
+        result->next=parse_else_statement(parse);
+    }
+    return result;
+
+    
+}
+
+parsing_node *parse_elif_statement(parser *parse) {
+   token current_token = get_current_token(parse);
+    if (current_token.type!=ELIF) {
+        write_in_error_buffer(parse, current_token.line, current_token.character, "expected 'elif'");
+        parse->parsing_status=PARSING_ERROR;
+        return NULL;
+    }
+    advance(parse);
+    parsing_node * result = new_parsing_node_of(ELIF_NODE);
+    result->condition=parse_logical_or(parse);
+    RET_NULL_IF_ERROR
+    result->true_condition=parse_statement(parse);
+    RET_NULL_IF_ERROR
+    if (get_current_token(parse).type==ELIF) {
+        result->next=parse_elif_statement(parse);
+    }
+    else if (get_current_token(parse).type==ELSE) {
+        result->next=parse_else_statement(parse);
+    }
+    return result;
+}
+
+parsing_node *parse_else_statement(parser *parse) {
+   token current_token = get_current_token(parse);
+    if (current_token.type!=ELSE) {
+        write_in_error_buffer(parse, current_token.line, current_token.character, "expected 'else'");
+        parse->parsing_status=PARSING_ERROR;
+        return NULL;
+    }
+    advance(parse);
+    parsing_node * result = new_parsing_node_of(ELSE_NODE);
+    result->true_condition=parse_statement(parse);
+    RET_NULL_IF_ERROR
+    return result;
 
 }
 
@@ -171,6 +252,8 @@ parsing_node * parse_identifier(parser * parse) {
     res->type=VARIABLE_NODE;
     res->string_val=current.string_val;
     advance(parse);
+
+
     return res;
 }
 
@@ -200,12 +283,12 @@ parsing_node * parse_logical_or(parser *parse) {
     if (center==NULL) {center = left;}
 
     
-    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
-        parse->parsing_status=PARSING_ERROR;
-        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
-        free_tree_node(center);
-        return NULL;
-    }
+    // if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
+    //     parse->parsing_status=PARSING_ERROR;
+    //     write_in_error_buffer(parse, current.line, current.character,"(OR) expected an operator, ')', ';' or EOF" );
+    //     free_tree_node(center);
+    //     return NULL;
+    // }
 
     return center;
 
@@ -238,12 +321,7 @@ parsing_node * parse_logical_and(parser *parse) {
     if (center==NULL) {center = left;}
 
     
-    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
-        parse->parsing_status=PARSING_ERROR;
-        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
-        free_tree_node(center);
-        return NULL;
-    }
+
 
     return center;
 }
@@ -265,12 +343,12 @@ parsing_node * parse_comparaison(parser * parse) {
         center=left;   
     }
 
-    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
-        parse->parsing_status=PARSING_ERROR;
-        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
-        free_tree_node(center);
-        return NULL;
-    }
+    // if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
+    //     parse->parsing_status=PARSING_ERROR;
+    //     write_in_error_buffer(parse, current.line, current.character,"(COMPARAISON) expected an operator, ')', ';' or EOF" );
+    //     free_tree_node(center);
+    //     return NULL;
+    // }
     return center;
 }
 
@@ -300,12 +378,12 @@ parsing_node * parse_additive(parser *parse) {
     if (center==NULL) {center = left;}
 
     
-    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
-        parse->parsing_status=PARSING_ERROR;
-        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
-        free_tree_node(center);
-        return NULL;
-    }
+    // if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
+    //     parse->parsing_status=PARSING_ERROR;
+    //     write_in_error_buffer(parse, current.line, current.character,"(ADDITIVE) expected an operator, ')', ';' or EOF" );
+    //     free_tree_node(center);
+    //     return NULL;
+    // }
 
     return center;
 
@@ -339,13 +417,13 @@ parsing_node * parse_multiplicative(parser * parse) {
 
     if (center==NULL) {center = left;}
     
-    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
-        parse->parsing_status=PARSING_ERROR;
+    // if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
+    //     parse->parsing_status=PARSING_ERROR;
 
-        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
-        free_tree_node(center);
-        return NULL;
-    }
+    //     write_in_error_buffer(parse, current.line, current.character,"(MULTIPLICATIVE) expected an operator, ')', ';' or EOF" );
+    //     free_tree_node(center);
+    //     return NULL;
+    // }
 
     if (center==NULL) {center = left;}
     return center;
@@ -380,7 +458,7 @@ parsing_node * parse_primary(parser * parse) {
         token t=get_current_token(parse);
         if (t.type!=CLOSING_PARENTHESE) {
             parse->parsing_status=PARSING_ERROR;
-            write_in_error_buffer(parse, t.line, t.character, "expected ')'");
+            write_in_error_buffer(parse, t.line, t.character, "(PRIMARY) expected ')'");
             return NULL;
         }
         advance(parse);
@@ -390,7 +468,7 @@ parsing_node * parse_primary(parser * parse) {
         int line=current.line;
         int character=current.character;
 
-        write_in_error_buffer(parse, line, character, "expected a number, an identifier, an unary, or  an opening parenthese");
+        write_in_error_buffer(parse, line, character, "(PRIMARY) expected a number, an identifier, an unary, or  an opening parenthese");
         parse->parsing_status=PARSING_ERROR;
 
         return NULL;

@@ -136,6 +136,15 @@ bool is_num_node(parsing_node * n) {
 
 void display_node_readable(parsing_node *n) {
    if (n==NULL) {printf("NULL"); return;}
+   if (n->type==IF_NODE) {
+        printf("if");
+   }
+   if (n->type==ELIF_NODE) {
+        printf("elif");
+   }
+   if (n->type==ELSE_NODE) {
+        printf("else");
+   }
    if (n->type==AFFECTATION_NODE) {
         printf("=");
    }
@@ -200,7 +209,12 @@ void display_tree_node(parsing_node * n) {
         printf("--> ");
         display_tree_node(n->next);
     }
+
 }
+
+
+
+
 
 void display_tree_node_readable(parsing_node *n) {
    if (n==NULL) {
@@ -208,8 +222,21 @@ void display_tree_node_readable(parsing_node *n) {
         return;
     }
 
+    if (conditional_node(n)) {
+        display_node_readable(n);
+        printf(" ");
+        if (n->type!=ELSE_NODE) {
+            display_tree_node_readable(n->condition);
+        }
+        display_tree_node_readable(n->true_condition);
+        if (n->next!=NULL) {
+            display_tree_node_readable(n->next);
+        }
+        return;
+    }
+
     if (n->type==BINARY_NODE) {
-        printf("(");
+        printf("( ");
     }
 
     if (n->left!=NULL) {
@@ -230,7 +257,7 @@ void display_tree_node_readable(parsing_node *n) {
         printf(") ");
     }
     if (n->type==OPENING_SCOPE_NODE) {
-        printf("}");
+        printf("\n} ");
     }
 
     if (n->next!=NULL) {
@@ -252,6 +279,11 @@ void free_tree_node(parsing_node *n) {
     free_tree_node(right);
 }
 
+
+bool conditional_node(parsing_node *node) {
+    return node->type==IF_NODE || node->type==ELIF_NODE || node->type==ELSE_NODE;
+}
+
 // linked list
 
 
@@ -263,7 +295,7 @@ parsing_node_linked_list  *new_parsing_node_linked_list() {
 
 }
 
-void add_parsing_node(parsing_node_linked_list * list, parsing_node * node) {
+void add_parsing_node_to_linked_list(parsing_node_linked_list * list, parsing_node * node) {
     if (list->end==NULL && list->head==NULL) {
         list->head=node;
         list->end=node;
@@ -272,6 +304,20 @@ void add_parsing_node(parsing_node_linked_list * list, parsing_node * node) {
         list->end->next=node;
         node->previous=list->end;
         list->end=node;
+    }
+}
+
+void skip_conditional_node(parsing_node_linked_list *list, parsing_node *node) {
+    if (! conditional_node(node)) {
+        return;
+    }
+    if (list->head==NULL && list->end==NULL) {
+        list->head=node;
+        list->end=node->jump;
+    }
+    else {
+        list->end->next=node;
+        list->end=node->jump;
     }
 }
 

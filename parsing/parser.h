@@ -32,6 +32,8 @@ parsing_node *parse_code(parser *parse);
 parsing_node_linked_list *parse_scope(parser *parse);
 parsing_node *parse_statement(parser *parse);
 parsing_node *parse_if_statement(parser *parse);
+parsing_node * parse_elif_statement(parser *parse);
+parsing_node * parse_else_statement(parser *parse);
 parsing_node *parse_affectation(parser *parse);
 parsing_node *parse_expression(parser *parse);
 parsing_node *parse_identifier(parser *parse);

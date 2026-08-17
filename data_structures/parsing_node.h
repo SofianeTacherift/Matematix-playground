@@ -20,7 +20,6 @@
 static char* PARSING_NODE_TYPE_STR[]= {
     "NONE",
     "BINARY",
-    "CONDITIONAL",
     "AFFECTATION",
     "INT",
     "FLOAT",
@@ -28,13 +27,15 @@ static char* PARSING_NODE_TYPE_STR[]= {
     "VARIABLE",
     "UNARY",
     "OPENING_SCOPE",
-    "CLOSING_SCOPE"
+    "CLOSING_SCOPE",
+    "IF_NODE",
+    "ELIF_NODE",
+    "ELSE_NODE"
 };
 
 typedef enum parsing_node_type {
     NONE,
     BINARY_NODE,
-    CONDITIONAL_NODE,
     AFFECTATION_NODE,
     INT_NODE,
     FLOAT_NODE,
@@ -42,7 +43,10 @@ typedef enum parsing_node_type {
     VARIABLE_NODE,
     UNARY_NODE,
     OPENING_SCOPE_NODE,
-    CLOSING_SCOPE_NODE
+    CLOSING_SCOPE_NODE,
+    IF_NODE,
+    ELIF_NODE,
+    ELSE_NODE
 
 
 } parsing_node_type;
@@ -68,11 +72,13 @@ typedef enum parsing_operator {
 
 
 
+
 typedef struct parsing_node {
     parsing_node_type type;
     parsing_operator operation;
     struct parsing_node *previous;
     struct parsing_node *next;
+
     union {
         int int_val;
         float float_val;
@@ -87,7 +93,7 @@ typedef struct parsing_node {
         struct { // conditional_node 
             struct parsing_node *condition;
             struct parsing_node_linked_list *true_condition;
-            struct parsing_node_linked_list *false_condition;
+            struct parsing_node_linked_list *jump;
         };
 
 
@@ -115,6 +121,8 @@ void display_node_readable(parsing_node *n);
 void display_tree_node_readable(parsing_node *n);
 void free_tree_node(parsing_node *n);
 parsing_node_linked_list *new_parsing_node_linked_list(void);
-void add_parsing_node(parsing_node_linked_list *list, parsing_node *node);
+bool conditional_node(parsing_node *node);
+void add_parsing_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node);
+void skip_conditional_node(parsing_node_linked_list *list, parsing_node *node);
 
 #endif
