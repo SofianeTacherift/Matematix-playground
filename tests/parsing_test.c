@@ -3,7 +3,6 @@
 
 
 int main(int argc, char ** argv) {
-
     if (argc<2) {
         printf("parsing_test <code>\n");
         return 1;
@@ -19,7 +18,7 @@ int main(int argc, char ** argv) {
 
 
     parser *parse= new_parser(list);
-    parsing_node * res = begin_parsement(parse);
+    parsing_node * res = parse_code(parse);
 
 
     if (parse->parsing_status==PARSING_ERROR) {
@@ -28,12 +27,19 @@ int main(int argc, char ** argv) {
     }
     printf("parsing result : ");
     
-    display_tree_node(res);
+    display_tree_node_readable(res);
+
 
     printf("\n");
 
     free_tree_node(res);
     free_token_array_list(list);
+
+
+
+
+
+
 
 
 

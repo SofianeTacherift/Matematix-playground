@@ -26,7 +26,9 @@ static char* PARSING_NODE_TYPE_STR[]= {
     "FLOAT",
     "DOUBLE",
     "VARIABLE",
-    "UNARY"
+    "UNARY",
+    "OPENING_SCOPE",
+    "CLOSING_SCOPE"
 };
 
 typedef enum parsing_node_type {
@@ -38,7 +40,9 @@ typedef enum parsing_node_type {
     FLOAT_NODE,
     DOUBLE_NODE,
     VARIABLE_NODE,
-    UNARY_NODE
+    UNARY_NODE,
+    OPENING_SCOPE_NODE,
+    CLOSING_SCOPE_NODE
 
 
 } parsing_node_type;
@@ -67,25 +71,38 @@ typedef enum parsing_operator {
 typedef struct parsing_node {
     parsing_node_type type;
     parsing_operator operation;
+    struct parsing_node *previous;
+    struct parsing_node *next;
     union {
         int int_val;
         float float_val;
         double double_val;
         char * string_val;
     };
-    struct parsing_node *left;
-    struct parsing_node *right;
-    struct parsing_node *middle;
-    struct parsing_node *next;
+    union {
+        struct { // basic node
+            struct parsing_node *left;
+            struct parsing_node *right;
+        };
+        struct { // conditional_node 
+            struct parsing_node_linked_list *true_condition;
+            struct parsing_node_linked_list *false_condition;
+            struct parsing_node *condition;
+        };
 
+
+    };
 } parsing_node;
 
+typedef struct parsing_node_linked_list {
+    parsing_node *head;
+    parsing_node *end;
+} parsing_node_linked_list;
 
 
 
-
-
-parsing_node * new_parsing_node();
+parsing_node *new_parsing_node(void);
+parsing_node *new_parsing_node_of(int type);
 parsing_node *token_num_to_node(token t);
 parsing_node *unary_token_to_node(token t);
 parsing_node *comparaison_token_to_node(token t);
@@ -94,6 +111,10 @@ void print_num_val(parsing_node *n);
 _Bool is_num_node(parsing_node *n);
 void display_node(parsing_node *n);
 void display_tree_node(parsing_node *n);
+void display_node_readable(parsing_node *n);
+void display_tree_node_readable(parsing_node *n);
 void free_tree_node(parsing_node *n);
+parsing_node_linked_list *new_parsing_node_linked_list(void);
+void add_parsing_node(parsing_node_linked_list *list, parsing_node *node);
 
 #endif

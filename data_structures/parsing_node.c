@@ -1,8 +1,15 @@
 #include "parsing_node.h"
 
+#define PRINT_SPACE printf(" ");
 
 parsing_node * new_parsing_node() {
     parsing_node *res=calloc(1, sizeof(parsing_node));
+    return res;
+}
+
+parsing_node *new_parsing_node_of(int type) {
+    parsing_node *res=calloc(1, sizeof(parsing_node));
+    res->type=type;
     return res;
 }
 
@@ -126,6 +133,28 @@ void print_num_val(parsing_node *n) {
 bool is_num_node(parsing_node * n) {
     return n->type==INT_NODE || n->type==FLOAT_NODE || n->type==DOUBLE_NODE;
 }
+
+void display_node_readable(parsing_node *n) {
+   if (n==NULL) {printf("NULL"); return;}
+   if (n->type==AFFECTATION_NODE) {
+        printf("=");
+   }
+   if (n->type==OPENING_SCOPE_NODE) {
+        printf("{");
+    }
+    if (n->type==CLOSING_SCOPE_NODE) {
+        printf("}");
+    }
+    if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
+        print_operation(n->operation);
+    }
+    if (n->type==VARIABLE_NODE) {
+        printf(" %s ", n->string_val);
+    }
+    if (is_num_node(n)) {
+        print_num_val(n);
+    }
+}
 void display_node(parsing_node * n) {
     if (n==NULL) {printf("NULL");}
     printf("parsing_node[ type=%s ", PARSING_NODE_TYPE_STR[n->type]);
@@ -170,6 +199,37 @@ void display_tree_node(parsing_node * n) {
     }
 }
 
+void display_tree_node_readable(parsing_node *n) {
+   if (n==NULL) {
+        printf("%s", "NULL");
+        return;
+    }
+
+    if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
+        printf("(");
+    }
+
+    if (n->left!=NULL) {
+        display_tree_node_readable(n->left);
+    }
+
+
+    display_node_readable(n);
+    PRINT_SPACE
+
+    if (n->right!=NULL) {
+        display_tree_node_readable(n->right);
+    }
+    if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
+        printf(") ");
+    }
+
+    if (n->next!=NULL) {
+        printf("\n");
+        display_tree_node_readable(n->next);
+    }
+}
+
 
 void free_tree_node(parsing_node *n) {
     if (n==NULL) {
@@ -181,5 +241,28 @@ void free_tree_node(parsing_node *n) {
     free(n);
     free_tree_node(left);
     free_tree_node(right);
+}
+
+// linked list
+
+
+parsing_node_linked_list  *new_parsing_node_linked_list() {
+    parsing_node_linked_list * result = calloc(1, sizeof(parsing_node_linked_list));
+    result->head=NULL;
+    result->end=NULL;
+    return result;
+
+}
+
+void add_parsing_node(parsing_node_linked_list * list, parsing_node * node) {
+    if (list->end==NULL && list->head==NULL) {
+        list->head=node;
+        list->end=node;
+    }
+    else {
+        list->end->next=node;
+        node->previous=list->end;
+        list->end=node;
+    }
 }
 

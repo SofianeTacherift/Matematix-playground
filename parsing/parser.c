@@ -55,9 +55,58 @@ bool is_unary_operator_token(token t ) {
 
 
 
-parsing_node * begin_parsement(parser *parse) {
+
+parsing_node * parse_code(parser *parse) {
     if (parse->tokens==NULL) {return NULL;}
-    return parse_statement(parse);
+    parsing_node_linked_list * last_scope=NULL;
+    parsing_node *res;
+    while (get_current_token(parse).type!=END) {
+        parsing_node_linked_list *current_scope = parse_scope(parse);
+        RET_NULL_IF_ERROR
+        if (last_scope==NULL) {
+
+            last_scope=current_scope;
+            res=current_scope->head;
+        }
+        else {
+            last_scope->end->next=current_scope->head;
+            current_scope->head->previous=last_scope->end;
+            free(last_scope);
+            last_scope=current_scope;
+        }
+    }
+    return res;
+}
+
+parsing_node_linked_list * parse_scope(parser * parse) {
+    token current = get_current_token(parse);
+    parsing_node_linked_list *res = new_parsing_node_linked_list();
+
+    if (current.type!=OPENING_SCOPE) {
+        write_in_error_buffer(parse, current.line, current.character, "expected {");
+        parse->parsing_status=PARSING_ERROR;
+        return NULL;
+    }
+    parsing_node *opening_scope = new_parsing_node();
+    opening_scope->type=OPENING_SCOPE_NODE;
+    add_parsing_node(res, opening_scope);
+    advance(parse);
+    while ((current=get_current_token(parse)).type!=END && current.type!=CLOSING_SCOPE) {
+        parsing_node * statement = parse_statement(parse);
+        RET_NULL_IF_ERROR
+        add_parsing_node(res, statement);
+    }
+    if (current.type!=CLOSING_SCOPE) {
+        write_in_error_buffer(parse, current.line, current.character, "expected }");
+        parse->parsing_status=PARSING_ERROR;
+        return NULL;
+    }
+    parsing_node *closing_scope = new_parsing_node();
+    closing_scope->type=CLOSING_SCOPE_NODE;
+    add_parsing_node(res, closing_scope);
+    advance(parse);
+
+    return res;
 }
 
 
@@ -80,19 +129,19 @@ parsing_node * parse_statement(parser *parse) {
         return NULL;
     }
     advance(parse);
-    t=get_current_token(parse);
 
-    if (t.type!=END) {
-        result->next=parse_statement(parse);
-        return result;
-    }
-    else {
-        return result;
-    }
+
+    return result;
+    
     
 
 }
 
+parsing_node * parse_if_statement(parser *parse) {
+
+    return NULL;
+
+}
 
 parsing_node * parse_affectation(parser *parse) {
         
