@@ -32,6 +32,10 @@
         init_##T##_list(array_list);\
         return array_list; \
     }\
+    static void free_##T##_array_list( list_type_name(T) * list) { \
+        free(list->elements);\
+        free(list); \
+    } \
     static void add_##T(list_type_name(T)* list, T element) { \
         int size = list->size;\
         if (size>=list->capacity) { \

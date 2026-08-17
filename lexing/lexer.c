@@ -182,9 +182,8 @@ int lexe_minus(lexer *lexe, char *code, int i, int str_end) {
 
     token_array_list *tokens_list = lexe->tokens_list;
 
-    if (tokens_list->size==0 || is_multiply_minus(tokens_list->elements[tokens_list->size-1])) {
+    if (tokens_list->size==0 || is_unary_minus(tokens_list->elements[tokens_list->size-1])) {
         char next_char = code[non_space_index];
-        // if (isalpha(next_char) || isdigit(next_char) || next_char=='(' ){
             add_token(tokens_list, (token) {.type=UNARY_MINUS, .line=line, .character=character});
             return i+1;
           
@@ -193,18 +192,18 @@ int lexe_minus(lexer *lexe, char *code, int i, int str_end) {
     return i+1;
 }
 int lexe_operator(lexer *lexe, char *code, int i, int str_end) {
-    char operator=code[i];
+    char parsing_operator=code[i];
     int line=lexe->current_line;
     int character = lexe->current_char;
-    if (operator!='-') {
+    if (parsing_operator!='-') {
         LEXER_ADV_UPDATE(lexe, code[i]);
-        token result=operator_to_token(operator);
+        token result=operator_to_token(parsing_operator);
         result.character=character;
         result.line=line;
         add_token(lexe->tokens_list, result);
         return i+1;
     }
-    else if (operator=='-') {
+    else if (parsing_operator=='-') {
         return lexe_minus(lexe, code, i, str_end);
     }
 

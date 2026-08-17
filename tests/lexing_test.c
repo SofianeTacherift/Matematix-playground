@@ -6,7 +6,8 @@
 int main(int argc, char **argv) {
     char * code;
     if (argc<2) {
-        code="a=a";
+        printf("lexing_test <code>\n");
+        return 1;
     }
     else {
         code=argv[1];

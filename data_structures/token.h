@@ -109,7 +109,7 @@ token operator_to_token(char c);
 
 bool is_operator_token(token t);
 
-bool is_multiply_minus(token previous_token);
+bool is_unary_minus(token previous_token);
 
 bool is_num_token(token t);
 

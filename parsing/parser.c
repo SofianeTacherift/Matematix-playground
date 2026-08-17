@@ -10,12 +10,7 @@
 #define DEBUG_PRINT printf("\n-----------------------------------------\n");
 
 
-node * new_node() {
-    node *res=malloc(sizeof(node));
-    res->left=NULL;
-    res->right=NULL;
-    return res;
-}
+
 
 
 token get_current_token(parser *parse) {
@@ -51,26 +46,6 @@ parser * new_parser(token_array_list * tokens) {
     return result;
 }
 
-node * token_num_to_node(token t) {
-    node * node=new_node();
-    switch (t.type) {
-    case INT:
-        node->type=INT_NODE;
-        node->int_val=t.int_val;
-        break;
-    case FLOAT:
-        node->type=FLOAT_NODE;
-        node->float_val=t.float_val;
-        break;
-    case DOUBLE:
-        node->type=DOUBLE_NODE;
-        node->double_val=t.double_val;
-        break;
-    default:
-        return NULL;
-    return node;
-    }
-}
 
 
 
@@ -78,88 +53,184 @@ bool is_unary_operator_token(token t ) {
     return t.type==UNARY_MINUS;
 }
 
-node * unary_token_to_node(token t) {
 
-    node * result = new_node();
-    if (t.type=UNARY_MINUS) {
-        result->type=UNARY_NODE;
-        result->operation=UNARY_MINUS;
+
+
+parsing_node * parse_code(parser *parse) {
+    if (parse->tokens==NULL) {return NULL;}
+    parsing_node_linked_list * linked_list = new_parsing_node_linked_list();
+    while (get_current_token(parse).type!=END) {
+        parsing_node *statement= parse_statement(parse);
+        RET_NULL_IF_ERROR
+        if (conditional_node(statement)) {
+            skip_conditional_node(linked_list, statement);
+        }
+        else {add_parsing_node_to_linked_list(linked_list, statement);}
     }
+    parsing_node *result= linked_list->head;
+    free(linked_list);
     return result;
 }
 
-
-node *  comparaison_token_to_node(token t) {
-    node * res = new_node();
-    res->type=BINARY_NODE;
-    switch (t.type) {
-    case EQUALS:
-        res->operation=EQUALS_OPERATOR;
-        break;
-    case GREATER_THAN:
-        res->operation=GREATER_THAN_OPERATOR;
-        break;
-    case GREATER_OR_EQUAL:
-        res->operation=GREATER_OR_EQUAL_OPERATOR;
-        break;
-    case LESS_THAN:
-        res->operation=LESS_THAN_OPERATOR;
-        break;
-    case LESS_OR_EQUAL:
-        res->operation=LESS_OR_EQUAL_OPERATOR;
-        break;
-    default:
-        res->type=NONE;
-    }
-    return res;
-}
-
-node * begin_parsement(parser *parse) {
-    if (parse->tokens==NULL) {return NULL;}
-    return parse_statement(parse);
-}
-
-
-
-node * parse_statement(parser *parse) {
+parsing_node_linked_list * parse_scope(parser * parse) {
     token current = get_current_token(parse);
-    node * result;
-    if (current.type==IDENTIFIER) {
-        result = (get_next_token(parse).type==AFFECTATION) ? parse_affectation(parse) : parse_expression(parse);
+    parsing_node_linked_list *res = new_parsing_node_linked_list();
+
+    if (current.type!=OPENING_SCOPE) {
+        write_in_error_buffer(parse, current.line, current.character, "expected {");
+        parse->parsing_status=PARSING_ERROR;
+        return NULL;
     }
-    else {    
-        result = parse_expression(parse);
+
+    advance(parse);
+    while ((current=get_current_token(parse)).type!=END && current.type!=CLOSING_SCOPE) {
+        parsing_node * statement = parse_statement(parse);
+        RET_NULL_IF_ERROR
+        if (conditional_node(statement)) {
+            skip_conditional_node(res, statement);
+        }
+        else {add_parsing_node_to_linked_list(res, statement);}
+        
     }
-    RET_NULL_IF_ERROR
-    token t =get_current_token(parse);
-    if (t.type!=DELIMITER) {
-        write_in_error_buffer(parse, t.line, t.character, "expected ';'");
+    if (current.type!=CLOSING_SCOPE) {
+        write_in_error_buffer(parse, current.line, current.character, "expected }");
         parse->parsing_status=PARSING_ERROR;
         return NULL;
     }
     advance(parse);
-    t=get_current_token(parse);
 
-    if (t.type!=END) {
-        result->next=parse_statement(parse);
-        return result;
+    return res;
+}
+
+
+
+parsing_node * parse_statement(parser *parse) {
+    RET_NULL_IF_ERROR
+    token current = get_current_token(parse);
+    parsing_node * result;
+
+
+    P_NEW_LINE
+
+    if (current.type==OPENING_SCOPE) {
+        parsing_node_linked_list * scope = parse_scope(parse);
+        RET_NULL_IF_ERROR
+        result = new_parsing_node_of(OPENING_SCOPE_NODE);
+        result->right=scope->head;
+        free(scope);
     }
-    else {
-        return result;
+    else if (current.type==IF) {
+        result = parse_if_statement(parse);
+        RET_NULL_IF_ERROR
+        token current_token = get_current_token(parse);
+        if (current_token.type!=END && current_token.type!=CLOSING_SCOPE) {
+            parsing_node * current_node = result;
+            parsing_node * jump = parse_statement(parse);
+            while (current_node->next!=NULL) {
+                current_node->jump=jump;
+                current_node=current_node->next;
+            }
+            current_node->next=jump;
+            current_node->jump=jump;
+        }
     }
+    else {    
+        if (current.type==IDENTIFIER) {
+        result = (get_next_token(parse).type==AFFECTATION) ? parse_affectation(parse) : parse_expression(parse);
+        }
+        else {
+            result = parse_expression(parse);
+        }
+        token t =get_current_token(parse);
+        RET_NULL_IF_ERROR
+        if (t.type!=DELIMITER ) {
+            write_in_error_buffer(parse, t.line, t.character, "(STATEMENT) expected ';'");
+            parse->parsing_status=PARSING_ERROR;
+            return NULL;
+        }
+        RET_NULL_IF_ERROR
+        advance(parse);
+    }
+  
+    return result;
+    
     
 
 }
 
+parsing_node * parse_if_statement(parser *parse) {
+    token current_token = get_current_token(parse);
+    if (current_token.type!=IF) {
+        write_in_error_buffer(parse, current_token.line, current_token.character, "expected 'if'");
+        parse->parsing_status=PARSING_ERROR;
+        return NULL;
+    }
+    advance(parse);
+    parsing_node * result = new_parsing_node_of(IF_NODE);
+    result->condition=parse_logical_or(parse);
 
-node * parse_affectation(parser *parse) {
+    RET_NULL_IF_ERROR
+
+    result->true_condition=parse_statement(parse);
+    RET_NULL_IF_ERROR
+    if (get_current_token(parse).type==ELIF) {
+        result->next=parse_elif_statement(parse);
+    }
+    else if (get_current_token(parse).type==ELSE) {
+        result->next=parse_else_statement(parse);
+    }
+    return result;
+
+    
+}
+
+parsing_node *parse_elif_statement(parser *parse) {
+   token current_token = get_current_token(parse);
+    if (current_token.type!=ELIF) {
+        write_in_error_buffer(parse, current_token.line, current_token.character, "expected 'elif'");
+        parse->parsing_status=PARSING_ERROR;
+        return NULL;
+    }
+    advance(parse);
+    parsing_node * result = new_parsing_node_of(ELIF_NODE);
+    result->condition=parse_logical_or(parse);
+    RET_NULL_IF_ERROR
+    result->true_condition=parse_statement(parse);
+    RET_NULL_IF_ERROR
+    if (get_current_token(parse).type==ELIF) {
+        result->next=parse_elif_statement(parse);
+    }
+    else if (get_current_token(parse).type==ELSE) {
+        result->next=parse_else_statement(parse);
+    }
+    return result;
+}
+
+parsing_node *parse_else_statement(parser *parse) {
+   token current_token = get_current_token(parse);
+    if (current_token.type!=ELSE) {
+        write_in_error_buffer(parse, current_token.line, current_token.character, "expected 'else'");
+        parse->parsing_status=PARSING_ERROR;
+        return NULL;
+    }
+    advance(parse);
+    parsing_node * result = new_parsing_node_of(ELSE_NODE);
+    result->true_condition=parse_statement(parse);
+    RET_NULL_IF_ERROR
+    return result;
+
+}
+
+parsing_node * parse_affectation(parser *parse) {
         
     RET_NULL_IF_ERROR
 
-    node *left = parse_identifier(parse);
-    node * result = new_node();
+    parsing_node *left = parse_identifier(parse);
+    RET_NULL_IF_ERROR
+    parsing_node * result = new_parsing_node();
     advance(parse);
-    node * right = parse_expression(parse);
+    parsing_node * right = parse_expression(parse);
+    RET_NULL_IF_ERROR
     result->type=AFFECTATION_NODE;
     result->left=left;
     result->right=right;
@@ -167,32 +238,34 @@ node * parse_affectation(parser *parse) {
 
 }
 
-node *parse_expression(parser *parse) {
+parsing_node *parse_expression(parser *parse) {
     RET_NULL_IF_ERROR
     return parse_logical_or(parse);
 }
 
 
 
-node * parse_identifier(parser * parse) {
+parsing_node * parse_identifier(parser * parse) {
     RET_NULL_IF_ERROR
-    node * res = new_node();
+    parsing_node * res = new_parsing_node();
     token current = get_current_token(parse);
     res->type=VARIABLE_NODE;
     res->string_val=current.string_val;
     advance(parse);
+
+
     return res;
 }
 
-node * parse_logical_or(parser *parse) {
+parsing_node * parse_logical_or(parser *parse) {
     RET_NULL_IF_ERROR
-    node *left=parse_logical_and(parse);
+    parsing_node *left=parse_logical_and(parse);
     RET_NULL_IF_ERROR
-    node *center=NULL;
+    parsing_node *center=NULL;
     token current;
     while ((current = get_current_token(parse)   ).type==OR) {
 
-        node * new_center =new_node();
+        parsing_node * new_center =new_parsing_node();
         new_center->type=BINARY_NODE;
 
         new_center->operation=OR_OPERATOR;
@@ -210,27 +283,27 @@ node * parse_logical_or(parser *parse) {
     if (center==NULL) {center = left;}
 
     
-    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
-        parse->parsing_status=PARSING_ERROR;
-        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
-        free_tree_node(center);
-        return NULL;
-    }
+    // if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
+    //     parse->parsing_status=PARSING_ERROR;
+    //     write_in_error_buffer(parse, current.line, current.character,"(OR) expected an operator, ')', ';' or EOF" );
+    //     free_tree_node(center);
+    //     return NULL;
+    // }
 
     return center;
 
 
 }
 
-node * parse_logical_and(parser *parse) {
+parsing_node * parse_logical_and(parser *parse) {
     RET_NULL_IF_ERROR
-    node *left=parse_comparaison(parse);
+    parsing_node *left=parse_comparaison(parse);
     RET_NULL_IF_ERROR
-    node *center=NULL;
+    parsing_node *center=NULL;
     token current;
     while ((current = get_current_token(parse)   ).type==AND) {
 
-        node * new_center =new_node();
+        parsing_node * new_center =new_parsing_node();
         new_center->type=BINARY_NODE;
 
         new_center->operation=AND_OPERATOR;
@@ -248,21 +321,16 @@ node * parse_logical_and(parser *parse) {
     if (center==NULL) {center = left;}
 
     
-    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
-        parse->parsing_status=PARSING_ERROR;
-        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
-        free_tree_node(center);
-        return NULL;
-    }
+
 
     return center;
 }
 
-node * parse_comparaison(parser * parse) {
+parsing_node * parse_comparaison(parser * parse) {
     RET_NULL_IF_ERROR
-    node * left = parse_additive(parse);
+    parsing_node * left = parse_additive(parse);
     RET_NULL_IF_ERROR
-    node *center=NULL;
+    parsing_node *center=NULL;
     token current=get_current_token(parse);
     if (is_comparaison_operator_token(current)) {
         center = comparaison_token_to_node(current);
@@ -275,24 +343,24 @@ node * parse_comparaison(parser * parse) {
         center=left;   
     }
 
-    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
-        parse->parsing_status=PARSING_ERROR;
-        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
-        free_tree_node(center);
-        return NULL;
-    }
+    // if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
+    //     parse->parsing_status=PARSING_ERROR;
+    //     write_in_error_buffer(parse, current.line, current.character,"(COMPARAISON) expected an operator, ')', ';' or EOF" );
+    //     free_tree_node(center);
+    //     return NULL;
+    // }
     return center;
 }
 
-node * parse_additive(parser *parse) {
+parsing_node * parse_additive(parser *parse) {
     RET_NULL_IF_ERROR
-    node *left=parse_multiplicative(parse);
+    parsing_node *left=parse_multiplicative(parse);
     RET_NULL_IF_ERROR
-    node *center=NULL;
+    parsing_node *center=NULL;
     token current;
     while ((current = get_current_token(parse)   ).type==ADD || current.type==SUB ) {
 
-        node * new_center =new_node();
+        parsing_node * new_center =new_parsing_node();
         new_center->type=BINARY_NODE;
 
         new_center->operation=(current.type==ADD) ? ADD_OPERATOR : SUB_OPERATOR;
@@ -310,27 +378,27 @@ node * parse_additive(parser *parse) {
     if (center==NULL) {center = left;}
 
     
-    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
-        parse->parsing_status=PARSING_ERROR;
-        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
-        free_tree_node(center);
-        return NULL;
-    }
+    // if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
+    //     parse->parsing_status=PARSING_ERROR;
+    //     write_in_error_buffer(parse, current.line, current.character,"(ADDITIVE) expected an operator, ')', ';' or EOF" );
+    //     free_tree_node(center);
+    //     return NULL;
+    // }
 
     return center;
 
 
 }
 
-node * parse_multiplicative(parser * parse) {
+parsing_node * parse_multiplicative(parser * parse) {
     RET_NULL_IF_ERROR
-    node *left = parse_primary(parse);
+    parsing_node *left = parse_primary(parse);
     RET_NULL_IF_ERROR
-    node *center=NULL;
+    parsing_node *center=NULL;
     token current;
 
     while ((current=get_current_token(parse)).type==MULTIPLY || current.type==DIVIDE) {
-        node *new_center= new_node();
+        parsing_node *new_center= new_parsing_node();
         new_center->type=BINARY_NODE;
 
         new_center->operation=(current.type==MULTIPLY) ? MULTIPLY_OPERATOR : DIVIDE_OPERATOR;
@@ -349,31 +417,31 @@ node * parse_multiplicative(parser * parse) {
 
     if (center==NULL) {center = left;}
     
-    if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
-        parse->parsing_status=PARSING_ERROR;
+    // if (!is_operator_token(current) && current.type!=END && current.type!=DELIMITER && current.type!=CLOSING_PARENTHESE) {
+    //     parse->parsing_status=PARSING_ERROR;
 
-        write_in_error_buffer(parse, current.line, current.character,"expected an operator, ')', ';' or EOF" );
-        free_tree_node(center);
-        return NULL;
-    }
+    //     write_in_error_buffer(parse, current.line, current.character,"(MULTIPLICATIVE) expected an operator, ')', ';' or EOF" );
+    //     free_tree_node(center);
+    //     return NULL;
+    // }
 
     if (center==NULL) {center = left;}
     return center;
 }
 
-node * parse_unary(parser * parse) {
+parsing_node * parse_unary(parser * parse) {
     RET_NULL_IF_ERROR
     token t = get_current_token(parse);
-    node * res = unary_token_to_node(t);
+    parsing_node * res = unary_token_to_node(t);
     advance(parse);
     res->right=parse_primary(parse);
     return res;
 }
 
-node * parse_primary(parser * parse) {
+parsing_node * parse_primary(parser * parse) {
     RET_NULL_IF_ERROR
     token current = get_current_token(parse);
-    node * result;
+    parsing_node * result;
     if (is_num_token(current)) {
         result=token_num_to_node(current);
         advance(parse);
@@ -390,7 +458,7 @@ node * parse_primary(parser * parse) {
         token t=get_current_token(parse);
         if (t.type!=CLOSING_PARENTHESE) {
             parse->parsing_status=PARSING_ERROR;
-            write_in_error_buffer(parse, t.line, t.character, "expected ')'");
+            write_in_error_buffer(parse, t.line, t.character, "(PRIMARY) expected ')'");
             return NULL;
         }
         advance(parse);
@@ -400,7 +468,7 @@ node * parse_primary(parser * parse) {
         int line=current.line;
         int character=current.character;
 
-        write_in_error_buffer(parse, line, character, "expected a number, an identifier, an unary, or  an opening parenthese");
+        write_in_error_buffer(parse, line, character, "(PRIMARY) expected a number, an identifier, an unary, or  an opening parenthese");
         parse->parsing_status=PARSING_ERROR;
 
         return NULL;
@@ -419,167 +487,6 @@ node * parse_primary(parser * parse) {
 
 
 
-
-void print_operation(operator op) {
-    switch (op) {
-    case ADD_OPERATOR:
-        printf("+");
-        break;
-    case SUB_OPERATOR:
-        printf("-");
-        break;
-    case MULTIPLY_OPERATOR:
-        printf("*");
-        break;
-    case DIVIDE_OPERATOR:
-        printf("/");
-        break;
-    case UNARY_MINUS_OPERATOR:
-        printf("-");
-        break;
-    case EQUALS_OPERATOR:
-        printf("==");
-        break;
-    case GREATER_THAN_OPERATOR:
-        printf(">");
-        break;
-    case GREATER_OR_EQUAL_OPERATOR:
-        printf(">=");
-        break;
-    case LESS_THAN_OPERATOR:
-        printf("<");
-        break;
-    case LESS_OR_EQUAL_OPERATOR:
-        printf("<=");
-        break;
-    case OR_OPERATOR:
-        printf("|");
-        break;
-    case AND_OPERATOR:
-        printf("&");
-        break;
-        
-    }
-}
-
-void print_num_val(node *n) {
-    switch(n->type) {
-        case INT_NODE:
-            printf("%d", n->int_val);
-            break;
-        case FLOAT_NODE:
-            printf("%f", n->float_val);
-            break;
-        case DOUBLE_NODE:
-            printf("%lf", n->double_val);
-            break;
-    }
-}
-
-bool is_num_node(node * n) {
-    return n->type==INT_NODE || n->type==FLOAT_NODE || n->type==DOUBLE_NODE;
-}
-void display_node(node * n) {
-    if (n==NULL) {printf("NULL");}
-    printf("node[ type=%s ", NODE_TYPE_STR[n->type]);
-    if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
-        printf("operation='");
-        print_operation(n->operation);
-        printf("' ");
-    }
-    if (n->type==VARIABLE_NODE) {
-        printf("name=%s ", n->string_val);
-    }
-    if (is_num_node(n)) {
-        printf("value=");
-        print_num_val(n);
-        printf(" ");
-    }
-    printf("]");
-}
-
-void display_tree_node(node * n) {
-    if (n==NULL) {
-        printf("%s", "NULL");
-        return;
-     }
-    if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
-        printf("( ");
-    }
-    if (n->left!=NULL) {
-    display_tree_node(n->left);
-    }
-    display_node(n);
-    printf(" ");
-    if (n->right!=NULL) {
-        display_tree_node(n->right);
-    }
-    if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
-        printf(") ");
-    }
-    if (n->next!=NULL) {
-        printf("--> ");
-        display_tree_node(n->next);
-    }
-}
-
-
-
-// void write_in_error_buffer(parser *parse, int line, int character, int count, ...) {
-//     va_list expected;
-//     va_start(expected, count);
-//     char buffer[] = parse->parsing_error_buffer;
-//     char * expected_string[count];
-//     snprintf(buffer, sizeof(buffer), "Error during parsing, expected ");
-//     for (int i=0,j=0; i<count && j<sizeof(buffer);i++, j=strlen(buffer)) {
-//         // expected_string[i]=TOKEN_TYPE_NAMES[va_arg(expected, int)];
-//         int current = va_arg(expected, int);
-//         char * end = strlen(buffer);
-//         if (i<count-1) {snprintf(end, sizeof(buffer) - j, "%s, ",  TOKEN_TYPE_NAMES[current]);}
-//         else {snprintf(end, sizeof(buffer) - j, "%s or ", TOKEN_TYPE_NAMES[current]);}
-//     }
-//     int len=strlen(buffer);
-//     snprintf(buffer+len, sizeof(buffer) - len, " at line %d, character %d.", line, character);
-//     va_end(expected); 
-// }
-
-
-void free_tree_node(node *n) {
-    if (n==NULL) {
-        return;
-    }
-    node *left =n->left;
-    node *right = n->right;
-    free(n);
-    free_tree_node(left);
-    free_tree_node(right);
-}
-
-// void write_in_error_buffer(parser *parse, int line, int , int count, ...) {
-//     va_list expected;
-//     va_start(expected, count);
-//     #define buffer parse->parsing_error_buffer
-//     char * expected_string[count];
-//     snprintf(buffer, sizeof(buffer), "Error during parsing, expected ");
-//     for (int i=0,j=0; i<count && j<sizeof(buffer);i++, j=strlen(buffer)) {
-//         // expected_string[i]=TOKEN_TYPE_NAMES[va_arg(expected, int)];
-//         char * current = va_arg(expected, char *);
-//         char * end = buffer + strlen(buffer);
-//         if (i<count-2) {
-//             snprintf(end, sizeof(buffer) - j, "%s, ",  current);
-//         }
-//         else if (i==count-1) {
-//             snprintf(end, sizeof(buffer) - j, "%s ",  current);
-//         }
-//         else {
-//             snprintf(end, sizeof(buffer) - j, "%s or ", current);
-//         }
-//     }
-//     int len=strlen(buffer);
-//     snprintf(buffer+len, sizeof(buffer) - len, "at line %d, character %d.", line+1, character+1);
-//     va_end(expected); 
-//     #undef buffer
-// }
 
 
 void write_in_error_buffer(parser *parse, int line, int character, char * message) {
