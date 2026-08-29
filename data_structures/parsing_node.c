@@ -1,4 +1,9 @@
 #include "parsing_node.h"
+#include  "hash_table.h"
+
+
+
+
 
 #define PRINT_SPACE printf(" ");
 
@@ -16,15 +21,15 @@ parsing_node *new_parsing_node_of(int type) {
 parsing_node * token_num_to_node(token t) {
     parsing_node * parsing_node=new_parsing_node();
     switch (t.type) {
-    case INT:
+    case INT_TOKEN:
         parsing_node->type=INT_NODE;
         parsing_node->int_val=t.int_val;
         break;
-    case FLOAT:
+    case FLOAT_TOKEN:
         parsing_node->type=FLOAT_NODE;
         parsing_node->float_val=t.float_val;
         break;
-    case DOUBLE:
+    case DOUBLE_TOKEN:
         parsing_node->type=DOUBLE_NODE;
         parsing_node->double_val=t.double_val;
         break;
@@ -37,84 +42,24 @@ parsing_node * token_num_to_node(token t) {
 
 
 
-parsing_node * unary_token_to_node(token t) {
 
-    parsing_node * result = new_parsing_node();
-    if (t.type=UNARY_MINUS) {
-        result->type=UNARY_NODE;
-        result->operation=UNARY_MINUS_OPERATOR;
+
+
+parsing_node *  operator_token_to_parsing_node(token t) {
+    if (t.type!=OPERATOR_TOKEN) {
+        return NULL;
     }
+    parsing_node *result = new_parsing_node();
+    if (!is_unary_operator(t.operation)) {
+        result->type=UNARY_NODE;
+    }
+    else {
+        result->type=BINARY_NODE;
+    }
+    result->operation=t.operation;
     return result;
 }
 
-
-parsing_node *  comparaison_token_to_node(token t) {
-    parsing_node * res = new_parsing_node();
-    res->type=BINARY_NODE;
-    switch (t.type) {
-    case EQUALS:
-        res->operation=EQUALS_OPERATOR;
-        break;
-    case GREATER_THAN:
-        res->operation=GREATER_THAN_OPERATOR;
-        break;
-    case GREATER_OR_EQUAL:
-        res->operation=GREATER_OR_EQUAL_OPERATOR;
-        break;
-    case LESS_THAN:
-        res->operation=LESS_THAN_OPERATOR;
-        break;
-    case LESS_OR_EQUAL:
-        res->operation=LESS_OR_EQUAL_OPERATOR;
-        break;
-    default:
-        res->type=NONE;
-    }
-    return res;
-}
-
-
-void print_operation(parsing_operator op) {
-    switch (op) {
-    case ADD_OPERATOR:
-        printf("+");
-        break;
-    case SUB_OPERATOR:
-        printf("-");
-        break;
-    case MULTIPLY_OPERATOR:
-        printf("*");
-        break;
-    case DIVIDE_OPERATOR:
-        printf("/");
-        break;
-    case UNARY_MINUS_OPERATOR:
-        printf("-");
-        break;
-    case EQUALS_OPERATOR:
-        printf("==");
-        break;
-    case GREATER_THAN_OPERATOR:
-        printf(">");
-        break;
-    case GREATER_OR_EQUAL_OPERATOR:
-        printf(">=");
-        break;
-    case LESS_THAN_OPERATOR:
-        printf("<");
-        break;
-    case LESS_OR_EQUAL_OPERATOR:
-        printf("<=");
-        break;
-    case OR_OPERATOR:
-        printf("|");
-        break;
-    case AND_OPERATOR:
-        printf("&");
-        break;
-        
-    }
-}
 
 void print_num_val(parsing_node *n) {
     switch(n->type) {
@@ -320,4 +265,14 @@ void skip_conditional_node(parsing_node_linked_list *list, parsing_node *node) {
         list->end=node->jump;
     }
 }
+
+
+
+parsing_node *operator_token_to_parsing_node(token t) {
+    if (!is_operator_token(t)) {
+        return NULL;
+    }
+
+}
+
 

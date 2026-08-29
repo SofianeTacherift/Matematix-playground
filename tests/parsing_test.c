@@ -9,7 +9,7 @@ int main(int argc, char ** argv) {
     }
     char * code = argv[1];
     printf("code = '''%s'''", code);
-    token_array_list *list = lexe_code(code);
+    token_array_list *list = lex_code(code);
 
     printf("\ntokens list : ");
     print_token_list(list);

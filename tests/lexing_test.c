@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
         code=argv[1];
     }
     printf("code= \"\"\"%s\"\"\"\n", code);
+    token_array_list * list = lex_code(code);
     printf("result = \n");
-    token_array_list * list = lexe_code(code);
     print_token_list(list);
 }

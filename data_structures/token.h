@@ -1,6 +1,7 @@
 #include "array_list.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include "operators.h"
 
 #ifndef TOKEN_H
 #define TOKEN_H
@@ -9,74 +10,50 @@
 
 
 
-
 static char * TOKEN_TYPE_NAMES[] = {
-    "VAR_TYPE",
-    "INT",
-    "FLOAT",
-    "DOUBLE",
-    "CHAR",
-    "AFFECTATION",
-    "ADD",
-    "SUB",
-    "MULTIPLY",
-    "DIVIDE",
-    "DELIMITER",
-    "IDENTIFIER",
-    "IF",
-    "ELIF",
-    "ELSE",
-    "UNARY_MINUS",
-    "OPENING_PARENTHESE",
-    "CLOSING_PARENTHESE",
-    "OPENING_SCOPE",
-    "CLOSING_SCOPE",
-    "EQUALS",
-    "GREATER_THAN",
-    "LESS_THAN",
-    "GREATER_OR_EQUAL",
-    "LESS_OR_EQUAL",
-    "AND",
-    "OR",
-    "NOT",
-    "END"
+    "VAR_TYPE_TOKEN",
+    "OPERATOR_TOKEN",
+    "INT_TOKEN",
+    "FLOAT_TOKEN",
+    "DOUBLE_TOKEN",
+    "CHAR_TOKEN",
+    "AFFECTATION_TOKEN",
+    "DELIMITER_TOKEN",
+    "IDENTIFIER_TOKEN",
+    "IF_TOKEN",
+    "ELIF_TOKEN",
+    "ELSE_TOKEN",
+    "OPENING_PARENTHESE_TOKEN",
+    "CLOSING_PARENTHESE_TOKEN",
+    "OPENING_SCOPE_TOKEN",
+    "CLOSING_SCOPE_TOKEN",
+    "EOF_TOKEN"
 };
 
 typedef enum {
-    VAR_TYPE,
-    INT,
-    FLOAT,
-    DOUBLE,
-    CHAR,
-    AFFECTATION,
-    ADD,
-    SUB,
-    MULTIPLY,
-    DIVIDE,
-    DELIMITER,
-    IDENTIFIER,
-    IF,
-    ELIF,
-    ELSE,
-    UNARY_MINUS,
-    OPENING_PARENTHESE,
-    CLOSING_PARENTHESE,
-    OPENING_SCOPE,
-    CLOSING_SCOPE,
-    EQUALS,
-    GREATER_THAN,
-    LESS_THAN,
-    GREATER_OR_EQUAL,
-    LESS_OR_EQUAL,
-    AND,
-    OR,
-    NOT,
-    END
+    VAR_TYPE_TOKEN,
+    OPERATOR_TOKEN,
+    INT_TOKEN,
+    FLOAT_TOKEN,
+    DOUBLE_TOKEN,
+    CHAR_TOKEN,
+    AFFECTATION_TOKEN,
+    DELIMITER_TOKEN,
+    IDENTIFIER_TOKEN,
+    IF_TOKEN,
+    ELIF_TOKEN,
+    ELSE_TOKEN,
+    OPENING_PARENTHESE_TOKEN,
+    CLOSING_PARENTHESE_TOKEN,
+    OPENING_SCOPE_TOKEN,
+    CLOSING_SCOPE_TOKEN,
+    EOF_TOKEN
 } token_type;
 
 
 typedef struct {
     token_type type;
+    operators operation;
     union {
     int int_val;
     float float_val;
@@ -102,12 +79,13 @@ void write_in_token_buffer(token t);
 
 void print_token(token t);
 
+
+
 void reverse_number_token_value(token *t);
 
 token operator_to_token(char c);
 
 
-bool is_operator_token(token t);
 
 bool is_unary_minus(token previous_token);
 

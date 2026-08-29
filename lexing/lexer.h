@@ -22,20 +22,20 @@ static char ERROR_BUFFER[1024];
 
 
 
-int lexe_number(lexer *lexe, char *code, int start, int str_end);
+int lex_number(lexer *lexe, char *code, int start, int str_end);
 
-int lexe_string( lexer *lexe, char *code, int start, int str_end);
+int lex_string( lexer *lexe, char *code, int start, int str_end);
 
-bool is_new_token(char c);
+bool start_new_token(char c);
 
-bool is_operator(char c);
+bool is_arithmetic_operator(char c);
 
-int lexe_minus(lexer *lexe, char *code, int i, int str_end);
+int lex_minus(lexer *lexe, char *code, int i, int str_end);
 
 token operator_to_token(char c);
 
 
-token_array_list * lexe_code(char * code);
+token_array_list * lex_code(char * code);
 
 void write_in_lexing_error_buffer(lexer *lexe, char *message);
 
