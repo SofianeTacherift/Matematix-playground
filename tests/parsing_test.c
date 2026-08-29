@@ -35,7 +35,7 @@ int main(int argc, char ** argv) {
 
     printf("parsing result (readable) :\n");
 
-    display_tree_node_readable(res);
+    display_tree_node_readable(res, 0);
 
 
     printf("\n");

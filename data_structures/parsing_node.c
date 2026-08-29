@@ -50,7 +50,7 @@ parsing_node *  operator_token_to_parsing_node(token t) {
         return NULL;
     }
     parsing_node *result = new_parsing_node();
-    if (!is_unary_operator(t.operation)) {
+    if (is_unary_operator(t.operation)) {
         result->type=UNARY_NODE;
     }
     else {
@@ -159,23 +159,27 @@ void display_tree_node(parsing_node * n) {
 
 
 
+void print_indentation(int indentation) {
+    for (int i=0; i<indentation; i++) {
+        printf("\t");
+    }
+}
 
-
-void display_tree_node_readable(parsing_node *n) {
+void display_tree_node_readable(parsing_node *n, int indentation) {
    if (n==NULL) {
         printf("%s", "NULL");
         return;
     }
 
-    if (conditional_node(n)) {
+    if (is_conditional_node(n)) {
         display_node_readable(n);
         printf(" ");
         if (n->type!=ELSE_NODE) {
-            display_tree_node_readable(n->condition);
+            display_tree_node_readable(n->condition, indentation);
         }
-        display_tree_node_readable(n->true_condition);
+        display_tree_node_readable(n->true_condition, indentation);
         if (n->next!=NULL) {
-            display_tree_node_readable(n->next);
+            display_tree_node_readable(n->next, indentation);
         }
         return;
     }
@@ -185,29 +189,40 @@ void display_tree_node_readable(parsing_node *n) {
     }
 
     if (n->left!=NULL) {
-        display_tree_node_readable(n->left);
+        display_tree_node_readable(n->left, indentation);
     }
 
 
     display_node_readable(n);
-    PRINT_SPACE
+    if (n->type==OPENING_SCOPE_NODE) {
+        indentation++;
+        printf("\n");
+        print_indentation(indentation);
+    }
+    else {
+        PRINT_SPACE
+    }
 
     if (n->type==UNARY_NODE) {
         printf("( ");
     }
     if (n->right!=NULL) {
-        display_tree_node_readable(n->right);
+        display_tree_node_readable(n->right, indentation);
     }
     if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
         printf(") ");
     }
     if (n->type==OPENING_SCOPE_NODE) {
-        printf("\n} ");
+        indentation--;
+        printf("\n");
+        print_indentation(indentation);
+        printf("}\n");
     }
 
     if (n->next!=NULL) {
         printf("\n");
-        display_tree_node_readable(n->next);
+        print_indentation(indentation);
+        display_tree_node_readable(n->next, indentation);
     }
 }
 
@@ -225,7 +240,7 @@ void free_tree_node(parsing_node *n) {
 }
 
 
-bool conditional_node(parsing_node *node) {
+bool is_conditional_node(parsing_node *node) {
     return node->type==IF_NODE || node->type==ELIF_NODE || node->type==ELSE_NODE;
 }
 
@@ -253,7 +268,7 @@ void add_parsing_node_to_linked_list(parsing_node_linked_list * list, parsing_no
 }
 
 void add_conditional_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node) {
-    if (! conditional_node(node)) {
+    if (! is_conditional_node(node)) {
         return;
     }
     if (list->head==NULL && list->end==NULL) {
@@ -262,7 +277,15 @@ void add_conditional_node_to_linked_list(parsing_node_linked_list *list, parsing
     }
     else {
         list->end->next=node;
-        list->end=node->jump;
+        if (node->jump!=NULL) {
+            list->end=node->jump;
+        }
+        else {
+            while (node->next!=NULL) {
+                node=node->next;
+            }
+            list->end=node;
+        }
     }
 }
 

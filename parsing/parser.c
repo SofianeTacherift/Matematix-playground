@@ -88,7 +88,7 @@ parsing_node * parse_code(parser *parse) {
     while (get_current_token(parse).type!=EOF_TOKEN) {
         parsing_node *statement= parse_statement(parse);
         RET_NULL_IF_ERROR
-        if (conditional_node(statement)) {
+        if (is_conditional_node(statement)) {
             add_conditional_node_to_linked_list(linked_list, statement);
         }
         else {add_parsing_node_to_linked_list(linked_list, statement);}
@@ -112,7 +112,7 @@ parsing_node_linked_list * parse_scope(parser * parse) {
     while ((current=get_current_token(parse)).type!=EOF_TOKEN && current.type!=CLOSING_SCOPE_TOKEN) {
         parsing_node * statement = parse_statement(parse);
         RET_NULL_IF_ERROR
-        if (conditional_node(statement)) {
+        if (is_conditional_node(statement)) {
             add_conditional_node_to_linked_list(res, statement);
         }
         else {add_parsing_node_to_linked_list(res, statement);}

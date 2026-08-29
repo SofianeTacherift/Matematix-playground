@@ -105,10 +105,10 @@ _Bool is_num_node(parsing_node *n);
 void display_node(parsing_node *n);
 void display_tree_node(parsing_node *n);
 void display_node_readable(parsing_node *n);
-void display_tree_node_readable(parsing_node *n);
+void display_tree_node_readable(parsing_node *n, int indentation);
 void free_tree_node(parsing_node *n);
 parsing_node_linked_list *new_parsing_node_linked_list(void);
-bool conditional_node(parsing_node *node);
+bool is_conditional_node(parsing_node *node);
 void add_parsing_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node);
 void add_conditional_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node);
 
