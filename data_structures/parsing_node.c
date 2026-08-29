@@ -100,7 +100,7 @@ void display_node_readable(parsing_node *n) {
         printf("}");
     }
     if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
-        print_operation(n->operation);
+        printf("%s", operators_str[n->operation]);
     }
     if (n->type==VARIABLE_NODE) {
         printf("%s", n->string_val);
@@ -114,7 +114,7 @@ void display_node(parsing_node * n) {
     printf("parsing_node[ type=%s ", PARSING_NODE_TYPE_STR[n->type]);
     if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
         printf("operation='");
-        print_operation(n->operation);
+        printf("%s", operators_str[n->operation]);
         printf("' ");
     }
     if (n->type==VARIABLE_NODE) {
@@ -252,7 +252,7 @@ void add_parsing_node_to_linked_list(parsing_node_linked_list * list, parsing_no
     }
 }
 
-void skip_conditional_node(parsing_node_linked_list *list, parsing_node *node) {
+void add_conditional_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node) {
     if (! conditional_node(node)) {
         return;
     }
@@ -268,11 +268,6 @@ void skip_conditional_node(parsing_node_linked_list *list, parsing_node *node) {
 
 
 
-parsing_node *operator_token_to_parsing_node(token t) {
-    if (!is_operator_token(t)) {
-        return NULL;
-    }
 
-}
 
 

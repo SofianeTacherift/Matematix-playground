@@ -18,7 +18,7 @@
 
 
 static char* PARSING_NODE_TYPE_STR[]= {
-    "NONE",
+    "NONE_NODE",
     "BINARY",
     "AFFECTATION_TOKEN",
     "INT_TOKEN",
@@ -34,7 +34,7 @@ static char* PARSING_NODE_TYPE_STR[]= {
 };
 
 typedef enum parsing_node_type {
-    NONE,
+    NONE_NODE,
     BINARY_NODE,
     AFFECTATION_NODE,
     INT_NODE,
@@ -110,7 +110,7 @@ void free_tree_node(parsing_node *n);
 parsing_node_linked_list *new_parsing_node_linked_list(void);
 bool conditional_node(parsing_node *node);
 void add_parsing_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node);
-void skip_conditional_node(parsing_node_linked_list *list, parsing_node *node);
+void add_conditional_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node);
 
 
 #endif

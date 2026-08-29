@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 typedef enum operators {
-    NONE,
+    NONE_OPERATOR,
     ADD_OPERATOR,
     SUB_OPERATOR,
     MULTIPLY_OPERATOR,
@@ -20,7 +20,7 @@ typedef enum operators {
 } operators;
 
 static char* operators_str[] = {
-    "NONE",
+    "NONE_OPERATOR",
     "+",
     "-",
     "*",

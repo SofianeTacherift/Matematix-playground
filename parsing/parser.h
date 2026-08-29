@@ -39,7 +39,7 @@ parsing_node *parse_expression(parser *parse);
 parsing_node *parse_identifier(parser *parse);
 parsing_node *parse_logical_or(parser *parse);
 parsing_node *parse_logical_and(parser *parse);
-parsing_node *parse_comparaison(parser *parse);
+parsing_node *parse_comparison(parser *parse);
 parsing_node *parse_additive(parser *parse);
 parsing_node *parse_multiplicative(parser *parse);
 parsing_node *parse_unary(parser *parse);
