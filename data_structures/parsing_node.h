@@ -99,7 +99,7 @@ parsing_node *new_parsing_node_of(int type);
 parsing_node *token_num_to_node(token t);
 parsing_node *unary_token_to_node(token t);
 parsing_node *operator_token_to_parsing_node(token t);
-parsing_node *operator_token_to_parsing_node(token t);
+int conditional_token_to_parsing_node_type(token t);
 void print_num_val(parsing_node *n);
 _Bool is_num_node(parsing_node *n);
 void display_node(parsing_node *n);
@@ -111,6 +111,8 @@ parsing_node_linked_list *new_parsing_node_linked_list(void);
 bool is_conditional_node(parsing_node *node);
 void add_parsing_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node);
 void add_conditional_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node);
+inline bool parsing_node_linked_list_empty(parsing_node_linked_list * list);
+void merge_linked_lists(parsing_node_linked_list * list, parsing_node_linked_list *to_add);
 
 
 #endif

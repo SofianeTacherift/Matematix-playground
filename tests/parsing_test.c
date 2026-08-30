@@ -18,11 +18,11 @@ int main(int argc, char ** argv) {
 
 
     parser *parse= new_parser(list);
-    parsing_node * res = parse_code(parse);
+    parsing_node * res = parse_main_scope(parse);
 
 
     if (parse->parsing_status==PARSING_ERROR) {
-        printf("%s\n", parse->parsing_error_buffer);
+        //printf("%s\n", parse->parsing_error_buffer);
         return 2;
     }
 

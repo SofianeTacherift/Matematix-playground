@@ -60,6 +60,20 @@ parsing_node *  operator_token_to_parsing_node(token t) {
     return result;
 }
 
+int conditional_token_to_parsing_node_type(token t) {
+    switch (t.type)
+    {
+    case IF_TOKEN:
+        return IF_NODE;
+    case ELIF_TOKEN:
+        return ELIF_NODE;
+    case ELSE_TOKEN :
+        return ELSE_NODE;
+    default:
+        return NONE_NODE;
+    }
+}
+
 
 void print_num_val(parsing_node *n) {
     switch(n->type) {
@@ -179,6 +193,7 @@ void display_tree_node_readable(parsing_node *n, int indentation) {
         }
         display_tree_node_readable(n->true_condition, indentation);
         if (n->next!=NULL) {
+            print_indentation(indentation);
             display_tree_node_readable(n->next, indentation);
         }
         return;
@@ -217,9 +232,11 @@ void display_tree_node_readable(parsing_node *n, int indentation) {
         printf("\n");
         print_indentation(indentation);
         printf("}\n");
+
     }
 
     if (n->next!=NULL) {
+
         printf("\n");
         print_indentation(indentation);
         display_tree_node_readable(n->next, indentation);
@@ -241,6 +258,9 @@ void free_tree_node(parsing_node *n) {
 
 
 bool is_conditional_node(parsing_node *node) {
+    if (node==NULL) {
+        return NULL;
+    }
     return node->type==IF_NODE || node->type==ELIF_NODE || node->type==ELSE_NODE;
 }
 
@@ -255,8 +275,15 @@ parsing_node_linked_list  *new_parsing_node_linked_list() {
 
 }
 
+
+inline bool parsing_node_linked_list_empty(parsing_node_linked_list * list) {
+    return list->head==NULL && list->end==NULL;
+}
 void add_parsing_node_to_linked_list(parsing_node_linked_list * list, parsing_node * node) {
-    if (list->end==NULL && list->head==NULL) {
+    if (node==NULL) {
+        return;
+    }
+    if (parsing_node_linked_list_empty(list)) {
         list->head=node;
         list->end=node;
     }
@@ -267,8 +294,22 @@ void add_parsing_node_to_linked_list(parsing_node_linked_list * list, parsing_no
     }
 }
 
+void merge_linked_lists(parsing_node_linked_list * list, parsing_node_linked_list *to_add) {
+    if (list==NULL || to_add==NULL) {
+        return NULL;
+    }
+    if (parsing_node_linked_list_empty(list)) {
+        list->head=to_add->head;
+        list->end=to_add->end;
+    }
+    else {
+        list->end->next=to_add->head;
+        list->end=to_add->end;
+    }
+}
+
 void add_conditional_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node) {
-    if (! is_conditional_node(node)) {
+    if (! is_conditional_node(node) || node->jump==NULL) {
         return;
     }
     if (list->head==NULL && list->end==NULL) {
