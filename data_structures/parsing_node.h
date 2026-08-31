@@ -113,6 +113,6 @@ void add_parsing_node_to_linked_list(parsing_node_linked_list *list, parsing_nod
 void add_conditional_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node);
 inline bool parsing_node_linked_list_empty(parsing_node_linked_list * list);
 void merge_linked_lists(parsing_node_linked_list * list, parsing_node_linked_list *to_add);
-
+void free_parsing_node_linked_list(parsing_node_linked_list*);
 
 #endif

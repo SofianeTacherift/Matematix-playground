@@ -94,7 +94,7 @@ bool is_num_node(parsing_node * n) {
 }
 
 void display_node_readable(parsing_node *n) {
-   if (n==NULL) {printf("NULL"); return;}
+   if (n==NULL) {printf("NULL "); return;}
    if (n->type==IF_NODE) {
         printf("if");
    }
@@ -181,7 +181,7 @@ void print_indentation(int indentation) {
 
 void display_tree_node_readable(parsing_node *n, int indentation) {
    if (n==NULL) {
-        printf("%s", "NULL");
+        printf("%s", "NULL ");
         return;
     }
 
@@ -251,9 +251,15 @@ void free_tree_node(parsing_node *n) {
     parsing_node *left =n->left;
     parsing_node *right = n->right;
     free_tree_node(n->next);
-    free(n);
-    free_tree_node(left);
-    free_tree_node(right);
+    if (is_conditional_node(n)) {
+        free_tree_node(n->condition);
+        free_tree_node(n->true_condition);
+    }
+    else {
+        free(n);
+        free_tree_node(left);
+        free_tree_node(right);
+    }
 }
 
 
@@ -327,6 +333,15 @@ void add_conditional_node_to_linked_list(parsing_node_linked_list *list, parsing
             }
             list->end=node;
         }
+    }
+}
+
+void free_parsing_node_linked_list(parsing_node_linked_list* list) {
+    parsing_node * current = list->head;
+    while (current!=NULL && current->next!=NULL) {
+        parsing_node * to_free= current;
+        current=current->next;
+        free_tree_node(list);
     }
 }
 

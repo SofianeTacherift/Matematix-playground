@@ -11,6 +11,7 @@
 
 
 static char * TOKEN_TYPE_NAMES[] = {
+    "NONE_TOKEN",
     "VAR_TYPE_TOKEN",
     "OPERATOR_TOKEN",
     "INT_TOKEN",
@@ -31,6 +32,7 @@ static char * TOKEN_TYPE_NAMES[] = {
 };
 
 typedef enum {
+    NONE_TOKEN,
     VAR_TYPE_TOKEN,
     OPERATOR_TOKEN,
     INT_TOKEN,

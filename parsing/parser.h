@@ -14,6 +14,8 @@
 #define NO_PARSING_ERROR 0
 
 
+
+
 typedef struct parser {
     token_array_list *tokens;
     int current;
@@ -22,6 +24,7 @@ typedef struct parser {
 
 } parser;
 
+bool is_an_token_of_type(token t, ...);
 token get_current_token(parser *parse);
 token get_next_token(parser *parse);
 token advance(parser *parse);
@@ -44,5 +47,6 @@ parsing_node *parse_unary(parser *parse);
 parsing_node *parse_primary(parser *parse);
 parsing_node *parse_instruction(parser *parser);
 void write_in_error_buffer(parser *parse, token current, char *message);
+void free_nodes(int count, ...);
 
 #endif

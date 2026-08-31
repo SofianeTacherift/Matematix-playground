@@ -5,16 +5,23 @@
 
 #define P_NEW_LINE printf("\n");
 
+#define RETURN_NULL_IF_ERROR(variable, ...) if (variable==NULL) {  \
+    free_nodes(__VA_ARGS__); \
+    return NULL;\
+} \
 
-
-#define DEBUG_PRINT printf("\n-----------------------------------------\n");
-
+#define ADVPARS_WHILE_NOT_CURRTYPE(PARSER, ...)  \
+    while (!is_an_token_of_type( get_current_token( PARSER) , __VA_ARGS__ )) { \
+        advance( PARSER );\
+    } \
+ \
 
 
 #define DEFINE_BINARY_PARSING_FUNCTION(NAME, CONDITION, PARSING_FUNC_LEFT, PARSING_FUNC_RIGHT) parsing_node * NAME (parser *parse) { \
       \
     parsing_node *left= PARSING_FUNC_LEFT(parse); \
       \
+    RETURN_NULL_IF_ERROR(left, 0) \
     parsing_node *center=NULL; \
     token current_token; \
     while ( current_token=get_current_token(parse), current_token.type==OPERATOR_TOKEN && CONDITION ) { \
@@ -30,8 +37,9 @@
             new_center->left=center; \
         } \
         advance(parse); \
-        new_center->right=  PARSING_FUNC_RIGHT(parse); \
+        new_center->right=PARSING_FUNC_RIGHT(parse); \
           \
+        RETURN_NULL_IF_ERROR(new_center->right, 1, new_center) \
         center=new_center; \
     } \
     if (center==NULL) {center = left;} \
@@ -41,6 +49,22 @@ DEFINE_BINARY_PARSING_FUNCTION(parse_logical_or, (current_token.operation==LOGIC
 DEFINE_BINARY_PARSING_FUNCTION(parse_logical_and, (current_token.operation==LOGICAL_AND_OPERATOR) , parse_comparison, parse_comparison)
 DEFINE_BINARY_PARSING_FUNCTION(parse_additive, (current_token.operation==ADD_OPERATOR || current_token.operation==SUB_OPERATOR) , parse_multiplicative, parse_multiplicative)
 DEFINE_BINARY_PARSING_FUNCTION(parse_multiplicative, (current_token.operation==MULTIPLY_OPERATOR || current_token.operation==DIVIDE_OPERATOR) , parse_primary, parse_primary)
+
+
+bool is_an_token_of_type(token t, ...) {
+    va_list args;
+    va_start(args, t);
+    int  current = va_arg(args, int);
+    while (current!=NONE_TOKEN) {
+        if (current==t.type) {
+            return true;
+        }
+        current=va_arg(args, int);
+    }
+    va_end(args);
+    return false;
+}
+
 
 
 token get_current_token(parser *parse) {
@@ -80,13 +104,21 @@ parser * new_parser(token_array_list * tokens) {
 
 
 
-
+#define print_current_token(PARSER) print_token(get_current_token(PARSER)); printf("\n");
 
 parsing_node * parse_main_scope(parser *parse) {
     if (parse->tokens==NULL) {return NULL;}
     parsing_node_linked_list * res = new_parsing_node_linked_list();
     while (get_current_token(parse).type!=EOF_TOKEN) {
+        //print_current_token(parse)
         parsing_node_linked_list * statement = parse_statement(parse);
+        // printf("result : ");
+        // display_tree_node(statement!=NULL ? statement->head : NULL);
+        // P_NEW_LINE
+        if (statement==NULL) {
+            ADVPARS_WHILE_NOT_CURRTYPE(parse, DELIMITER_TOKEN, EOF_TOKEN,  NONE_TOKEN)
+            advance(parse);
+        }
         merge_linked_lists(res, statement);
         free(statement);
     }
@@ -98,22 +130,23 @@ parsing_node * parse_main_scope(parser *parse) {
 parsing_node_linked_list * parse_scope(parser * parse) {
     token current = get_current_token(parse);
     parsing_node_linked_list *res = new_parsing_node_linked_list();
-
-    if (current.type!=OPENING_SCOPE_TOKEN) {
-        write_in_error_buffer(parse, current, "expected {");
-        parse->parsing_status=PARSING_ERROR;
-        return NULL;
-    }
-
     advance(parse);
+
     while ((current=get_current_token(parse)).type!=EOF_TOKEN && current.type!=CLOSING_SCOPE_TOKEN) {
         parsing_node_linked_list * statement = parse_statement(parse);
+        if (statement==NULL) {
+            ADVPARS_WHILE_NOT_CURRTYPE(parse, DELIMITER_TOKEN, CLOSING_SCOPE_TOKEN, EOF_TOKEN,  NONE_TOKEN)
+            if (get_current_token(parse).type!=CLOSING_SCOPE_TOKEN) {
+                advance(parse);
+            }
+        }
         merge_linked_lists(res, statement);
         free(statement);
     }
     if (current.type!=CLOSING_SCOPE_TOKEN) {
         write_in_error_buffer(parse, current, "expected }");
         parse->parsing_status=PARSING_ERROR;
+        free_parsing_node_linked_list(res);
         return NULL;
     }
     advance(parse);
@@ -126,10 +159,13 @@ parsing_node_linked_list * parse_scope(parser * parse) {
 parsing_node_linked_list * parse_statement(parser *parse) {
      
     token current = get_current_token(parse);
-    parsing_node_linked_list * result;
+    parsing_node_linked_list * result=NULL;
 
     if (current.type==OPENING_SCOPE_TOKEN) {
         parsing_node_linked_list * scope = parse_scope(parse);
+        if (scope==NULL) {
+            return NULL; // if there is a scope error, this mean we are at the EOF and that there is no '}' finishing a scope
+        }
         parsing_node *head = new_parsing_node_of(OPENING_SCOPE_NODE);
         head->right=scope->head;
         free(scope);
@@ -141,25 +177,24 @@ parsing_node_linked_list * parse_statement(parser *parse) {
     }
     else {
         parsing_node *instruction =parse_instruction(parse);
-        result = new_parsing_node_linked_list();
-        add_parsing_node_to_linked_list(result, instruction);
+        if (instruction!=NULL) {
+            result = new_parsing_node_linked_list();
+            add_parsing_node_to_linked_list(result, instruction);
+        }
+        else {
+            return NULL;
+        }
+
         token t =get_current_token(parse);
-        
-        if (t.type!=DELIMITER_TOKEN && !parse->parsing_status==PARSING_ERROR) {
+        if (t.type!=DELIMITER_TOKEN) {
             write_in_error_buffer(parse, t, "(STATEMENT) expected ';'");
             parse->parsing_status=PARSING_ERROR;
+            free(result);
             result=NULL;
         }
-
-        if (parse->parsing_status==PARSING_ERROR) {
-            while (t=get_current_token(parse), t.type!=EOF_TOKEN && t.type!=CLOSING_SCOPE_TOKEN) {
-                advance(parse);
-            }
-            parse->parsing_status=NO_PARSING_ERROR;
+        else {
+            advance(parse);
         }
-
-         
-        advance(parse);
 
     }
     return result;
@@ -176,21 +211,52 @@ parsing_node * parse_conditional_node(parser *parser) {
     advance(parser);
     if (type!=ELSE_NODE) {
         result->condition=parse_logical_or(parser);
+        RETURN_NULL_IF_ERROR(result->condition, 1,result);
     }
     parsing_node_linked_list * true_branch = parse_statement(parser);
+    if (true_branch==NULL) {
+        ADVPARS_WHILE_NOT_CURRTYPE(parser, DELIMITER_TOKEN, CLOSING_SCOPE_TOKEN, EOF_TOKEN,  NONE_TOKEN)
+        if (get_current_token(parser).type!=CLOSING_SCOPE_TOKEN) {
+            advance(parser);
+        }
+        
+        free_tree_node(result);
+        return NULL;
+    }
     result->true_condition=true_branch->head;
     free(true_branch);
     return result;
 }
+
+
 parsing_node_linked_list * parse_if_statement(parser *parse) {
     token current_token = get_current_token(parse);
     parsing_node_linked_list * result = new_parsing_node_linked_list();
-    add_parsing_node_to_linked_list(result, parse_conditional_node(parse));
+
+    parsing_node *if_statement = parse_conditional_node(parse);
+
+    if (if_statement==NULL) {
+        free_parsing_node_linked_list(result);
+        return NULL;
+    }
+
+    add_parsing_node_to_linked_list(result, if_statement);
+
     while ((current_token=get_current_token(parse)).type==ELIF_TOKEN) {
-        add_parsing_node_to_linked_list(result, parse_conditional_node(parse));
+        parsing_node *elif_statement = parse_conditional_node(parse);
+        if (elif_statement==NULL) {
+            free_parsing_node_linked_list(result);
+            return NULL;
+        }
+        add_parsing_node_to_linked_list(result, elif_statement);
     }
     if ((current_token=get_current_token(parse)).type==ELSE_TOKEN) {
-        add_parsing_node_to_linked_list(result, parse_conditional_node(parse));     
+        parsing_node *else_statement = parse_conditional_node(parse);
+        if (else_statement==NULL) {
+            free_parsing_node_linked_list(result);
+            return NULL;
+        }
+        add_parsing_node_to_linked_list(result, else_statement); 
     }
     return result;
 }
@@ -205,6 +271,7 @@ parsing_node *parse_instruction(parser *parser) {
     else {
         res = parse_expression(parser);
     }
+    RETURN_NULL_IF_ERROR(res, 0)
     return res;
 }
 
@@ -240,6 +307,7 @@ parsing_node * parse_identifier(parser * parse) {
 parsing_node * parse_comparison(parser * parse) {
      
     parsing_node * left = parse_additive(parse);
+    RETURN_NULL_IF_ERROR(left, 0)
      
     parsing_node *center=NULL;
     token current=get_current_token(parse);
@@ -248,7 +316,7 @@ parsing_node * parse_comparison(parser * parse) {
         center->left=left;
         advance(parse);
         center->right=parse_additive(parse);
-         
+        RETURN_NULL_IF_ERROR(center->right, 2, left, center)
     }
     else {
         center=left;   
@@ -265,11 +333,11 @@ parsing_node * parse_unary(parser * parse) {
     parsing_node * res = operator_token_to_parsing_node(t);
     advance(parse);
     res->right=parse_primary(parse);
+    RETURN_NULL_IF_ERROR(res->right, 1, res)
     return res;
 }
 
 parsing_node * parse_primary(parser * parse) {
-     
     token current = get_current_token(parse);
     parsing_node * result;
     if (is_num_token(current)) {
@@ -277,6 +345,7 @@ parsing_node * parse_primary(parser * parse) {
         advance(parse);
     }
     else if (current.type==OPERATOR_TOKEN &&  is_unary_operator(current.operation)) {
+        
         result = parse_unary(parse);
     }
     else if (current.type==IDENTIFIER_TOKEN) {
@@ -285,20 +354,25 @@ parsing_node * parse_primary(parser * parse) {
     else if (current.type==OPENING_PARENTHESE_TOKEN) {
         advance(parse);
         result=parse_expression(parse);
+        RETURN_NULL_IF_ERROR(result, 1, result)
         token t=get_current_token(parse);
         if (t.type!=CLOSING_PARENTHESE_TOKEN) {
             parse->parsing_status=PARSING_ERROR;
             write_in_error_buffer(parse, t, "(PRIMARY) expected ')'");
+            free(result);
             return NULL;
         }
+        RETURN_NULL_IF_ERROR(result, 0)
         advance(parse);
     }
     else {
+  
         write_in_error_buffer(parse, current, "(PRIMARY) expected a number, an identifier, an unary, or  an opening parenthese");
         parse->parsing_status=PARSING_ERROR;
 
         return NULL;
     }
+    RETURN_NULL_IF_ERROR(result, 0)
     return result;
 }
 
@@ -318,14 +392,20 @@ add_error (parser *parser, token t, char * message) {
 }
 
 void write_in_error_buffer(parser *parse, token t, char * message) {
-    advance(parse);
+    parse->parsing_status=PARSING_ERROR;
     snprintf(parse->parsing_error_buffer, sizeof(parse->parsing_error_buffer), "Error in parsing at line %d character %d : %s.\n", t.line+1, t.character+1, message);
     printf(parse->parsing_error_buffer);
     
 }
 
-
-
+void free_nodes(int count, ...) {
+    va_list pointers;
+    va_start(pointers, count);
+    for (int i=0; i<count; i++ ) {
+        parsing_node *p = va_arg(pointers, parsing_node*);
+        free_tree_node(p);
+    }
+} 
 
 
 
