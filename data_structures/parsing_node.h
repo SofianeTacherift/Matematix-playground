@@ -106,7 +106,7 @@ void display_node(parsing_node *n);
 void display_tree_node(parsing_node *n);
 void display_node_readable(parsing_node *n);
 void display_tree_node_readable(parsing_node *n, int indentation);
-void free_tree_node(parsing_node *n);
+void free_tree_node(parsing_node *n, bool free_next);
 parsing_node_linked_list *new_parsing_node_linked_list(void);
 bool is_conditional_node(parsing_node *node);
 void add_parsing_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node);
@@ -114,5 +114,5 @@ void add_conditional_node_to_linked_list(parsing_node_linked_list *list, parsing
 inline bool parsing_node_linked_list_empty(parsing_node_linked_list * list);
 void merge_linked_lists(parsing_node_linked_list * list, parsing_node_linked_list *to_add);
 void free_parsing_node_linked_list(parsing_node_linked_list*);
-
+void print_parsing_node_linked_list(parsing_node_linked_list * list) ;
 #endif

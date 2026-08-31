@@ -110,11 +110,7 @@ parsing_node * parse_main_scope(parser *parse) {
     if (parse->tokens==NULL) {return NULL;}
     parsing_node_linked_list * res = new_parsing_node_linked_list();
     while (get_current_token(parse).type!=EOF_TOKEN) {
-        //print_current_token(parse)
         parsing_node_linked_list * statement = parse_statement(parse);
-        // printf("result : ");
-        // display_tree_node(statement!=NULL ? statement->head : NULL);
-        // P_NEW_LINE
         if (statement==NULL) {
             ADVPARS_WHILE_NOT_CURRTYPE(parse, DELIMITER_TOKEN, EOF_TOKEN,  NONE_TOKEN)
             advance(parse);
@@ -140,9 +136,13 @@ parsing_node_linked_list * parse_scope(parser * parse) {
                 advance(parse);
             }
         }
-        merge_linked_lists(res, statement);
-        free(statement);
+        else {
+            merge_linked_lists(res, statement);
+            free(statement);
+        }
     }
+
+
     if (current.type!=CLOSING_SCOPE_TOKEN) {
         write_in_error_buffer(parse, current, "expected }");
         parse->parsing_status=PARSING_ERROR;
@@ -219,8 +219,7 @@ parsing_node * parse_conditional_node(parser *parser) {
         if (get_current_token(parser).type!=CLOSING_SCOPE_TOKEN) {
             advance(parser);
         }
-        
-        free_tree_node(result);
+        free_tree_node(result, true);
         return NULL;
     }
     result->true_condition=true_branch->head;
@@ -403,7 +402,7 @@ void free_nodes(int count, ...) {
     va_start(pointers, count);
     for (int i=0; i<count; i++ ) {
         parsing_node *p = va_arg(pointers, parsing_node*);
-        free_tree_node(p);
+        free_tree_node(p, true);
     }
 } 
 

@@ -244,21 +244,21 @@ void display_tree_node_readable(parsing_node *n, int indentation) {
 }
 
 
-void free_tree_node(parsing_node *n) {
+void free_tree_node(parsing_node *n, bool free_next ) {
     if (n==NULL) {
         return;
     }
     parsing_node *left =n->left;
     parsing_node *right = n->right;
-    free_tree_node(n->next);
+
     if (is_conditional_node(n)) {
-        free_tree_node(n->condition);
-        free_tree_node(n->true_condition);
+        free_tree_node(n->condition, free_next);
+        free_tree_node(n->true_condition, free_next);
     }
     else {
         free(n);
-        free_tree_node(left);
-        free_tree_node(right);
+        free_tree_node(left, free_next);
+        free_tree_node(right, free_next);
     }
 }
 
@@ -301,14 +301,15 @@ void add_parsing_node_to_linked_list(parsing_node_linked_list * list, parsing_no
 }
 
 void merge_linked_lists(parsing_node_linked_list * list, parsing_node_linked_list *to_add) {
-    if (list==NULL || to_add==NULL) {
-        return NULL;
+    if (list==NULL || to_add==NULL || to_add->head==NULL && to_add->end==NULL) {
+        return;
     }
+    
     if (parsing_node_linked_list_empty(list)) {
         list->head=to_add->head;
         list->end=to_add->end;
     }
-    else {
+    else { 
         list->end->next=to_add->head;
         list->end=to_add->end;
     }
@@ -338,11 +339,24 @@ void add_conditional_node_to_linked_list(parsing_node_linked_list *list, parsing
 
 void free_parsing_node_linked_list(parsing_node_linked_list* list) {
     parsing_node * current = list->head;
-    while (current!=NULL && current->next!=NULL) {
+    while (current!=NULL) {
         parsing_node * to_free= current;
         current=current->next;
-        free_tree_node(list);
+        free_tree_node(to_free, false);
     }
+
+}
+
+void print_parsing_node_linked_list(parsing_node_linked_list * list) {
+    parsing_node * current = list->head;
+    while (current!=NULL) {
+        display_node(current);
+        current=current->next;
+        if (current!=NULL) {
+            printf("  ----------------------  ");
+        }
+    }
+    printf("\n");
 }
 
 

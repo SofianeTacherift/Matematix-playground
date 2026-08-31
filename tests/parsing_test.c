@@ -8,13 +8,6 @@ int main(int argc, char ** argv) {
         return 1;
     }
 
-    // parsing_node * n = new_parsing_node();
-    // n->left=new_parsing_node();
-    // n->right=new_parsing_node();
-
-    // printf("left : %p\n right : %p\n condition : %p\n true_condition : %p\n jump : %p\n", n->left, n->right, n->condition, n->true_condition, n->jump);
-
-    // return 0;
 
     char * code = argv[1];
     printf("code = '''%s'''", code);
@@ -23,6 +16,12 @@ int main(int argc, char ** argv) {
     printf("\ntokens list : ");
     print_token_list(list);
     printf("\n");
+
+    if (list==NULL) {
+        printf("error during lexing, exit\n");
+        return 2;
+    }
+
 
  
 
@@ -34,12 +33,11 @@ int main(int argc, char ** argv) {
 
 
 
-    printf("parsing result :\n ");
+
 
     if (parse->parsing_status==NO_PARSING_ERROR) {
-        display_tree_node(res);
-    
-
+    printf("parsing result :\n ");
+    display_tree_node(res);
 
     printf("\n\n");
 
@@ -51,20 +49,7 @@ int main(int argc, char ** argv) {
     printf("\n");
 
     }
-
-
-    free_tree_node(res);
+    free_tree_node(res, true);
     free_token_array_list(list);
-
-
-
-
-
-
-
-
-
-
-
     return 0;
 }
