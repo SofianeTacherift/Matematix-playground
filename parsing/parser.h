@@ -43,6 +43,7 @@ parsing_node *parse_logical_and(parser *parse);
 parsing_node *parse_comparison(parser *parse);
 parsing_node *parse_additive(parser *parse);
 parsing_node *parse_multiplicative(parser *parse);
+parsing_node *parse_power(parser * parse);
 parsing_node *parse_unary(parser *parse);
 parsing_node *parse_primary(parser *parse);
 parsing_node *parse_instruction(parser *parser);

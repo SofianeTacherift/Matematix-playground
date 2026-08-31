@@ -90,6 +90,10 @@ token operator_to_token(char c) {
        case '/':
             result.operation=DIVIDE_OPERATOR;
             break;
+        case '^':
+            result.operation=POWER_OPERATOR;
+            break;
+
         
     }
     return result;

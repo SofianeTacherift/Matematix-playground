@@ -51,8 +51,7 @@ parsing_node *  operator_token_to_parsing_node(token t) {
     }
     parsing_node *result = new_parsing_node();
     if (is_unary_operator(t.operation)) {
-        result->type=UNARY_NODE;
-    }
+        result->type=UNARY_NODE;    }
     else {
         result->type=BINARY_NODE;
     }

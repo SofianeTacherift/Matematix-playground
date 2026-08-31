@@ -36,6 +36,7 @@ bool start_new_token(char c) {
     case '-':
     case '=':
     case ' ':
+    case '^':
     case '(':
     case ')':
     case DELIMITATION:
@@ -45,6 +46,7 @@ bool start_new_token(char c) {
     case '|':
     case '{':
     case '}':
+    case '!':
         return true;
     default:
         return false;
@@ -152,6 +154,7 @@ bool is_arithmetic_operator(char c) {
         case '-':
         case '*':
         case '/':
+        case '^':
             return true;
         default:
             return false;
@@ -284,6 +287,11 @@ token_array_list * lex_code(char * code) {
                 break;
             case '|':
             add_token(lexe->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=LOGICAL_OR_OPERATOR   , .character=lexe->current_char, .line=lexe->current_line});
+                lexe->current_char++;  
+                i++;
+                break;
+            case '!':
+                add_token(lexe->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=NOT_OPERATOR   , .character=lexe->current_char, .line=lexe->current_line});
                 lexe->current_char++;  
                 i++;
                 break;

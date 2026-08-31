@@ -48,8 +48,8 @@
 DEFINE_BINARY_PARSING_FUNCTION(parse_logical_or, (current_token.operation==LOGICAL_OR_OPERATOR) , parse_logical_and, parse_logical_and)
 DEFINE_BINARY_PARSING_FUNCTION(parse_logical_and, (current_token.operation==LOGICAL_AND_OPERATOR) , parse_comparison, parse_comparison)
 DEFINE_BINARY_PARSING_FUNCTION(parse_additive, (current_token.operation==ADD_OPERATOR || current_token.operation==SUB_OPERATOR) , parse_multiplicative, parse_multiplicative)
-DEFINE_BINARY_PARSING_FUNCTION(parse_multiplicative, (current_token.operation==MULTIPLY_OPERATOR || current_token.operation==DIVIDE_OPERATOR) , parse_primary, parse_primary)
-
+DEFINE_BINARY_PARSING_FUNCTION(parse_multiplicative, (current_token.operation==MULTIPLY_OPERATOR || current_token.operation==DIVIDE_OPERATOR) , parse_power, parse_power)
+DEFINE_BINARY_PARSING_FUNCTION(parse_power, (current_token.operation==POWER_OPERATOR),parse_primary, parse_power)
 
 bool is_an_token_of_type(token t, ...) {
     va_list args;
@@ -331,7 +331,7 @@ parsing_node * parse_unary(parser * parse) {
     token t = get_current_token(parse);
     parsing_node * res = operator_token_to_parsing_node(t);
     advance(parse);
-    res->right=parse_primary(parse);
+    res->right=parse_power(parse);
     RETURN_NULL_IF_ERROR(res->right, 1, res)
     return res;
 }
