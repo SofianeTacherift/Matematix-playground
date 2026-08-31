@@ -81,6 +81,7 @@ int lex_number(lexer *lexe, char *code, int start, int str_end) {
     token t;
     t.line=line;
     t.character=character;
+    t.operation=NONE_OPERATOR;
 
     if ((i<str_end && code[i]=='f')) {
         type=FLOAT_TOKEN;
@@ -142,6 +143,7 @@ int lex_string(lexer *lexe, char *code, int start, int str_end) {
     else {
         t.string_val=str; t.type=IDENTIFIER_TOKEN ; t.line=line; t.character=character;
     }
+    t.operation=NONE_OPERATOR;
     add_token(lexe->tokens_list, t);
     t.line=line;
     t.character=character;
@@ -349,8 +351,6 @@ token_array_list * lex_code(char * code) {
     }
     printf("\ncode lexed\n");
     add_token(lexe->tokens_list, (token) {.type=EOF_TOKEN, .line=lexe->current_line, .character=lexe->current_char});
-
-
     return lexe->tokens_list;
 
 

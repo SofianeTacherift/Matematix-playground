@@ -3,3 +3,5 @@
 *.java
 *.idea/*
 *.o
+cmake-build-debug
+build

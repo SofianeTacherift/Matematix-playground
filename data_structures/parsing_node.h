@@ -79,8 +79,8 @@ typedef struct parsing_node {
         };
         struct { // conditional_node 
             struct parsing_node *condition;
-            struct parsing_node_linked_list *true_condition;
-            struct parsing_node_linked_list *jump;
+            struct parsing_node  *true_condition;
+            struct parsing_node *jump;
         };
 
 

@@ -17,19 +17,23 @@
     } \
  \
 
+ #define print_current_token(PARSER) print_token(get_current_token(PARSER)); printf("\n");
+
+
+     // printf("%s : " , #NAME );\
+    // print_current_token(parse);\
+    // printf("\n");\
 
 #define DEFINE_BINARY_PARSING_FUNCTION(NAME, CONDITION, PARSING_FUNC_LEFT, PARSING_FUNC_RIGHT) parsing_node * NAME (parser *parse) { \
-      \
     parsing_node *left= PARSING_FUNC_LEFT(parse); \
       \
     RETURN_NULL_IF_ERROR(left, 0) \
     parsing_node *center=NULL; \
     token current_token; \
-    while ( current_token=get_current_token(parse), current_token.type==OPERATOR_TOKEN && CONDITION ) { \
-         \
+    while ( current_token=get_current_token(parse), current_token.type==OPERATOR_TOKEN && CONDITION ) {       \
         parsing_node * new_center =new_parsing_node(); \
         new_center->type=BINARY_NODE; \
-\
+        \
         new_center->operation=current_token.operation; \
         if (center==NULL) { \
             new_center->left=left; \
@@ -37,9 +41,9 @@
         else { \
             new_center->left=center; \
         } \
+        token t = get_current_token(parse); \
         advance(parse); \
         new_center->right=PARSING_FUNC_RIGHT(parse); \
-          \
         RETURN_NULL_IF_ERROR(new_center->right, 1, new_center) \
         center=new_center; \
     } \
@@ -51,6 +55,8 @@ DEFINE_BINARY_PARSING_FUNCTION(parse_logical_and, (current_token.operation==LOGI
 DEFINE_BINARY_PARSING_FUNCTION(parse_additive, (current_token.operation==ADD_OPERATOR || current_token.operation==SUB_OPERATOR) , parse_multiplicative, parse_multiplicative)
 DEFINE_BINARY_PARSING_FUNCTION(parse_multiplicative, (current_token.operation==MULTIPLY_OPERATOR || current_token.operation==DIVIDE_OPERATOR) , parse_power, parse_power)
 DEFINE_BINARY_PARSING_FUNCTION(parse_power, (current_token.operation==POWER_OPERATOR),parse_primary, parse_power)
+
+
 
 bool is_an_token_of_type(token t, ...) {
     va_list args;
@@ -105,7 +111,7 @@ parser * new_parser(token_array_list * tokens) {
 
 
 
-#define print_current_token(PARSER) print_token(get_current_token(PARSER)); printf("\n");
+
 
 parsing_node * parse_main_scope(parser *parse) {
     if (parse->tokens==NULL) {return NULL;}
@@ -191,6 +197,7 @@ parsing_node_linked_list * parse_statement(parser *parse) {
 
         token t =get_current_token(parse);
         if (t.type!=DELIMITER_TOKEN) {
+
             write_in_error_buffer(parse, t, "(STATEMENT) expected ';'");
             parse->parsing_status=PARSING_ERROR;
             free(result);
@@ -214,8 +221,10 @@ parsing_node * parse_conditional_node(parser *parser) {
     parsing_node *result = new_parsing_node_of( type );
     advance(parser);
     if (type!=ELSE_NODE) {
+
         result->condition=parse_logical_or(parser);
         RETURN_NULL_IF_ERROR(result->condition, 1,result);
+
     }
     current_token=get_current_token(parser);
     parsing_node_linked_list * true_branch = parse_statement(parser);
@@ -305,17 +314,18 @@ parsing_node * parse_identifier(parser * parse) {
 
 
 parsing_node * parse_comparison(parser * parse) {
-     
     parsing_node * left = parse_additive(parse);
     RETURN_NULL_IF_ERROR(left, 0)
      
     parsing_node *center=NULL;
     token current=get_current_token(parse);
-    if (is_comparaison_operator_token(current)) {
+    if (current.type==OPERATOR_TOKEN && is_comparaison_operator_token(current)) {
         center = operator_token_to_parsing_node(current);
+        RETURN_NULL_IF_ERROR(center, 1, left);
         center->left=left;
         advance(parse);
         center->right=parse_additive(parse);
+        //print_current_token(parse);
         RETURN_NULL_IF_ERROR(center->right, 2, left, center)
     }
     else {
@@ -387,9 +397,7 @@ parsing_node * parse_primary(parser * parse) {
 
 
 
-add_error (parser *parser, token t, char * message) {
-    
-}
+
 
 void write_in_error_buffer(parser *parse, token t, char * message) {
     parse->parsing_status=PARSING_ERROR;
