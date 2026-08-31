@@ -16,19 +16,28 @@
 
 
 
+typedef struct parsing_error {
+    token token;
+    char message[1024];
+} parsing_error;
+
+array_list(parsing_error)
+
 typedef struct parser {
+
     token_array_list *tokens;
     int current;
-    char parsing_error_buffer[2048];
+    parsing_error_array_list *parsing_errors;
     int parsing_status;
 
 } parser;
+
 
 bool is_an_token_of_type(token t, ...);
 token get_current_token(parser *parse);
 token get_next_token(parser *parse);
 token advance(parser *parse);
-_Bool parsing_error(parser *parse);
+_Bool has_parsing_error(parser *parse);
 parser *new_parser(token_array_list *tokens);
 _Bool is_unary_operator_token(token t);
 parsing_node *parse_main_scope(parser *parse);
