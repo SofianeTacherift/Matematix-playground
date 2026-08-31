@@ -1,6 +1,7 @@
 #include "parser.h"
 #include "token.h"
 #include <stdarg.h>
+#include <stdio.h>
 
 
 #define P_NEW_LINE printf("\n");
@@ -10,7 +11,7 @@
     return NULL;\
 } \
 
-#define ADVPARS_WHILE_NOT_CURRTYPE(PARSER, ...)  \
+#define ADV_PARSER_WHILE_NOT_CURRTYPE(PARSER, ...)  \
     while (!is_an_token_of_type( get_current_token( PARSER) , __VA_ARGS__ )) { \
         advance( PARSER );\
     } \
@@ -86,15 +87,15 @@ token advance(parser *parse ) {
     return get_current_token(parse);
 }
 
-bool parsing_error(parser *parse) {
+bool has_parsing_error(parser *parse) {
     return parse->parsing_status==PARSING_ERROR;
 }
 
 
 
 parser * new_parser(token_array_list * tokens) {
-    void* p =malloc(sizeof(parser));
-    parser *result = p;
+    parser *result=calloc(1, sizeof(parser));
+    result->parsing_errors=new_parsing_error_array_list();
     result->current=0;
     result->tokens=tokens;
     return result;
@@ -112,8 +113,10 @@ parsing_node * parse_main_scope(parser *parse) {
     while (get_current_token(parse).type!=EOF_TOKEN) {
         parsing_node_linked_list * statement = parse_statement(parse);
         if (statement==NULL) {
-            ADVPARS_WHILE_NOT_CURRTYPE(parse, DELIMITER_TOKEN, EOF_TOKEN,  NONE_TOKEN)
-            advance(parse);
+            ADV_PARSER_WHILE_NOT_CURRTYPE(parse, OPENING_SCOPE_TOKEN,  DELIMITER_TOKEN, EOF_TOKEN,  NONE_TOKEN)
+            if (get_current_token(parse).type!=OPENING_SCOPE_TOKEN) {
+                advance(parse);
+            }
         }
         merge_linked_lists(res, statement);
         free(statement);
@@ -131,8 +134,8 @@ parsing_node_linked_list * parse_scope(parser * parse) {
     while ((current=get_current_token(parse)).type!=EOF_TOKEN && current.type!=CLOSING_SCOPE_TOKEN) {
         parsing_node_linked_list * statement = parse_statement(parse);
         if (statement==NULL) {
-            ADVPARS_WHILE_NOT_CURRTYPE(parse, DELIMITER_TOKEN, CLOSING_SCOPE_TOKEN, EOF_TOKEN,  NONE_TOKEN)
-            if (get_current_token(parse).type!=CLOSING_SCOPE_TOKEN) {
+            ADV_PARSER_WHILE_NOT_CURRTYPE(parse, OPENING_SCOPE_NODE, DELIMITER_TOKEN, CLOSING_SCOPE_TOKEN, EOF_TOKEN,  NONE_TOKEN)
+            if (get_current_token(parse).type!=OPENING_SCOPE_TOKEN) {
                 advance(parse);
             }
         }
@@ -142,8 +145,7 @@ parsing_node_linked_list * parse_scope(parser * parse) {
         }
     }
 
-
-    if (current.type!=CLOSING_SCOPE_TOKEN) {
+    if (current.type!=CLOSING_SCOPE_TOKEN && parse->parsing_status!=PARSING_ERROR) {
         write_in_error_buffer(parse, current, "expected }");
         parse->parsing_status=PARSING_ERROR;
         free_parsing_node_linked_list(res);
@@ -157,7 +159,7 @@ parsing_node_linked_list * parse_scope(parser * parse) {
 
 
 parsing_node_linked_list * parse_statement(parser *parse) {
-     
+    
     token current = get_current_token(parse);
     parsing_node_linked_list * result=NULL;
 
@@ -215,7 +217,7 @@ parsing_node * parse_conditional_node(parser *parser) {
     }
     parsing_node_linked_list * true_branch = parse_statement(parser);
     if (true_branch==NULL) {
-        ADVPARS_WHILE_NOT_CURRTYPE(parser, DELIMITER_TOKEN, CLOSING_SCOPE_TOKEN, EOF_TOKEN,  NONE_TOKEN)
+        ADV_PARSER_WHILE_NOT_CURRTYPE(parser, DELIMITER_TOKEN, CLOSING_SCOPE_TOKEN, EOF_TOKEN,  NONE_TOKEN)
         if (get_current_token(parser).type!=CLOSING_SCOPE_TOKEN) {
             advance(parser);
         }
@@ -392,9 +394,9 @@ add_error (parser *parser, token t, char * message) {
 
 void write_in_error_buffer(parser *parse, token t, char * message) {
     parse->parsing_status=PARSING_ERROR;
-    snprintf(parse->parsing_error_buffer, sizeof(parse->parsing_error_buffer), "Error in parsing at line %d character %d : %s.\n", t.line+1, t.character+1, message);
-    printf(parse->parsing_error_buffer);
-    
+    parsing_error error = {.token=t};
+    snprintf(error.message, sizeof(error.message), message);
+    add_parsing_error(parse->parsing_errors, error);
 }
 
 void free_nodes(int count, ...) {
