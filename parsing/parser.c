@@ -135,9 +135,11 @@ parsing_node_linked_list * parse_scope(parser * parse) {
         parsing_node_linked_list * statement = parse_statement(parse);
         if (statement==NULL) {
             ADV_PARSER_WHILE_NOT_CURRTYPE(parse, OPENING_SCOPE_NODE, DELIMITER_TOKEN, CLOSING_SCOPE_TOKEN, EOF_TOKEN,  NONE_TOKEN)
-            if (get_current_token(parse).type!=OPENING_SCOPE_TOKEN) {
+            token current_token = get_current_token(parse);
+            if (current_token.type!=OPENING_SCOPE_TOKEN && current_token.type!=CLOSING_SCOPE_TOKEN) {
                 advance(parse);
             }
+
         }
         else {
             merge_linked_lists(res, statement);
@@ -215,13 +217,10 @@ parsing_node * parse_conditional_node(parser *parser) {
         result->condition=parse_logical_or(parser);
         RETURN_NULL_IF_ERROR(result->condition, 1,result);
     }
+    current_token=get_current_token(parser);
     parsing_node_linked_list * true_branch = parse_statement(parser);
     if (true_branch==NULL) {
-        ADV_PARSER_WHILE_NOT_CURRTYPE(parser, DELIMITER_TOKEN, CLOSING_SCOPE_TOKEN, EOF_TOKEN,  NONE_TOKEN)
-        if (get_current_token(parser).type!=CLOSING_SCOPE_TOKEN) {
-            advance(parser);
-        }
-        free_tree_node(result, true);
+        free_tree_node(result, 0);
         return NULL;
     }
     result->true_condition=true_branch->head;
