@@ -128,8 +128,11 @@ int lex_string(lexer *lexe, char *code, int start, int str_end) {
 
     }
     str[i-start]='\0';
-    token t;
-    if (strcmp("if", str)==0) {
+    token t= {0};
+    if (strcmp("while", str)==0) {
+        t.type=WHILE_TOKEN; t.line=line, t.character=character;
+    }
+    else if (strcmp("if", str)==0) {
         t.type=IF_TOKEN; t.line=line, t.character=character;
     }
     else if (strcmp("elif", str)==0) {

@@ -24,6 +24,7 @@ static char * TOKEN_TYPE_NAMES[] = {
     "IF_TOKEN",
     "ELIF_TOKEN",
     "ELSE_TOKEN",
+    "WHILE_TOKEN",
     "OPENING_PARENTHESE_TOKEN",
     "CLOSING_PARENTHESE_TOKEN",
     "OPENING_SCOPE_TOKEN",
@@ -45,6 +46,7 @@ typedef enum {
     IF_TOKEN,
     ELIF_TOKEN,
     ELSE_TOKEN,
+    WHILE_TOKEN,
     OPENING_PARENTHESE_TOKEN,
     CLOSING_PARENTHESE_TOKEN,
     OPENING_SCOPE_TOKEN,
@@ -93,7 +95,7 @@ bool is_unary_minus(token previous_token);
 
 bool is_num_token(token t);
 
-bool is_comparaison_operator_token(token t);
+bool is_comparison_operator_token(token t);
 
 
 

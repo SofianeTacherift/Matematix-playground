@@ -44,6 +44,7 @@ parsing_node *parse_main_scope(parser *parse);
 parsing_node_linked_list *parse_scope(parser *parse);
 parsing_node_linked_list *parse_statement(parser *parse);
 parsing_node_linked_list *parse_if_statement(parser *parse);
+parsing_node * parse_conditional_node(parser *parser);
 parsing_node *parse_affectation(parser *parse);
 parsing_node *parse_expression(parser *parse);
 parsing_node *parse_identifier(parser *parse);

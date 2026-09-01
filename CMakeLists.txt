@@ -10,11 +10,20 @@ include_directories(
         parsing
 )
 
+
+
 add_executable(parsing_test.out
         tests/parsing_test.c
         lexing/lexer.c
         data_structures/token.c
         parsing/parser.c
         data_structures/parsing_node.c
+        data_structures/operators.c
+)
+
+add_executable(lexing_test.out
+        tests/lexing_test.c
+        lexing/lexer.c
+        data_structures/token.c
         data_structures/operators.c
 )

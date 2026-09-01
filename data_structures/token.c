@@ -117,7 +117,7 @@ bool is_num_token(token t) {
     }
 }
 
-bool is_comparaison_operator_token(token t) {
+bool is_comparison_operator_token(token t) {
     switch (t.operation)
     {
     case EQUALS_OPERATOR:

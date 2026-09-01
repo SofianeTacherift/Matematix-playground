@@ -30,7 +30,8 @@ static char* PARSING_NODE_TYPE_STR[]= {
     "CLOSING_SCOPE_TOKEN",
     "IF_NODE",
     "ELIF_NODE",
-    "ELSE_NODE"
+    "ELSE_NODE",
+    "WHILE_NODE"
 };
 
 typedef enum parsing_node_type {
@@ -46,7 +47,8 @@ typedef enum parsing_node_type {
     CLOSING_SCOPE_NODE,
     IF_NODE,
     ELIF_NODE,
-    ELSE_NODE
+    ELSE_NODE,
+    WHILE_NODE
 
 
 } parsing_node_type;

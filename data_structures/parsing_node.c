@@ -62,12 +62,14 @@ parsing_node *  operator_token_to_parsing_node(token t) {
 int conditional_token_to_parsing_node_type(token t) {
     switch (t.type)
     {
-    case IF_TOKEN:
-        return IF_NODE;
-    case ELIF_TOKEN:
-        return ELIF_NODE;
-    case ELSE_TOKEN :
-        return ELSE_NODE;
+        case IF_TOKEN:
+            return IF_NODE;
+        case ELIF_TOKEN:
+            return ELIF_NODE;
+        case ELSE_TOKEN :
+            return ELSE_NODE;
+        case WHILE_TOKEN:
+            return WHILE_NODE;
     default:
         return NONE_NODE;
     }
@@ -103,6 +105,9 @@ void display_node_readable(parsing_node *n) {
    if (n->type==ELSE_NODE) {
         printf("else");
    }
+    if (n->type==WHILE_NODE) {
+        printf("while");
+    }
    if (n->type==AFFECTATION_NODE) {
         printf("=");
    }
@@ -177,6 +182,7 @@ void print_indentation(int indentation) {
         printf("\t");
     }
 }
+
 
 void display_tree_node_readable(parsing_node *n, int indentation) {
    if (n==NULL) {
@@ -266,7 +272,7 @@ bool is_conditional_node(parsing_node *node) {
     if (node==NULL) {
         return NULL;
     }
-    return node->type==IF_NODE || node->type==ELIF_NODE || node->type==ELSE_NODE;
+    return node->type==IF_NODE || node->type==ELIF_NODE || node->type==ELSE_NODE || node->type==WHILE_NODE;
 }
 
 // linked list
@@ -352,7 +358,7 @@ void print_parsing_node_linked_list(parsing_node_linked_list * list) {
         display_node(current);
         current=current->next;
         if (current!=NULL) {
-            printf("  ----------------------  ");
+            printf("  ");
         }
     }
     printf("\n");
