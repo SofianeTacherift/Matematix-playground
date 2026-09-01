@@ -312,6 +312,7 @@ token_array_list * lex_code(char * code) {
                 i=lex_closing_parenthese(lexe, code, i, end);
                 break;
             case ' ':
+            case '\n':
                 i++;
                 LEXER_ADV_UPDATE(lexe, charI);
                 break;
