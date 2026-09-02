@@ -15,7 +15,7 @@ typedef struct lexer {
     int total_bytes_read;
 
     char *code_buffer;
-    int buffer_end;
+    int buffer_size;
     int reading_index;
 
     int current_line;
@@ -31,7 +31,10 @@ static char ERROR_BUFFER[1024];
 
 lexer * new_lexer(void);
 
+void set_lexer_code_buffer(lexer *, char*, int);
+
 void advance_n(lexer *, int);
+
 
 void advance_check_ln(lexer *lexer) ;
 
@@ -48,6 +51,8 @@ token minus_to_token(lexer *lexer);
 
 
 void lex_code(lexer *lexer );
+
+void lex_code_from_file(lexer *lexer,char *buffer, int buffer_size, FILE *file);
 
 void write_in_lexing_error_buffer(lexer *lexe, char *message);
 

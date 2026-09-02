@@ -22,6 +22,13 @@ lexer * new_lexer() {
     return res;
 }
 
+void set_lexer_code_buffer(lexer *lexer, char* buffer, int size) {
+    free(lexer->code_buffer);
+    lexer->code_buffer=buffer;
+    lexer->buffer_size=size;
+
+}
+
 bool start_new_token(char c) {
     switch (c)
     {
@@ -56,13 +63,14 @@ void lex_number(lexer *lexe) {
     int character=lexe->current_char;
     char * number =malloc(sizeof(char)*30);
     int type=INT_TOKEN;
-    while (i<lexe->buffer_end && isdigit(code[i]) || code[i]=='.') {
+    while (i<lexe->buffer_size && isdigit(code[i]) || code[i]=='.') {
         int current_index=i-start;
         char charI=code[i];
         if (charI=='.') {
             if (type==DOUBLE_TOKEN) {
                 lexe->lexing_status=LEXING_ERROR;
                 write_in_lexing_error_buffer(lexe, "invalid number\n");
+                return;
             }
             type=DOUBLE_TOKEN;
         } 
@@ -77,7 +85,7 @@ void lex_number(lexer *lexe) {
     t.character=character;
     t.operation=NONE_OPERATOR;
 
-    if ((i<lexe->buffer_end && code[i]=='f')) {
+    if ((i<lexe->buffer_size && code[i]=='f')) {
         type=FLOAT_TOKEN;
         i++;
     }
@@ -102,7 +110,7 @@ void lex_number(lexer *lexe) {
 void lex_string(lexer *lexer) {
     char *code =lexer->code_buffer;
     int start = lexer->reading_index;
-    int str_end = lexer->buffer_end;
+    int str_end = lexer->buffer_size;
 
     int i=start;
     int current_len = 32;
@@ -213,7 +221,7 @@ int lex_comparison(lexer *lexer) {
 
     char *code = lexer->code_buffer;
     int start = lexer->reading_index;
-    int end = lexer->buffer_end;
+    int end = lexer->buffer_size;
 
 
     if (start<end-1 && code[start+1]=='=') {
@@ -268,6 +276,7 @@ void advance_check_ln(lexer *lexer) {
 
 }
 
+
 void advance_n(lexer *lexer, int n) {
     lexer->reading_index+=n;
     lexer->current_char+=n;
@@ -280,7 +289,7 @@ void lex_code(lexer *lexer) {
 
     char * code = lexer->code_buffer;
 
-    while (lexer->reading_index<lexer->buffer_end) {
+    while (lexer->reading_index<lexer->buffer_size) {
         char charI=code[lexer->reading_index];
         int res=0;
         switch (charI) {
@@ -315,12 +324,10 @@ void lex_code(lexer *lexer) {
                 advance_check_ln(lexer);
                 break;
             case '{':
-                res++;
                 add_token(lexer->tokens_list, (token){.type=OPENING_SCOPE_TOKEN, .line=lexer->current_line, .character=lexer->current_char});
                 advance_check_ln(lexer);
                 break;
             case '}':
-                res++;
                 add_token(lexer->tokens_list, (token){.type=CLOSING_SCOPE_TOKEN, .line=lexer->current_line, .character=lexer->current_char});
                 advance_check_ln(lexer);
                 break;
@@ -346,7 +353,8 @@ void lex_code(lexer *lexer) {
         }
         if (lexer->lexing_status==LEXING_ERROR) {
             fwrite(lexer->error_buffer, sizeof(char), 1024, stderr);
-            return ;
+            lexer->lexing_status=0;
+            return;
         }
 
 
@@ -355,6 +363,29 @@ void lex_code(lexer *lexer) {
     printf("\ncode lexed\n");
     add_token(lexer->tokens_list, (token) {.type=EOF_TOKEN, .line=lexer->current_line, .character=lexer->current_char});
 
+
+}
+
+int find_last_sliceable_index(const char * buffer, const int last_valid_index) {
+    for (int i=last_valid_index; i>=0 ; i--) {
+        char charI = buffer[i];
+        if (!isalnum(charI)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+
+void lex_code_from_file(lexer *lexer,char *buffer, int buffer_size, FILE *file) {
+    int n_read;
+    set_lexer_code_buffer(lexer, buffer, buffer_size);
+    while ((n_read=fread(buffer, sizeof(char), buffer_size, file))!=0) {
+        int end=find_last_sliceable_index(buffer, n_read-1);
+        lexer->buffer_size=end+1;
+        lexer->reading_index=0;
+        lex_code(lexer);
+    }
 
 }
 

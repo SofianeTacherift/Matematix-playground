@@ -4,21 +4,29 @@
 
 int main(int argc, char ** argv) {
     if (argc<2) {
-        printf("parsing_test <code>\n");
+        printf("parsing_test <file>\n");
+        return 1;
+    }
+
+    char *path = argv[1];
+    FILE *file = fopen(path, "r");
+    if (file==NULL) {
+        printf("Error : can't find file '%s'.\n", path);
         return 1;
     }
 
 
-    char * code = argv[1];
-    printf("code = '''%s'''", code);
+    printf("path= \"\"\"%s\"\"\"\n", path);
 
-    lexer * lexer = new_lexer();
-    lexer->code_buffer=code;
-    lexer->buffer_end=strlen(code);
+    char buffer[1024];
 
-    lex_code(lexer);
 
-    token_array_list *list = lexer->tokens_list;
+    lexer *lexer = new_lexer();
+
+    lex_code_from_file(lexer, buffer, sizeof(buffer), file);
+
+    token_array_list * list = lexer->tokens_list;
+
 
     printf("\ntokens list : ");
     print_token_list(list);
