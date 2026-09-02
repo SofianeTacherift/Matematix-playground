@@ -11,7 +11,14 @@ int main(int argc, char ** argv) {
 
     char * code = argv[1];
     printf("code = '''%s'''", code);
-    token_array_list *list = lex_code(code);
+
+    lexer * lexer = new_lexer();
+    lexer->code_buffer=code;
+    lexer->buffer_end=strlen(code);
+
+    lex_code(lexer);
+
+    token_array_list *list = lexer->tokens_list;
 
     printf("\ntokens list : ");
     print_token_list(list);
@@ -53,7 +60,7 @@ int main(int argc, char ** argv) {
     else {
         for (int i=0; i<parse->parsing_errors->size; i++) {
             parsing_error error = parse->parsing_errors->elements[i];
-            printf("error during parsing line %d character %d : %s \n", error.token.line, error.token.character, error.message);
+            printf("error during parsing line %d character %d : %s \n", error.token.line+1, error.token.character+1, error.message);
         }
     }
     free_tree_node(res, true);

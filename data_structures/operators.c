@@ -9,5 +9,5 @@ void print_operator(operators operation) {
 }
 
 bool is_unary_operator(operators operation) {
-    return operation==UNARY_MINUS_OPERATOR || operation==NOT_OPERATOR;
+    return operation==UNARY_MINUS_OPERATOR || operation==LOGICAL_NOT_OPERATOR;
 }

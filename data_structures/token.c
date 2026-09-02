@@ -74,7 +74,7 @@ void reverse_number_token_value(token *t) {
 }
 
 
-token operator_to_token(char c) {
+token binary_operator_to_token(char c) {
     token result=ZERO_INITIALISATION;
     result.type=OPERATOR_TOKEN;
     switch (c) {
@@ -93,15 +93,19 @@ token operator_to_token(char c) {
         case '^':
             result.operation=POWER_OPERATOR;
             break;
-
-        
+        case '&':
+            result.operation=LOGICAL_AND_OPERATOR;
+            break;
+        case '|':
+            result.operation=LOGICAL_OR_OPERATOR;
+            break;
     }
     return result;
 
 }
 
 
-bool is_unary_minus(token previous_token) {
+bool involve_unary_minus(token previous_token) {
     return (!is_num_token(previous_token) && previous_token.type!=IDENTIFIER_TOKEN);
 }
 

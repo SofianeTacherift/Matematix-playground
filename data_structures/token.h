@@ -70,6 +70,8 @@ typedef struct {
 } token;
 
 
+
+
 array_list(token);
 
 static char TOKEN_DISPLAY[TOKEN_DISPLAY_SIZE()];
@@ -87,11 +89,11 @@ void print_token(token t);
 
 void reverse_number_token_value(token *t);
 
-token operator_to_token(char c);
+token binary_operator_to_token(char c);
 
 
 
-bool is_unary_minus(token previous_token);
+bool involve_unary_minus(token previous_token);
 
 bool is_num_token(token t);
 
