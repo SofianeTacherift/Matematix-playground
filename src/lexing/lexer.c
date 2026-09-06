@@ -10,7 +10,6 @@
 
 
 
-// return true if a substring who start with c is automaticly a new token
 
 
 lexer * new_lexer() {
@@ -55,21 +54,21 @@ bool start_new_token(char c) {
     }
 }
 
-void lex_number(lexer *lexe) {
-    char * code = lexe->code_buffer;
-    int start = lexe->reading_index;
+void lex_number(lexer *lexer) {
+    char * code = lexer->code_buffer;
+    int start = lexer->reading_index;
     int i=start;
-    int line=lexe->current_line;
-    int character=lexe->current_char;
+    int line=lexer->current_line;
+    int character=lexer->current_char;
     char * number =malloc(sizeof(char)*30);
     int type=INT_TOKEN;
-    while (i<lexe->buffer_size && isdigit(code[i]) || code[i]=='.') {
+    while (i<lexer->buffer_size && isdigit(code[i]) || code[i]=='.') {
         int current_index=i-start;
         char charI=code[i];
         if (charI=='.') {
             if (type==DOUBLE_TOKEN) {
-                lexe->lexing_status=LEXING_ERROR;
-                write_in_lexing_error_buffer(lexe, "invalid number\n");
+                lexer->lexing_status=LEXING_ERROR;
+                write_in_lexing_error_buffer(lexer, "invalid number\n");
                 return;
             }
             type=DOUBLE_TOKEN;
@@ -85,7 +84,7 @@ void lex_number(lexer *lexe) {
     t.character=character;
     t.operation=NONE_OPERATOR;
 
-    if ((i<lexe->buffer_size && code[i]=='f')) {
+    if ((i<lexer->buffer_size && code[i]=='f')) {
         type=FLOAT_TOKEN;
         i++;
     }
@@ -102,8 +101,8 @@ void lex_number(lexer *lexe) {
         t.double_val=atof(number);
         break;
     }
-    advance_n(lexe, i-start);
-    add_token(lexe->tokens_list, t);
+    advance_n(lexer, i-start);
+    add_token(lexer->tokens_list, t);
 
 }
 
@@ -217,46 +216,46 @@ int lex_operator(lexer *lexer) {
 
 
 
-int lex_comparison(lexer *lexer) {
+int lex_comparison(lexer *lexe) {
 
-    char *code = lexer->code_buffer;
-    int start = lexer->reading_index;
-    int end = lexer->buffer_size;
+    char *code = lexe->code_buffer;
+    int start = lexe->reading_index;
+    int end = lexe->buffer_size;
 
 
     if (start<end-1 && code[start+1]=='=') {
         switch (code[start]) {
         case '=':
-            add_token(lexer->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=EQUALS_OPERATOR   , .character=lexer->current_char, .line=lexer->current_line});
+            add_token(lexe->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=EQUALS_OPERATOR   , .character=lexe->current_char, .line=lexe->current_line});
             break;
         case '>':
-            add_token(lexer->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=GREATER_OR_EQUAL_OPERATOR   , .character=lexer->current_char, .line=lexer->current_line});
+            add_token(lexe->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=GREATER_OR_EQUAL_OPERATOR   , .character=lexe->current_char, .line=lexe->current_line});
             break;
         case '<':
-            add_token(lexer->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=LESS_OR_EQUAL_OPERATOR , .character=lexer->current_char, .line=lexer->current_line});
+            add_token(lexe->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=LESS_OR_EQUAL_OPERATOR , .character=lexe->current_char, .line=lexe->current_line});
             break;
         default:
             break;
         }
-        advance_n(lexer, 2);
+        advance_n(lexe, 2);
         return 0;
     }
 
 
     switch (code[start]) {
     case '=':
-        add_token(lexer->tokens_list, (token) {.type=AFFECTATION_TOKEN, .character=lexer->current_char, .line=lexer->current_line});
+        add_token(lexe->tokens_list, (token) {.type=AFFECTATION_TOKEN, .character=lexe->current_char, .line=lexe->current_line});
         break;
     case '>':
-        add_token(lexer->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=GREATER_THAN_OPERATOR   , .character=lexer->current_char, .line=lexer->current_line});
+        add_token(lexe->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=GREATER_THAN_OPERATOR   , .character=lexe->current_char, .line=lexe->current_line});
         break;
     case '<':
-        add_token(lexer->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=LESS_THAN_OPERATOR  , .character=lexer->current_char, .line=lexer->current_line});
+        add_token(lexe->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=LESS_THAN_OPERATOR  , .character=lexe->current_char, .line=lexe->current_line});
         break;
     default:
         break;
     }
-    advance_n(lexer, 1);
+    advance_n(lexe, 1);
     return 0;
 
 }
@@ -356,11 +355,7 @@ void lex_code(lexer *lexer) {
             lexer->lexing_status=0;
             return;
         }
-
-
-
     }
-    printf("\ncode lexed\n");
     add_token(lexer->tokens_list, (token) {.type=EOF_TOKEN, .line=lexer->current_line, .character=lexer->current_char});
 
 

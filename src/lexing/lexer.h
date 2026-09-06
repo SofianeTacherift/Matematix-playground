@@ -38,7 +38,7 @@ void advance_n(lexer *, int);
 
 void advance_check_ln(lexer *lexer) ;
 
-void lex_number(lexer *lexe);
+void lex_number(lexer *lexer);
 
 void lex_string( lexer *lexer);
 
