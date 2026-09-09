@@ -72,7 +72,7 @@ typedef struct {
 
 
 
-array_list(token);
+array_list(token, token);
 
 static char TOKEN_DISPLAY[TOKEN_DISPLAY_SIZE()];
 

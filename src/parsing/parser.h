@@ -21,7 +21,7 @@ typedef struct parsing_error {
     char message[1024];
 } parsing_error;
 
-array_list(parsing_error)
+array_list(parsing_error, parsing_error)
 
 typedef struct parser {
 

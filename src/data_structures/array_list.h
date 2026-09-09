@@ -13,30 +13,30 @@
 
 #define list_type_name(T) T##_array_list
 
-#define array_list(T) \
+#define array_list(T, TYPE_ALIAS) \
     \
-    typedef struct list_type_name(T) { \
+    typedef struct list_type_name(TYPE_ALIAS) { \
     int size; \
     int capacity; \
     T* elements; \
-    } list_type_name(T); \
+    } list_type_name(TYPE_ALIAS); \
     \
-    static void init_##T##_list(list_type_name(T)*  list ) { \
+    static void init_##TYPE_ALIAS##_list(list_type_name(TYPE_ALIAS)*  list ) { \
     list->size=0;  \
     list->elements=malloc(sizeof(T)); \
     list->capacity=1; \
     }\
     \
-    static list_type_name(T)* new_##T##_array_list() { \
-        list_type_name(T) *array_list = malloc(sizeof(list_type_name(T))); \
-        init_##T##_list(array_list);\
+    static list_type_name(TYPE_ALIAS)* new_##TYPE_ALIAS##_array_list() { \
+        list_type_name(TYPE_ALIAS) *array_list = malloc(sizeof(list_type_name(TYPE_ALIAS))); \
+        init_##TYPE_ALIAS##_list(array_list);\
         return array_list; \
     }\
-    static void free_##T##_array_list( list_type_name(T) * list) { \
+    static void free_##TYPE_ALIAS##_array_list( list_type_name(TYPE_ALIAS) * list) { \
         free(list->elements);\
         free(list); \
     } \
-    static void add_##T(list_type_name(T)* list, T element) { \
+    static void add_##TYPE_ALIAS(list_type_name(TYPE_ALIAS)* list, T element) { \
         int size = list->size;\
         if (size>=list->capacity) { \
             list->elements=realloc(list->elements, 2*list->capacity*sizeof(T));\
@@ -46,7 +46,7 @@
         list->size++;\
     } \
     \
-    static void add_##T##_at(list_type_name(T)*list, T element, int index) {\
+    static void add_##TYPE_ALIAS##_at(list_type_name(TYPE_ALIAS)*list, T element, int index) {\
         int size = list->size;\
         if (size>=list->capacity) { \
             list->elements=realloc(list->elements, 2*list->capacity*sizeof(T));\
@@ -61,11 +61,11 @@
     }\
     \
     \
-    static void pop_##T(list_type_name(T)* list) { \
+    static void pop_##TYPE_ALIAS(list_type_name(TYPE_ALIAS)* list) { \
         list->size = max(list->size-1, 0); \
     } \
     \
-    static void delete_##T(list_type_name(T) * list, int index) { \
+    static void delete_##TYPE_ALIAS(list_type_name(TYPE_ALIAS) * list, int index) { \
         if (index>=list->size || index<0) {return;} \
         int size = list->size-(index+1);\
         T* source = list->elements+(index+1); \
@@ -74,17 +74,17 @@
         list->size--; \
     } \
     \
-    static void apply_##T##_operation(list_type_name(T)* list, void (*ptr) (T) ) { \
+    static void apply_##TYPE_ALIAS##_operation(list_type_name(TYPE_ALIAS)* list, void (*ptr) (T) ) { \
         for (int i=0;i<list->size;i++) {\
             ptr(list->elements[i]);\
         }\
     }\
     \
-    static bool T##_array_list_empty(list_type_name(T)* list) {\
+    static bool TYPE_ALIAS##_array_list_empty(list_type_name(TYPE_ALIAS)* list) {\
         return list->size==0;\
     }\
     \
-    static T *last_##T##_from(list_type_name(T) *list) { \
+    static T *last_##TYPE_ALIAS##_from(list_type_name(TYPE_ALIAS) *list) { \
         if (list->size<=0) {\
             return NULL; \
         }\
