@@ -5,7 +5,9 @@
 #include "compiler.h"
 
 
+instruction_array_list * compile_(parsing_node * node, int curr_var) {
 
+}
 
 
 
