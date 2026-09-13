@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "hash_table.h"
+#include "void_hash_table.h"
 #include <stdbool.h>
 #include <math.h>
 
@@ -220,7 +220,7 @@ void put_entry(hash_table * table, void * key,  void* value) {
 
 void print_hash_table(hash_table *table, void (print_key_function) (void*), void (print_value_function) (void*) ) {
     if (print_key_function==NULL || print_value_function==NULL) {return;}
-    printf("hash_table size=%ld capacity = %ld - elements = { ", table->size, table->capacity);
+    printf("void_hash_table size=%ld capacity = %ld - elements = { ", table->size, table->capacity);
     int count=0;
     for (int i=0; i<table->capacity; i++) {
         entry *current=(table->buckets[i]);

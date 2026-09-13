@@ -10,6 +10,7 @@
 
 
 
+
 static char * TOKEN_TYPE_NAMES[] = {
     "NONE_TOKEN",
     "VAR_TYPE_TOKEN",
@@ -69,10 +70,12 @@ typedef struct {
     int character;
 } token;
 
+ARRAY_LIST(token, token);
 
 
 
-array_list(token, token);
+
+
 
 static char TOKEN_DISPLAY[TOKEN_DISPLAY_SIZE()];
 

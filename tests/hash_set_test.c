@@ -37,8 +37,8 @@ long hash_str(char  *p) {
     return hash;
 }
 
-hash_set(int, int)
-hash_set(char*, str)
+HASH_SET(int, int)
+HASH_SET(char*, str)
 
 int main(void) {
 

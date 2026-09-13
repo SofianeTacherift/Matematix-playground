@@ -1,91 +1,204 @@
-#ifndef HASH_H
-#define HASH_H
+//
+// Created by sofiane on 11/09/2026.
+//
+
+
+#ifndef MATEMATIX_HASH_TABLE_H
+#define MATEMATIX_HASH_TABLE_H
+
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
-#include "array_list.h"
+#include <string.h>
 
-#define STR(string) #string 
-#define PSTR(str) & (char*) { STR(str) }
-#define PINT(i) & (int) { i }
-#define PLONG(l) & (long) { l }
-#define PDOUBLE( d ) & (double) { d }
-#define PFLOAT ( f ) & (float ) { f }
-#define PCHAR(c) & (char) { c }
+#define ENTRY_NAME(K,V) K##_##V##_entry
+#define HASH_TABLE_NAME(K, V) K##_##V##_hash_table
 
+#define NEW_ENTRY(K_ALIAS, V_ALIAS, KEY,VALUE) new_##K_ALIAS##_##V_ALIAS##_entry(KEY,VALUE)
 
-
-typedef struct entry {
-    void *key;
-    void *value;
-    struct entry *next;
-} entry;
-
-
-typedef struct hash_table {
-    long capacity;
-    long size;
-    entry ** buckets;
-    long (*hash) (void*);
-    bool (*equal) (void*, void *);
-    size_t key_size;
-    size_t value_size;
-} hash_table;
-
-long hash_str(void *p);
-bool equal_str(void *p1, void *p2);
-void print_str(void *p);
-
-long hash_int(void *p);
-bool equal_int(void *p1, void *p2);
-void print_int(void *p);
-
-long hash_long(void *p);
-bool equal_long(void *p1, void *p2);
-void print_long(void *p);
-
-long hash_float(void *p);
-bool equal_float(void *p1, void *p2);
-void print_float(void *p);
-
-long hash_double(void *p);
-bool equal_double(void *p1, void *p2);
-void print_double(void *p);
-
-long hash_char(void *p);
-bool equal_char(void *p1, void *p2);
-void print_char(void *p);
+#define TABLE_NAME K_ALIAS##V_ALIAS##_hash_table
+#define CONCAT(X, Y) X##Y
+#define CONCAT_MACROS(A,B) CONCAT(A,B)
 
 
 
+#define HASH_TABLE(K, V, K_ALIAS, V_ALIAS) \
+    \
+    \
+    typedef struct ENTRY_NAME(K_ALIAS, V_ALIAS) {\
+        K key;\
+        V value;\
+        struct ENTRY_NAME(K_ALIAS, V_ALIAS) *next;\
+    } ENTRY_NAME(K_ALIAS, V_ALIAS);\
+    \
+    ENTRY_NAME(K_ALIAS, V_ALIAS) *new_##K_ALIAS##_##V_ALIAS##_entry(K key, V value) {\
+        ENTRY_NAME(K_ALIAS, V_ALIAS) *res = calloc(1, sizeof ( ENTRY_NAME(K_ALIAS, V_ALIAS) ));\
+        \
+        if (res!=NULL) {\
+        res->key=key;\
+        res->value=value;\
+        }\
+        return res;\
+    }\
+    \
+    \
+    \
+    \
+    \
+    \
+    typedef struct HASH_TABLE_NAME(K_ALIAS, V_ALIAS) {\
+        size_t capacity;\
+        size_t size;\
+        ENTRY_NAME(K_ALIAS, V_ALIAS) **buckets;\
+        long (*hash_function) (K);\
+        bool (*equals_function) (K, K);\
+        void (*print_function) (K,V);\
+    } HASH_TABLE_NAME(K_ALIAS, V_ALIAS);\
+    \
+    \
+    void CONCAT_MACROS(put_to_, HASH_TABLE_NAME(K_ALIAS, V_ALIAS)) ( HASH_TABLE_NAME(K_ALIAS, V_ALIAS) *map, K key, V value);\
+    void double_##K_ALIAS##_##V_ALIAS##_capacity( HASH_TABLE_NAME(K_ALIAS, V_ALIAS) *);\
+    \
+    \
+    HASH_TABLE_NAME(K_ALIAS,V_ALIAS) *CONCAT_MACROS(new_,HASH_TABLE_NAME(K_ALIAS, V_ALIAS)) ( long (*hash_func) (K), bool (*equals_func) (K,K), void (*print_func) (K,V)) {\
+        HASH_TABLE_NAME(K_ALIAS, V_ALIAS) *res=calloc(1, sizeof (HASH_TABLE_NAME(K_ALIAS, V_ALIAS)));\
+        if (res!=NULL) {\
+            res->capacity=16;\
+            res->hash_function=hash_func;\
+            res->equals_function=equals_func;\
+            res->print_function=print_func;\
+            res->buckets=calloc(res->capacity, sizeof (ENTRY_NAME(K_ALIAS, V_ALIAS)*));\
+        }\
+        return res;\
+    }\
+    \
+    void CONCAT_MACROS(put_to_, HASH_TABLE_NAME(K_ALIAS, V_ALIAS)) ( HASH_TABLE_NAME(K_ALIAS, V_ALIAS) *map, K key, V value) { \
+        long hash=map->hash_function(key);\
+        size_t index=hash%map->capacity;\
+        if (map->buckets[index]==NULL) {\
+            map->buckets[index]=NEW_ENTRY(K_ALIAS, V_ALIAS, key, value);\
+            map->size++;\
+        }\
+        else if (map->equals_function(map->buckets[index]->key, key ) ) {map->buckets[index]->value=value;}\
+        else {\
+            ENTRY_NAME(K_ALIAS,V_ALIAS) *current=map->buckets[index];\
+            while (current->next !=NULL && !map->equals_function(key, current->key) ) {\
+                current=current->next;\
+            }\
+            if (map->equals_function(key, current->key)) {current->key=key;}\
+            else {\
+                current->next=NEW_ENTRY(K_ALIAS,V_ALIAS,key,value);\
+                map->size++;\
+                }\
+        }\
+        \
+        bool resize_needed=false;\
+        size_t capacity=map->capacity;\
+        size_t size = map->size;\
+        if ( (( size >> ((sizeof(size_t)) -2) ) & 3L) == 0L) {\
+            bool no_capacity_overflow = ( (capacity >> (sizeof(size_t) -1) ) & 1L ) == 0;\
+            resize_needed= no_capacity_overflow && (size << 2)/capacity >= 3; \
+            }\
+        \
+        if ( resize_needed ) {double_##K_ALIAS##_##V_ALIAS##_capacity(map);} \
+    }\
+    \
+    const V *CONCAT_MACROS(get_from_, HASH_TABLE_NAME(K_ALIAS, V_ALIAS))  (HASH_TABLE_NAME(K_ALIAS, V_ALIAS) *map, K key) {\
+        long hash = map->hash_function(key);\
+        size_t index = hash % map->capacity;\
+        ENTRY_NAME(K_ALIAS, V_ALIAS) *current = map->buckets[index];\
+        while (current!=NULL && !map->equals_function(key, current->key)) {\
+            current=current->next;\
+        }\
+        return (current==NULL) ? NULL : (const V*) (&current->value);\
+    }\
+    \
+    bool CONCAT_MACROS(remove_from_, HASH_TABLE_NAME(K_ALIAS, V_ALIAS)) (HASH_TABLE_NAME(K_ALIAS, V_ALIAS) *map, K key) {\
+        long hash = map->hash_function(key);\
+        size_t index = hash % map->capacity;\
+        ENTRY_NAME(K_ALIAS, V_ALIAS) *head = map->buckets[index];\
+        ENTRY_NAME(K_ALIAS, V_ALIAS) *removed=NULL;\
+        if (head==NULL) {\
+            return false;\
+        }\
+        else if (map->equals_function(head->key, key)) {\
+            map->buckets[index]=head->next;\
+            removed=head;\
+        }\
+        else {\
+            ENTRY_NAME(K_ALIAS, V_ALIAS) *current = head;\
+            while (current->next!=NULL && !map->equals_function(current->next->key, key)) {\
+                current=current->next;\
+            }\
+            if (current->next!=NULL) {\
+                current->next=current->next->next;\
+                removed=current->next;\
+            }\
+        }\
+        if (removed!=NULL) {\
+            free(removed);\
+            map->size--;\
+            return true;\
+        }\
+        return false;\
+    }\
+    \
+    \
+    \
+    void double_##K_ALIAS##_##V_ALIAS##_capacity( HASH_TABLE_NAME(K_ALIAS, V_ALIAS) *map) {\
+        size_t old_capacity=map->capacity;\
+        map->capacity*=2;\
+        map->buckets=realloc(map->buckets, map->capacity * sizeof(ENTRY_NAME(K_ALIAS, V_ALIAS)*));\
+        memset(map->buckets+old_capacity, 0, map->capacity - old_capacity);\
+        ENTRY_NAME(K_ALIAS, V_ALIAS) *sentinel=calloc(1, sizeof( ENTRY_NAME(K_ALIAS, V_ALIAS)));\
+        for (size_t i =0 ; i<old_capacity; i++) {\
+            sentinel->next = map->buckets[i];\
+            ENTRY_NAME(K_ALIAS, V_ALIAS) *current=sentinel;\
+            while (current->next!=NULL) {\
+                ENTRY_NAME(K_ALIAS, V_ALIAS) *next_entry = current->next;\
+                size_t index = map->hash_function(next_entry->key) % map->capacity;\
+                if (index!=i) {\
+                    if (next_entry==map->buckets[i]) {\
+                        map->buckets[i]=next_entry->next;\
+                    }\
+                    current->next=next_entry->next;\
+                    next_entry->next=map->buckets[index];\
+                    map->buckets[index]=next_entry;\
+                }\
+                if (current->next!=NULL) {\
+                    current=current->next;\
+                }\
+            }\
+        }\
+        free(sentinel);\
+    }\
+    \
+    void CONCAT_MACROS(print_, HASH_TABLE_NAME(K_ALIAS, V_ALIAS)) (HASH_TABLE_NAME(K_ALIAS, V_ALIAS) *map) {\
+        printf("hash_table[ capacity : %lu - size : %lu  { ", map->capacity, map->size);\
+        size_t count=0;\
+        for (size_t i=0; count<map->size && i<map->capacity; i++) {\
+            ENTRY_NAME(K_ALIAS, V_ALIAS) *current = map->buckets[i];\
+            while (count<map->size && current!=NULL) {\
+                count++;\
+                map->print_function(current->key, current->value);\
+                printf(" ");\
+                if (count<map->size) {printf(" - ")  ;}\
+                \
+                \
+                current=current->next;\
+            }\
+        }\
+        \
+        printf("} ]\n");\
+    }\
+    \
+    \
+    \
+    \
+    \
+    \
+    \
+    \
 
 
-
-
-
-
-hash_table *new_hash_table(size_t key_size, size_t value_size, long (*hash) (void*), bool (*equal) (void*, void*) );
-
-
-entry * new_entry(void *key, void *value, size_t key_size, size_t value_size);
-
-void free_entry(entry * to_free);
-
-
-void set_hash_table_capacity(hash_table * table, size_t new_capacity);
-
-void put_entry(hash_table * table, void * key,  void* value);
-
-void print_hash_table(hash_table *table, void (print_key_function) (void*), void (print_value_function) (void*) );
-
-bool contains_key(hash_table * table, void *key);
-
-void remove_key(hash_table *table, void * key);
-
-
-void * get_value(hash_table * table, void *key);
-
-
-
-
-
-
-#endif
+#endif //MATEMATIX_HASH_TABLE_H

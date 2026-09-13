@@ -22,7 +22,7 @@ typedef struct {
 } instruction;
 
 
-array_list(instruction, instruction)
+ARRAY_LIST(instruction, instruction)
 
 
 typedef struct compiler {

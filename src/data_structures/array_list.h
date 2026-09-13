@@ -13,7 +13,7 @@
 
 #define list_type_name(T) T##_array_list
 
-#define array_list(T, TYPE_ALIAS) \
+#define ARRAY_LIST(T, TYPE_ALIAS) \
     \
     typedef struct list_type_name(TYPE_ALIAS) { \
     int size; \
@@ -28,9 +28,9 @@
     }\
     \
     static list_type_name(TYPE_ALIAS)* new_##TYPE_ALIAS##_array_list() { \
-        list_type_name(TYPE_ALIAS) *array_list = malloc(sizeof(list_type_name(TYPE_ALIAS))); \
-        init_##TYPE_ALIAS##_list(array_list);\
-        return array_list; \
+        list_type_name(TYPE_ALIAS) *ARRAY_LIST = malloc(sizeof(list_type_name(TYPE_ALIAS))); \
+        init_##TYPE_ALIAS##_list(ARRAY_LIST);\
+        return ARRAY_LIST; \
     }\
     static void free_##TYPE_ALIAS##_array_list( list_type_name(TYPE_ALIAS) * list) { \
         free(list->elements);\

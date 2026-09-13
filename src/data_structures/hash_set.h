@@ -21,7 +21,7 @@
 
 
 
-    #define hash_set(T, TYPE_ALIAS) \
+    #define HASH_SET(T, TYPE_ALIAS) \
      \
         typedef struct CELL_TYPE_NAME(TYPE_ALIAS) {\
             T value; \
