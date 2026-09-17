@@ -29,7 +29,7 @@
         }  CELL_TYPE_NAME(TYPE_ALIAS);\
         \
         \
-        CELL_TYPE_NAME(TYPE_ALIAS) *create_##TYPE_ALIAS##_cell(T element) { \
+        static CELL_TYPE_NAME(TYPE_ALIAS) *create_##TYPE_ALIAS##_cell(T element) { \
         CELL_TYPE_NAME(TYPE_ALIAS) *result = calloc(1, sizeof(CELL_TYPE_NAME(TYPE_ALIAS)));\
         if (result!=NULL) {result->value=element;}\
         return result;\

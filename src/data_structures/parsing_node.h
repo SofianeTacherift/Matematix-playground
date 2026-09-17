@@ -3,6 +3,7 @@
 #include "token.h"
 #include "parsing_node.h"
 #include <stdlib.h>
+#include "hash_map.h"
 
 
 
@@ -12,6 +13,9 @@
 
 #define PARSING_ERROR 1
 #define NO_PARSING_ERROR 0
+
+
+
 
 
 
@@ -89,12 +93,20 @@ typedef struct parsing_node {
     };
 } parsing_node;
 
+
+typedef struct jump_infos {
+    parsing_node *node;
+    bool inverse_condition;
+} jump_key;
+
+
 typedef struct parsing_node_linked_list {
     parsing_node *head;
     parsing_node *end;
 } parsing_node_linked_list;
 
 
+HASH_MAP(parsing_node *, parsing_node*, p_node,p_node )
 
 parsing_node *new_parsing_node(void);
 parsing_node *new_parsing_node_of(int type);
@@ -117,4 +129,6 @@ inline bool parsing_node_linked_list_empty(parsing_node_linked_list * list);
 void merge_linked_lists(parsing_node_linked_list * list, parsing_node_linked_list *to_add);
 void free_parsing_node_linked_list(parsing_node_linked_list*);
 void print_parsing_node_linked_list(parsing_node_linked_list * list) ;
+p_node_p_node_hash_map * map_most_not_logical_node_left(parsing_node *condition);
+p_node_p_node_hash_map *map_condition_jumps(parsing_node *condition);
 #endif

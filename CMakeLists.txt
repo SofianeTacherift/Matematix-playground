@@ -8,6 +8,7 @@ include_directories(
         src/data_structures
         src/lexing
         src/parsing
+        src/compilation
 )
 
 
@@ -26,4 +27,16 @@ add_executable(lexing_test.out
         src/lexing/lexer.c
         src/data_structures/token.c
         src/data_structures/operators.c
+)
+
+add_executable(compilation_test.out
+        tests/compilation_test.c
+        src/lexing/lexer.c
+        src/data_structures/token.c
+        src/parsing/parser.c
+        src/data_structures/parsing_node.c
+        src/data_structures/operators.c
+        src/compilation/compiler.c
+        src/compilation/instructions.c
+        src/compilation/instructions_block.c
 )

@@ -365,6 +365,89 @@ void print_parsing_node_linked_list(parsing_node_linked_list * list) {
 }
 
 
+long hash_node_addr(parsing_node *node) {
+    return  (long) node;
+}
+
+bool equals_node_add(parsing_node *n1, parsing_node *n2) {
+    return n1==n2;
+}
+
+void display_node_node_entry(parsing_node *n1, parsing_node *n2) {
+    printf("{");
+    display_node(n1);
+    printf(" : ");
+    display_node(n2);
+    printf("}");
+}
+
+void display_tree_node_tree_node(parsing_node *n1, parsing_node *n2) {
+    printf("{");
+    display_tree_node(n1);
+    printf(" : ");
+    display_tree_node(n2);
+    printf("}");
+}
+
+
+parsing_node * most_left_non_logical_operand_node(parsing_node *node, p_node_p_node_hash_map *map) {
+    if (node==NULL) {
+        return NULL;
+    }
+
+    if (node->type!=BINARY_NODE || (node->operation!=LOGICAL_OR_OPERATOR && node->operation!=LOGICAL_AND_OPERATOR )) {
+        return node;
+    }
+
+
+    parsing_node *res = most_left_non_logical_operand_node(node->left, map );
+    put_to_p_node_p_node_hash_map(map, node, res);
+    if (node->right->type==BINARY_NODE && (node->right->operation==LOGICAL_OR_OPERATOR || node->right->operation==LOGICAL_AND_OPERATOR )) {
+        most_left_non_logical_operand_node(node->right, map);
+    }
+    else {
+        put_to_p_node_p_node_hash_map(map, node->right, node->right);
+    }
+
+    return res;
+}
+
+
+
+
+p_node_p_node_hash_map * map_most_not_logical_node_left(parsing_node *condition) {
+    p_node_p_node_hash_map *res=new_p_node_p_node_hash_map(hash_node_addr, equals_node_add, display_node_node_entry);
+    most_left_non_logical_operand_node(condition, res);
+    return res;
+}
+
+void map_condition_jumps_recursive(parsing_node *node, parsing_node *last_or, p_node_p_node_hash_map *most_left_node_map, p_node_p_node_hash_map *control_map) {
+    if (node->type==BINARY_NODE && (node->operation==LOGICAL_OR_OPERATOR || node->operation==LOGICAL_AND_OPERATOR)) {
+        parsing_node *or = (node->operation==LOGICAL_OR_OPERATOR) ? node : last_or;
+        map_condition_jumps_recursive(node->left, or, most_left_node_map, control_map);
+        map_condition_jumps_recursive(node->right, last_or, most_left_node_map, control_map);
+    }
+    else {
+        const parsing_node **next_jump_ptr= ( last_or ==NULL ) ? NULL : get_from_p_node_p_node_hash_map( most_left_node_map, last_or->right);
+        parsing_node *next_jump= next_jump_ptr ? (parsing_node*) *next_jump_ptr : NULL ;
+        put_to_p_node_p_node_hash_map(control_map, node, next_jump);
+    }
+
+}
+
+
+
+p_node_p_node_hash_map *map_condition_jumps(parsing_node *condition) {
+    p_node_p_node_hash_map *most_left_not_logical= map_most_not_logical_node_left(condition);
+    p_node_p_node_hash_map *jumps = new_p_node_p_node_hash_map(hash_node_addr, equals_node_add, display_tree_node_tree_node);
+    map_condition_jumps_recursive(condition, NULL, most_left_not_logical, jumps);
+    free_p_node_p_node_hash_map(most_left_not_logical);
+    return jumps;
+
+}
+
+
+
 
 
 

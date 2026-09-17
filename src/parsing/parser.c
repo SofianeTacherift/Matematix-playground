@@ -120,8 +120,10 @@ parsing_node * parse_main_scope(parser *parse) {
                 advance(parse);
             }
         }
-        merge_linked_lists(res, statement);
-        free(statement);
+        else {
+            merge_linked_lists(res, statement);
+            free(statement);
+        }
     }
     parsing_node *result= res->head;
     free(res);
@@ -160,6 +162,7 @@ parsing_node_linked_list * parse_scope(parser * parse) {
     parsing_node * head = new_parsing_node_of(OPENING_SCOPE_NODE);
     head->right=scope->head;
     result->head=head;
+    result->end=head;
 
     free(scope);
 

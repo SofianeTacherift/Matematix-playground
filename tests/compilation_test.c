@@ -1,6 +1,10 @@
+//
+// Created by sofiane on 13/09/2026.
+//
+
 #include "parser.h"
 #include "lexer.h"
-
+#include "compiler.h"
 
 int main(int argc, char ** argv) {
     if (argc<2) {
@@ -8,8 +12,18 @@ int main(int argc, char ** argv) {
         return 1;
     }
 
-    // char *path = argv[1];
-    char *path="/home/sofiane/Documents/PROJETS/PROGRAMMING_LANGUAGE/ressources/mxp_files/truc.mxp";
+    // char *dir = argv[1];
+    // char path[strlen(dir)+3];
+    //
+    // memcpy(path+2, dir, strlen(dir));
+    //
+    // path[0]='.'; path[1]='/';
+    // path[strlen(dir)+2]='\0';
+    // printf("%s\n", path);
+
+    // char * path=argv[1];
+
+    char *path="/home/sofiane/Documents/PROJETS/PROGRAMMING_LANGUAGE/ressources/mxp_files/test.mxp";
     FILE *file = fopen(path, "r");
     if (file==NULL) {
         printf("Error : can't find file '%s'.\n", path);
@@ -39,7 +53,7 @@ int main(int argc, char ** argv) {
     }
 
 
- 
+
 
 
 
@@ -73,11 +87,18 @@ int main(int argc, char ** argv) {
         }
     }
 
-    print_p_node_p_node_hash_map(map_condition_jumps(res));
+    compiler *compiler = new_compiler(res);
+    compile_main_scope(compiler, res);
 
+    printf("compilation result (%d instructions):\n", compiler->instructions_blocks_list->size);
+
+    instructions_block_array_list *instructions_block = compiler->instructions_blocks_list;
+
+
+
+    apply_instructions_block_operation(instructions_block, print_instruction_block );
     free_tree_node(res, true);
     free_token_array_list(list);
-
     return 0;
-    
+
 }
