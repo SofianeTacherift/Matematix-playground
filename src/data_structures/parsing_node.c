@@ -7,6 +7,51 @@
 
 #define PRINT_SPACE printf(" ");
 
+
+
+long hash_node_addr(parsing_node *node) {
+    return  (long) node;
+}
+
+bool equals_node_addr(parsing_node *n1, parsing_node *n2) {
+    return n1==n2;
+}
+
+long hash_size_t(size_t i) {
+    return (long) i;
+}
+
+bool equals_size_t(size_t i1, size_t i2) {
+    return i1==i2;
+}
+
+void print_p_node_size_t_entry(parsing_node *p, size_t i) {
+    printf("{ ");
+    display_node(p);
+    printf(" : %d}\n", (int) i);
+}
+
+
+
+
+void print_jump_infos(jump_infos jump_inf) {
+    printf(" jump_infos[ jumpif : %s - jump_node : ", jump_inf.jump_if ? "TRUE" : "FALSE"   );
+    display_node(jump_inf.jump_node);
+    printf(" - next_condition : ");
+    display_node(jump_inf.next_node);
+    printf(" ]\n");
+}
+
+
+void print_node_jump_entry(parsing_node *node, jump_infos infos) {
+    printf("{");
+    display_node(node);
+    printf(" : ");
+    print_jump_infos(infos);
+    printf("}");
+}
+
+
 parsing_node * new_parsing_node() {
     parsing_node *res=calloc(1, sizeof(parsing_node));
     return res;
@@ -34,9 +79,10 @@ parsing_node * token_num_to_node(token t) {
         parsing_node->double_val=t.double_val;
         break;
     default:
-        return NULL;
-    return parsing_node;
+            free(parsing_node);
+            return NULL;
     }
+    return parsing_node;
 }
 
 
@@ -87,6 +133,8 @@ void print_num_val(parsing_node *n) {
         case DOUBLE_NODE:
             printf("%lf", n->double_val);
             break;
+            default:
+            break;
     }
 }
 
@@ -118,7 +166,7 @@ void display_node_readable(parsing_node *n) {
         printf("}");
     }
     if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
-        printf("%s", operators_str[n->operation]);
+        printf("%s", OPERATORS_STR[n->operation]);
     }
     if (n->type==VARIABLE_NODE) {
         printf("%s", n->string_val);
@@ -128,11 +176,14 @@ void display_node_readable(parsing_node *n) {
     }
 }
 void display_node(parsing_node * n) {
-    if (n==NULL) {printf("NULL");}
+    if (n==NULL) {
+        printf("NULL");
+        return;
+    }
     printf("parsing_node[ type=%s ", PARSING_NODE_TYPE_STR[n->type]);
     if (n->type==BINARY_NODE || n->type==UNARY_NODE) {
         printf("operation='");
-        printf("%s", operators_str[n->operation]);
+        printf("%s", OPERATORS_STR[n->operation]);
         printf("' ");
     }
     if (n->type==VARIABLE_NODE) {
@@ -275,6 +326,25 @@ bool is_conditional_node(parsing_node *node) {
     return node->type==IF_NODE || node->type==ELIF_NODE || node->type==ELSE_NODE || node->type==WHILE_NODE;
 }
 
+bool is_comparison_node(parsing_node *node) {
+    if (node->type!=BINARY_NODE) {return false;}
+    switch (node->operation) {
+        case EQUALS_OPERATOR:
+        case GREATER_THAN_OPERATOR:
+        case GREATER_OR_EQUAL_OPERATOR:
+        case LESS_THAN_OPERATOR:
+        case LESS_OR_EQUAL_OPERATOR:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool is_logical_node(parsing_node *node) {
+    return node->type==BINARY_NODE && (node->operation==LOGICAL_OR_OPERATOR || node->operation==LOGICAL_AND_OPERATOR);
+}
+
+
 // linked list
 
 
@@ -365,13 +435,7 @@ void print_parsing_node_linked_list(parsing_node_linked_list * list) {
 }
 
 
-long hash_node_addr(parsing_node *node) {
-    return  (long) node;
-}
 
-bool equals_node_add(parsing_node *n1, parsing_node *n2) {
-    return n1==n2;
-}
 
 void display_node_node_entry(parsing_node *n1, parsing_node *n2) {
     printf("{");
@@ -383,9 +447,11 @@ void display_node_node_entry(parsing_node *n1, parsing_node *n2) {
 
 void display_tree_node_tree_node(parsing_node *n1, parsing_node *n2) {
     printf("{");
-    display_tree_node(n1);
+    if (n1==NULL) {printf("NULL");}
+    else {display_tree_node(n1);}
     printf(" : ");
-    display_tree_node(n2);
+    if (n2==NULL) {printf("NULL");}
+    else {display_tree_node(n2);}
     printf("}");
 }
 
@@ -413,38 +479,67 @@ parsing_node * most_left_non_logical_operand_node(parsing_node *node, p_node_p_n
 }
 
 
+void map_most_not_logical_node_left(parsing_node *condition, p_node_p_node_hash_map *map) {
+    most_left_non_logical_operand_node(condition, map);
 
-
-p_node_p_node_hash_map * map_most_not_logical_node_left(parsing_node *condition) {
-    p_node_p_node_hash_map *res=new_p_node_p_node_hash_map(hash_node_addr, equals_node_add, display_node_node_entry);
-    most_left_non_logical_operand_node(condition, res);
-    return res;
 }
 
-void map_condition_jumps_recursive(parsing_node *node, parsing_node *last_or, p_node_p_node_hash_map *most_left_node_map, p_node_p_node_hash_map *control_map) {
+
+HASH_MAP(parsing_node *, size_t, p_node, size_t)
+
+
+void map_condition_jumps_recursive(parsing_node *node, parsing_node *last_or, parsing_node *last_and, parsing_node* parent, p_node_p_node_hash_map *most_left_node_map, p_node_size_t_hash_map *levels, p_node_jump_hash_map *jumps_map) {
+
+    put_to_p_node_size_t_hash_map(levels, node, * (get_from_p_node_size_t_hash_map(levels, parent)) +1);
+
     if (node->type==BINARY_NODE && (node->operation==LOGICAL_OR_OPERATOR || node->operation==LOGICAL_AND_OPERATOR)) {
         parsing_node *or = (node->operation==LOGICAL_OR_OPERATOR) ? node : last_or;
-        map_condition_jumps_recursive(node->left, or, most_left_node_map, control_map);
-        map_condition_jumps_recursive(node->right, last_or, most_left_node_map, control_map);
+        parsing_node *and = (node->operation==LOGICAL_AND_OPERATOR) ? node : last_and;
+        map_condition_jumps_recursive(node->left, or, and, node, most_left_node_map,levels, jumps_map);
+        map_condition_jumps_recursive(node->right, last_or, last_and, node , most_left_node_map, levels, jumps_map);
     }
     else {
-        const parsing_node **next_jump_ptr= ( last_or ==NULL ) ? NULL : get_from_p_node_p_node_hash_map( most_left_node_map, last_or->right);
-        parsing_node *next_jump= next_jump_ptr ? (parsing_node*) *next_jump_ptr : NULL ;
-        put_to_p_node_p_node_hash_map(control_map, node, next_jump);
+        bool jump_if= parent==NULL || parent->operation==LOGICAL_OR_OPERATOR; // if parent type is logical and, we jump only if the condition is false so we must store it
+        parsing_node *last_checkpoint = (jump_if) ? last_and: last_or;
+        parsing_node *next_condition_root = (jump_if) ? last_or : last_and;
+
+        parsing_node **jump_node_ptr = (parsing_node**) ( last_checkpoint==NULL ? NULL :  get_from_p_node_p_node_hash_map(most_left_node_map, last_checkpoint->right));
+        parsing_node *jump_node= jump_node_ptr ? *jump_node_ptr : NULL;
+
+        parsing_node **next_node = (parsing_node **)  (next_condition_root==NULL ? NULL : get_from_p_node_p_node_hash_map(most_left_node_map, next_condition_root->right));
+        parsing_node *next_condition =  (next_condition_root) ? *next_node : NULL;
+
+        jump_infos infos = {0};
+        const size_t *jump_node_level_ptr =  get_from_p_node_size_t_hash_map(levels, last_checkpoint);
+        const size_t *next_condition_level_ptr = get_from_p_node_size_t_hash_map(levels, next_condition_root);
+        size_t jump_node_level = jump_node_level_ptr ? *jump_node_level_ptr  : 0;
+        size_t next_condition_level = next_condition_level_ptr ? *next_condition_level_ptr : 0;
+        if (jump_node_level<next_condition_level || (jump_node_level==next_condition_level && jump_if)) {
+            infos=(jump_infos) {.jump_if = jump_if, .jump_node = jump_node, .next_node = next_condition}; // T
+        }
+        else {
+            infos=(jump_infos) {.jump_if =  !jump_if,  .jump_node =next_condition,  .next_node =  jump_node};
+        }
+
+        put_to_p_node_jump_hash_map(jumps_map, node, infos );
     }
+}
+
+p_node_jump_hash_map *map_condition_jumps(parsing_node *root) {
+    p_node_p_node_hash_map *most_left = new_p_node_p_node_hash_map(hash_node_addr, equals_node_addr, display_node_node_entry);
+    map_most_not_logical_node_left(root, most_left);
+    p_node_jump_hash_map *res =  new_p_node_jump_hash_map(hash_node_addr, equals_node_addr, print_node_jump_entry);
+    p_node_size_t_hash_map *levels = new_p_node_size_t_hash_map(hash_node_addr, equals_node_addr, print_p_node_size_t_entry);
+    put_to_p_node_size_t_hash_map(levels, NULL , 0);
+    map_condition_jumps_recursive(root, NULL, NULL, NULL, most_left,levels,  res);
+    free_p_node_p_node_hash_map(most_left);
+    free_p_node_size_t_hash_map(levels);
+    return res;
 
 }
 
 
 
-p_node_p_node_hash_map *map_condition_jumps(parsing_node *condition) {
-    p_node_p_node_hash_map *most_left_not_logical= map_most_not_logical_node_left(condition);
-    p_node_p_node_hash_map *jumps = new_p_node_p_node_hash_map(hash_node_addr, equals_node_add, display_tree_node_tree_node);
-    map_condition_jumps_recursive(condition, NULL, most_left_not_logical, jumps);
-    free_p_node_p_node_hash_map(most_left_not_logical);
-    return jumps;
-
-}
 
 
 

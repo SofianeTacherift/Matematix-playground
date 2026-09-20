@@ -307,8 +307,15 @@ void lex_code(lexer *lexer) {
                 lex_operator(lexer);
                 break;
             case '!':
-                add_token(lexer->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=LOGICAL_NOT_OPERATOR   , .character=lexer->current_char, .line=lexer->current_line});
-                advance_check_ln(lexer);
+                if (lexer->reading_index < lexer->buffer_size-1 && lexer->code_buffer[lexer->reading_index+1]=='=') {
+                    add_token(lexer->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=LOGICAL_NOT_OPERATOR   , .character=lexer->current_char, .line=lexer->current_line});
+
+                    advance_n(lexer, 2);
+
+                }
+                else {
+                    advance_check_ln(lexer);
+                }
                 break;
             case DELIMITATION:
                 add_token(lexer->tokens_list, (token) {.type=DELIMITER_TOKEN ,.line=lexer->current_line, .character=lexer->current_char  });

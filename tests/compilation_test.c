@@ -12,18 +12,24 @@ int main(int argc, char ** argv) {
         return 1;
     }
 
-    // char *dir = argv[1];
-    // char path[strlen(dir)+3];
+    // char *file_name = argv[1];
     //
-    // memcpy(path+2, dir, strlen(dir));
+    // char *dir = "./ressources/mxp_files/";
     //
-    // path[0]='.'; path[1]='/';
-    // path[strlen(dir)+2]='\0';
+    // char path[strlen(file_name)+strlen(dir)+2];
+    //
+    // memcpy(path+2, file_name, strlen(file_name));
+    //
+    // strcpy(path, dir);
+    // strcat(path, file_name);
+
+    // char *path= "/home/sofiane/Documents/PROJETS/PROGRAMMING_LANGUAGE/ressources/mxp_files/truc.mxp";
     // printf("%s\n", path);
 
     // char * path=argv[1];
-
+    //
     char *path="/home/sofiane/Documents/PROJETS/PROGRAMMING_LANGUAGE/ressources/mxp_files/test.mxp";
+
     FILE *file = fopen(path, "r");
     if (file==NULL) {
         printf("Error : can't find file '%s'.\n", path);
@@ -85,18 +91,23 @@ int main(int argc, char ** argv) {
             parsing_error error = parse->parsing_errors->elements[i];
             printf("error during parsing line %d character %d : %s \n", error.token.line+1, error.token.character+1, error.message);
         }
+        return 2;
     }
+
+    
+
 
     compiler *compiler = new_compiler(res);
     compile_main_scope(compiler, res);
 
-    printf("compilation result (%d instructions):\n", compiler->instructions_blocks_list->size);
+
+
+    printf("\n\n\ncompilation result (%d):\n", compiler->instructions_blocks_list->size);
 
     instructions_block_array_list *instructions_block = compiler->instructions_blocks_list;
 
 
-
-    apply_instructions_block_operation(instructions_block, print_instruction_block );
+    apply_instructions_block_operation(instructions_block, print_instruction_block_recursive );
     free_tree_node(res, true);
     free_token_array_list(list);
     return 0;

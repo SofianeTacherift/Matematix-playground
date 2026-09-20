@@ -17,10 +17,11 @@ typedef enum {
     BINARY_ADD_INSTRUCTION,
     BINARY_MULT_INSTRUCTION,
     GOTO,
+    IF_CMPEQ,
     IF_CMPNE,
     IF_CMPGT,
-    IF_CMPGTE,
     IF_CMPLT,
+    IF_CMPGTE,
     IF_CMPTLTE
 } instruction_type;
 
@@ -33,10 +34,11 @@ static char * INSTRUCTION_TYPE_STR[] = {
      "BINARY_ADD",
      "BINARY_MULT",
     "GOTO",
+    "IF_CMPEQ",
     "IF_CMPNE",
     "IF_CMPGT",
-    "IF_CMPGTE",
     "IF_CMPLT",
+    "IF_CMPGTE",
     "IF_CMPTLTE"
 };
 
@@ -54,7 +56,14 @@ ARRAY_LIST(instruction, instruction)
 
 int binary_node_to_instruction_type(parsing_node *node);
 
+int comparison_operator_to_instruction_type(int t);
+
+
 void print_instruction_readable(instruction instruction);
+
+
+
+
 
 
 #endif //MATEMATIX_INSTRUCTIONS_H

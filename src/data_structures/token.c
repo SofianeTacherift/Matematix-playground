@@ -39,7 +39,7 @@ void write_in_token_buffer(token t) {
             snprintf(TOKEN_DISPLAY,TOKEN_DISPLAY_SIZE(), "token[ type=IDENTIFIER_TOKEN - value=%s - line=%d - char=%d ]", t.string_val, t.line, t.character );
             break;
         case OPERATOR_TOKEN:
-            snprintf(TOKEN_DISPLAY,TOKEN_DISPLAY_SIZE(), "token[ type=OPERATOR_TOKEN - operation='%s' - line=%d - char=%d ]", operators_str[t.operation] , t.line, t.character );
+            snprintf(TOKEN_DISPLAY,TOKEN_DISPLAY_SIZE(), "token[ type=OPERATOR_TOKEN - operation='%s' - line=%d - char=%d ]", OPERATORS_STR[t.operation] , t.line, t.character );
             break;
         default:
             snprintf(TOKEN_DISPLAY,TOKEN_DISPLAY_SIZE(), "token[ type=%s - line=%d - char=%d type_int : %d]", TOKEN_TYPE_NAMES[t.type], t.line, t.character, t.type);

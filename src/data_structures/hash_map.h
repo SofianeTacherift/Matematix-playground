@@ -142,6 +142,17 @@ return removed_count;\
         return (current==NULL) ? NULL : (const V*) (&current->value);\
     }\
     \
+    \
+    static const ENTRY_NAME(K_ALIAS, V_ALIAS) *CONCAT_MACROS(get_entry_from_, HASH_MAP_NAME(K_ALIAS, V_ALIAS))  (HASH_MAP_NAME(K_ALIAS, V_ALIAS) *map, K key) {\
+        long hash = map->hash_function(key);\
+        size_t index = hash % map->capacity;\
+        ENTRY_NAME(K_ALIAS, V_ALIAS) *current = map->buckets[index];\
+        while (current!=NULL && !map->equals_function(key, current->key)) {\
+            current=current->next;\
+        }\
+        return (current==NULL) ? NULL : (const ENTRY_NAME(K_ALIAS, V_ALIAS)*) (&current);\
+    }\
+    \
     static bool CONCAT_MACROS(remove_from_, HASH_MAP_NAME(K_ALIAS, V_ALIAS)) (HASH_MAP_NAME(K_ALIAS, V_ALIAS) *map, K key) {\
         long hash = map->hash_function(key);\
         size_t index = hash % map->capacity;\

@@ -13,6 +13,7 @@ typedef enum operators {
     UNARY_MINUS_OPERATOR,
     LOGICAL_NOT_OPERATOR,
     EQUALS_OPERATOR,
+    NOT_EQUALS_OPERATOR,
     GREATER_THAN_OPERATOR,
     LESS_THAN_OPERATOR,
     GREATER_OR_EQUAL_OPERATOR,
@@ -21,7 +22,11 @@ typedef enum operators {
     LOGICAL_AND_OPERATOR
 } operators;
 
-static char* operators_str[] = {
+
+
+
+
+static char* OPERATORS_STR[] = {
     "NONE_OPERATOR",
     "+",
     "-",
@@ -31,6 +36,7 @@ static char* operators_str[] = {
     "-",
     "!",
     "==",
+    "!=",
     ">",
     "<",
     ">=",
@@ -40,6 +46,8 @@ static char* operators_str[] = {
 };
 
 void print_operator(operators operation);
+operators inverse_comparison_operator(int operator);
+
 bool is_unary_operator(operators operation);
 
 

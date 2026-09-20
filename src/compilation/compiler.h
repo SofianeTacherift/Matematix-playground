@@ -44,5 +44,7 @@ void compile_affectation(compiler *compiler,instructions_block *block,  parsing_
 void compile_instruction(compiler *compiler, instructions_block *block,parsing_node *node);
 void compile_(compiler *compiler);
 
+void compile_logical_expression(compiler *compiler, instructions_block *block, parsing_node *node, instructions_block *true_block, instructions_block *false_block) ;
+
 
 #endif //MATEMATIX_COMPILATOR_H
