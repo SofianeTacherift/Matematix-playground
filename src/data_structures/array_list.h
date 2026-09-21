@@ -23,8 +23,8 @@
     \
     static void init_##TYPE_ALIAS##_list(LIST_NAME(TYPE_ALIAS)*  list ) { \
     list->size=0;  \
-    list->elements=malloc(sizeof(T)); \
-    list->capacity=1; \
+    list->capacity=16; \
+    list->elements=malloc(sizeof(T)*list->capacity); \
     }\
     \
     static LIST_NAME(TYPE_ALIAS)* new_##TYPE_ALIAS##_array_list() { \

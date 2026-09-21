@@ -99,15 +99,16 @@ int main(int argc, char ** argv) {
 
     compiler *compiler = new_compiler(res);
     compile_main_scope(compiler, res);
+    link_instructions_blocks(compiler);
 
 
 
     printf("\n\n\ncompilation result (%d):\n", compiler->instructions_blocks_list->size);
 
     instructions_block_array_list *instructions_block = compiler->instructions_blocks_list;
-
-
-    apply_instructions_block_operation(instructions_block, print_instruction_block_recursive );
+    for (size_t i = 0 ; i<instructions_block->size; i++) {
+        print_instructions_block_readable(instructions_block->elements[i],0);
+    }
     free_tree_node(res, true);
     free_token_array_list(list);
     return 0;

@@ -205,10 +205,11 @@ return removed_count;\
                     next_entry->next=map->buckets[index];\
                     map->buckets[index]=next_entry;\
                 }\
-                if (current->next!=NULL) {\
+                else if (current->next!=NULL) {\
                     current=current->next;\
                 }\
             }\
+            sentinel->next=NULL;\
         }\
         free(sentinel);\
     }\

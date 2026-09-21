@@ -52,6 +52,7 @@ void print_instruction_readable(instruction instruction) {
         case IF_CMPGTE:
         case IF_CMPTLTE:
         case IF_CMPLT:
+        case GOTO:
             printf(" %zu", instruction.operand1);
             break;
         default:
