@@ -121,18 +121,7 @@ bool is_num_token(token t) {
     }
 }
 
-bool is_comparison_operator_token(token t) {
-    switch (t.operation)
-    {
-    case EQUALS_OPERATOR:
-    case GREATER_THAN_OPERATOR:
-    case GREATER_OR_EQUAL_OPERATOR:
-    case LESS_THAN_OPERATOR:
-    case LESS_OR_EQUAL_OPERATOR:
-        return true;
-
-    default:
-        return false;
-    }
+bool is_unary_operator_token(token t) {
+    return t.type=OPERATOR_TOKEN && is_unary_operator(t.operation);
 }
 

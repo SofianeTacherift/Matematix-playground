@@ -46,9 +46,12 @@ static char* OPERATORS_STR[] = {
 };
 
 void print_operator(operators operation);
-operators inverse_comparison_operator(int operator);
-
 bool is_unary_operator(operators operation);
+bool is_logical_binary_operator(operators operator);
+bool is_logical_unary_operator(operators operator);
+bool is_arithmetic_binary_operator(operators operator);
+bool is_comparison_operator(operators operator);
+operators inverse_comparison_operator(int operator);
 
 
 #endif

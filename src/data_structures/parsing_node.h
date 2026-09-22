@@ -115,18 +115,18 @@ bool equals_node_addr(parsing_node *n1, parsing_node *n2);
 void print_node_jump_entry(parsing_node *node, jump_infos infos);
 parsing_node *new_parsing_node(void);
 parsing_node *new_parsing_node_of(int type);
-parsing_node *token_num_to_node(token t);
+parsing_node *numerical_token_to_node(token t);
 parsing_node *unary_token_to_node(token t);
 parsing_node *operator_token_to_parsing_node(token t);
 int conditional_token_to_parsing_node_type(token t);
-void print_num_val(parsing_node *n);
-_Bool is_num_node(parsing_node *n);
+void print_numerical_node_val(parsing_node *n);
+_Bool is_numerical_node(parsing_node *n);
 void display_node(parsing_node *n);
 void display_tree_node(parsing_node *n);
 void display_node_readable(parsing_node *n);
 void display_tree_node_readable(parsing_node *n, int indentation);
 void free_tree_node(parsing_node *n, bool free_next);
-bool is_comparison_node(parsing_node *node);
+bool is_binary_comparison_node(parsing_node *node);
 
 parsing_node_linked_list *new_parsing_node_linked_list(void);
 bool is_conditional_node(parsing_node *node);
@@ -139,5 +139,5 @@ void print_parsing_node_linked_list(parsing_node_linked_list * list) ;
 void map_most_not_logical_node_left(parsing_node *condition, p_node_p_node_hash_map *map);
 p_node_jump_hash_map *map_condition_jumps(parsing_node *root);
 
-bool is_logical_node(parsing_node *node);
+bool is_logical_binary_node(parsing_node *node);
 #endif

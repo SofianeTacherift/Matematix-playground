@@ -25,7 +25,6 @@ void set_lexer_code_buffer(lexer *lexer, char* buffer, int size) {
     free(lexer->code_buffer);
     lexer->code_buffer=buffer;
     lexer->buffer_size=size;
-
 }
 
 bool start_new_token(char c) {
@@ -308,12 +307,11 @@ void lex_code(lexer *lexer) {
                 break;
             case '!':
                 if (lexer->reading_index < lexer->buffer_size-1 && lexer->code_buffer[lexer->reading_index+1]=='=') {
-                    add_token(lexer->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=LOGICAL_NOT_OPERATOR   , .character=lexer->current_char, .line=lexer->current_line});
-
+                    add_token(lexer->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=NOT_EQUALS_OPERATOR   , .character=lexer->current_char, .line=lexer->current_line});
                     advance_n(lexer, 2);
-
                 }
                 else {
+                    add_token(lexer->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=LOGICAL_NOT_OPERATOR   , .character=lexer->current_char, .line=lexer->current_line});
                     advance_check_ln(lexer);
                 }
                 break;

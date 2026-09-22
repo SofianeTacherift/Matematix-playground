@@ -39,7 +39,6 @@ token get_next_token(parser *parse);
 token advance(parser *parse);
 _Bool has_parsing_error(parser *parse);
 parser *new_parser(token_array_list *tokens);
-_Bool is_unary_operator_token(token t);
 parsing_node *parse_main_scope(parser *parse);
 parsing_node_linked_list *parse_scope(parser *parse);
 parsing_node_linked_list *parse_statement(parser *parse);

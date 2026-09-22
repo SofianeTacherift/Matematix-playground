@@ -9,6 +9,35 @@
 
 
 
+bool is_conditional_node(parsing_node *node) {
+    if (node==NULL) {
+        return NULL;
+    }
+    return node->type==IF_NODE || node->type==ELIF_NODE || node->type==ELSE_NODE || node->type==WHILE_NODE;
+}
+
+bool is_binary_comparison_node(parsing_node *node) {
+    if (node->type!=BINARY_NODE) {return false;}
+    return is_comparison_operator(node->operation);
+}
+
+bool is_logical_binary_node(parsing_node *node) {
+    return node->type==BINARY_NODE &&  is_logical_binary_operator(node->operation);
+}
+
+bool is_logical_unary_node(parsing_node *node) {
+    return node->type==UNARY_NODE && is_logical_unary_operator(node->operation);
+}
+
+bool is_logical_node(parsing_node *node) {
+    return is_logical_binary_node(node) || is_logical_unary_node(node);
+}
+
+bool is_numerical_node(parsing_node * n) {
+    return n->type==INT_NODE || n->type==FLOAT_NODE || n->type==DOUBLE_NODE;
+}
+
+
 long hash_node_addr(parsing_node *node) {
     return  (long) node;
 }
@@ -63,7 +92,7 @@ parsing_node *new_parsing_node_of(int type) {
     return res;
 }
 
-parsing_node * token_num_to_node(token t) {
+parsing_node * numerical_token_to_node(token t) {
     parsing_node * parsing_node=new_parsing_node();
     switch (t.type) {
     case INT_TOKEN:
@@ -122,7 +151,7 @@ int conditional_token_to_parsing_node_type(token t) {
 }
 
 
-void print_num_val(parsing_node *n) {
+void print_numerical_node_val(parsing_node *n) {
     switch(n->type) {
         case INT_NODE:
             printf("%d", n->int_val);
@@ -138,9 +167,6 @@ void print_num_val(parsing_node *n) {
     }
 }
 
-bool is_num_node(parsing_node * n) {
-    return n->type==INT_NODE || n->type==FLOAT_NODE || n->type==DOUBLE_NODE;
-}
 
 void display_node_readable(parsing_node *n) {
    if (n==NULL) {printf("NULL "); return;}
@@ -171,8 +197,8 @@ void display_node_readable(parsing_node *n) {
     if (n->type==VARIABLE_NODE) {
         printf("%s", n->string_val);
     }
-    if (is_num_node(n)) {
-        print_num_val(n);
+    if (is_numerical_node(n)) {
+        print_numerical_node_val(n);
     }
 }
 void display_node(parsing_node * n) {
@@ -189,9 +215,9 @@ void display_node(parsing_node * n) {
     if (n->type==VARIABLE_NODE) {
         printf("name=%s ", n->string_val);
     }
-    if (is_num_node(n)) {
+    if (is_numerical_node(n)) {
         printf("value=");
-        print_num_val(n);
+        print_numerical_node_val(n);
         printf(" ");
     }
     printf("]");
@@ -319,30 +345,9 @@ void free_tree_node(parsing_node *n, bool free_next ) {
 }
 
 
-bool is_conditional_node(parsing_node *node) {
-    if (node==NULL) {
-        return NULL;
-    }
-    return node->type==IF_NODE || node->type==ELIF_NODE || node->type==ELSE_NODE || node->type==WHILE_NODE;
-}
 
-bool is_comparison_node(parsing_node *node) {
-    if (node->type!=BINARY_NODE) {return false;}
-    switch (node->operation) {
-        case EQUALS_OPERATOR:
-        case GREATER_THAN_OPERATOR:
-        case GREATER_OR_EQUAL_OPERATOR:
-        case LESS_THAN_OPERATOR:
-        case LESS_OR_EQUAL_OPERATOR:
-            return true;
-        default:
-            return false;
-    }
-}
 
-bool is_logical_node(parsing_node *node) {
-    return node->type==BINARY_NODE && (node->operation==LOGICAL_OR_OPERATOR || node->operation==LOGICAL_AND_OPERATOR);
-}
+
 
 
 // linked list

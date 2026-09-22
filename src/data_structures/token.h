@@ -84,6 +84,8 @@ void print_token_in_list(token t);
 
 void print_token_list(token_array_list *list);
 
+_Bool is_unary_operator_token(token t);
+
 void write_in_token_buffer(token t);
 
 void print_token(token t);
@@ -100,7 +102,7 @@ bool involve_unary_minus(token previous_token);
 
 bool is_num_token(token t);
 
-bool is_comparison_operator_token(token t);
+bool is_unary_operator_token(token t);
 
 
 

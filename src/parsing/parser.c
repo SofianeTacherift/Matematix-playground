@@ -177,15 +177,12 @@ parsing_node_linked_list * parse_statement(parser *parse) {
     parsing_node_linked_list * result=NULL;
 
     switch (current.type) {
-
         case OPENING_SCOPE_TOKEN:
             result=parse_scope(parse);
             break;
-
         case  IF_TOKEN:
             result=parse_if_statement(parse);
             break;
-
         case WHILE_TOKEN:
             parsing_node *head=parse_conditional_node(parse);
             if (head!=NULL) {
@@ -317,7 +314,7 @@ parsing_node * parse_comparison(parser * parse) {
     RETURN_NULL_IF_ERROR(left, 0)
     parsing_node *center=NULL;
     token current=get_current_token(parse);
-    if (current.type==OPERATOR_TOKEN && is_comparison_operator_token(current)) {
+    if (current.type==OPERATOR_TOKEN && is_unary_operator_token(current)) {
         center = operator_token_to_parsing_node(current);
         RETURN_NULL_IF_ERROR(center, 1, left);
         center->left=left;
@@ -336,23 +333,42 @@ parsing_node * parse_comparison(parser * parse) {
 
 
 parsing_node * parse_unary(parser * parse) {
-    token t = get_current_token(parse);
-    parsing_node * res = operator_token_to_parsing_node(t);
-    advance(parse);
-    res->right=parse_power(parse);
-    RETURN_NULL_IF_ERROR(res->right, 1, res)
-    return res;
+    token current = get_current_token(parse);
+    if (!is_unary_operator_token(current)) {
+        return parse_primary(parse);
+    }
+
+    operators unary = get_current_token(parse).operation;
+    bool apply = false;
+    while ( is_unary_operator_token(current) && current.operation==unary) {
+        apply=!apply;
+        advance(parse);
+        current=get_current_token(parse);
+    }
+    parsing_node *result = NULL;
+    if (apply) {
+        result = new_parsing_node_of(UNARY_NODE);
+        result->operation=unary;
+        result->right=parse_primary(parse);;
+    }
+    else {
+        result=parse_primary(parse);
+    }
+    return result;
+
+
+
+
 }
 
 parsing_node * parse_primary(parser * parse) {
     token current = get_current_token(parse);
     parsing_node * result;
     if (is_num_token(current)) {
-        result=token_num_to_node(current);
+        result=numerical_token_to_node(current);
         advance(parse);
     }
-    else if (current.type==OPERATOR_TOKEN &&  is_unary_operator(current.operation)) {
-        
+    else if (is_unary_operator_token(current)) {
         result = parse_unary(parse);
     }
     else if (current.type==IDENTIFIER_TOKEN) {

@@ -158,7 +158,7 @@ instructions_block  *compile_expression(compiler *compiler, instructions_block *
 
     switch (node->type) {
         case BINARY_NODE:
-            if (!is_logical_node(node) && !is_comparison_node(node)) {
+            if (!is_logical_binary_node(node) && !is_binary_comparison_node(node)) {
                 compile_binary(compiler, block, node);
             }
             else {
@@ -190,7 +190,7 @@ HASH_MAP(parsing_node*, instructions_block*, p_node, instructions)
 
 void compile_single_condition(compiler *compiler, instructions_block *block, parsing_node *node, bool inverse_condition) {
     instruction comparison= {0};
-    if (is_comparison_node(node)) {
+    if (is_binary_comparison_node(node)) {
         block=compile_expression(compiler, block, node->left);
         block=compile_expression(compiler, block, node->right);
 
@@ -271,7 +271,7 @@ void compile_logical_expression(compiler *compiler, instructions_block *block, p
     p_node_instructions_hash_map *map_node_instructions_block = new_p_node_instructions_hash_map(hash_node_addr,equals_node_addr, print_node_instruction);
 
     parsing_node *most_left = node;
-    while (  is_logical_node(most_left) ) {
+    while (  is_logical_binary_node(most_left) ) {
         most_left=most_left->left;
     }
     block->next=map_conditions_instructions_block(map_node_instructions_block,compiler, most_left, jumps, true_block, false_block);
@@ -370,6 +370,11 @@ void link_instructions_blocks(compiler *compiler) {
         }
         free_instructions_block_size_t_hash_map(indexs);
     }
+}
+
+void compile_if_statement(compiler *compiler, instructions_block *block, parsing_node *node) {
+    instructions_block *jump = new_instructions_block();
+
 }
 
 
