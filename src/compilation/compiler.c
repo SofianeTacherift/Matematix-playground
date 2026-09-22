@@ -190,15 +190,8 @@ HASH_MAP(parsing_node*, instructions_block*, p_node, instructions)
 
 void compile_single_condition(compiler *compiler, instructions_block *block, parsing_node *node, bool inverse_condition) {
     instruction comparison= {0};
-    if (!is_comparison_node(node)) {
-        compile_primary(compiler, block, node);
-        add_instruction(block->instructions, (instruction) {.type = ICONST_INSTRUCTION, .operand1 = 0});
-        comparison.type= (inverse_condition) ? IF_CMPEQ : IF_CMPNE;
-        add_instruction(block->instructions, comparison);
-    }
-    else {
+    if (is_comparison_node(node)) {
         block=compile_expression(compiler, block, node->left);
-
         block=compile_expression(compiler, block, node->right);
 
         int operator = (inverse_condition) ? inverse_comparison_operator(node->operation) : node->operation;
@@ -206,8 +199,13 @@ void compile_single_condition(compiler *compiler, instructions_block *block, par
         int type = comparison_operator_to_instruction_type(operator);
         comparison.type = type;
         add_instruction(block->instructions, comparison);
+    }
 
-
+    else {
+        compile_expression(compiler, block, node);
+        add_instruction(block->instructions, (instruction) {.type = ICONST_INSTRUCTION, .operand1 = 0});
+        comparison.type= (inverse_condition) ? IF_CMPEQ : IF_CMPNE;
+        add_instruction(block->instructions, comparison);
     }
 
 }
@@ -277,6 +275,7 @@ void compile_logical_expression(compiler *compiler, instructions_block *block, p
         most_left=most_left->left;
     }
     block->next=map_conditions_instructions_block(map_node_instructions_block,compiler, most_left, jumps, true_block, false_block);
+    print_instruction_block_recursive(*block);
 
 
 }

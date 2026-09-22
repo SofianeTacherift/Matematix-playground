@@ -23,12 +23,9 @@ int main(int argc, char ** argv) {
     // strcpy(path, dir);
     // strcat(path, file_name);
 
-    // char *path= "/home/sofiane/Documents/PROJETS/PROGRAMMING_LANGUAGE/ressources/mxp_files/truc.mxp";
-    // printf("%s\n", path);
 
-    // char * path=argv[1];
-    //
-    char *path="/home/sofiane/Documents/PROJETS/PROGRAMMING_LANGUAGE/ressources/mxp_files/test.mxp";
+
+    char *path="/home/sofiane/Documents/PROJETS/PROGRAMMING_LANGUAGE/ressources/mxp_files/truc.mxp";
 
     FILE *file = fopen(path, "r");
     if (file==NULL) {
