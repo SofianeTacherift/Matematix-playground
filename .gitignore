@@ -1,6 +1,6 @@
 *.out*
 *.class
-*.mxp
+*.mxp*
 *.py 
 *.java
 *.idea/*

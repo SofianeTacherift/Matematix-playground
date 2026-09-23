@@ -170,11 +170,6 @@ instructions_block  *compile_expression(compiler *compiler, instructions_block *
             }
 
             block=last_instruction_block_from_instruction(block);
-
-            if (block!=start_block) {
-                block->next=new_instructions_block();
-                return block->next;
-            }
             return block;
         default:
             compile_primary(compiler, block, node);
@@ -202,10 +197,11 @@ void compile_single_condition(compiler *compiler, instructions_block *block, par
     }
 
     else {
-        compile_expression(compiler, block, node);
-        add_instruction(block->instructions, (instruction) {.type = ICONST_INSTRUCTION, .operand1 = 0});
+        instructions_block *end =compile_expression(compiler, block, node);
+
+        add_instruction(end->instructions, (instruction) {.type = ICONST_INSTRUCTION, .operand1 = 0});
         comparison.type= (inverse_condition) ? IF_CMPEQ : IF_CMPNE;
-        add_instruction(block->instructions, comparison);
+        add_instruction(end->instructions, comparison);
     }
 
 }
@@ -219,39 +215,47 @@ instructions_block *map_conditions_instructions_block(p_node_instructions_hash_m
     }
     jump_infos infos = *infos_ptr;
 
-
-    instructions_block *base = result;
     compile_single_condition(compiler, result, current, !infos.jump_if);
-    result=last_instruction_block_from_instruction(result);
-
-
-
+     instructions_block *result_end=last_instruction_block_from_instruction(result);
     parsing_node *next=infos.next_node;
+
+    instructions_block *next_block=NULL;
+
     if (next==NULL) {
-        result->next=(infos.jump_if) ? false_block : true_block;
+        next_block=(infos.jump_if) ? false_block : true_block;
     }
     else {
-        result->next=map_conditions_instructions_block(map, compiler, next, jumps, true_block, false_block);
-
+        next_block=map_conditions_instructions_block(map, compiler, next, jumps, true_block, false_block);
     }
-
 
 
     parsing_node *jump = infos.jump_node;
 
     if (jump==NULL) {
-        result->jump=(infos.jump_if) ? true_block : false_block;
+        result_end->jump=(infos.jump_if) ? true_block : false_block;
     }
     else {
         const instructions_block **result_ptr = get_from_p_node_instructions_hash_map(map, jump);
-        result->jump = (instructions_block *) *result_ptr;
+        result_end->jump = (instructions_block *) *result_ptr;
     }
 
-    put_to_p_node_instructions_hash_map(map, current, result);
+
+
+    if (result_end!=result) {
+        result_end->next=new_instructions_block();
+        result_end=result_end->next;
+    }
+    result_end->next=next_block;
 
 
 
-    return base;
+
+
+
+
+    put_to_p_node_instructions_hash_map(map, current, result_end);
+
+    return result;
 
 }
 
@@ -274,8 +278,10 @@ void compile_logical_expression(compiler *compiler, instructions_block *block, p
     while (  is_logical_binary_node(most_left) ) {
         most_left=most_left->left;
     }
+
+
     block->next=map_conditions_instructions_block(map_node_instructions_block,compiler, most_left, jumps, true_block, false_block);
-    print_instruction_block_recursive(*block);
+
 
 
 }
@@ -294,7 +300,9 @@ void compile_binary(compiler * compiler , instructions_block *block, parsing_nod
 
 void compile_affectation(compiler *compiler, instructions_block *block,  parsing_node *node) {
     str_size_t_hash_map *variables = compiler->variables;
-    block=compile_expression(compiler, block, node->right);
+
+    instructions_block *end=compile_expression(compiler, block, node->right);
+
 
     char * var_name = node->left->string_val;
     const size_t *index=get_from_str_size_t_hash_map(variables, var_name);
@@ -306,7 +314,11 @@ void compile_affectation(compiler *compiler, instructions_block *block,  parsing
     else {
         res_index=*index;
     }
-    add_instruction(block->instructions, (instruction) {.type = OSTORE_INSTRUCTION, .operand1 = res_index });
+    if (block!=end) {
+        end->next=new_instructions_block();
+        end=end->next;
+    }
+    add_instruction(end->instructions, (instruction) {.type = OSTORE_INSTRUCTION, .operand1 = res_index });
 }
 
 
