@@ -314,7 +314,7 @@ parsing_node * parse_comparison(parser * parse) {
     RETURN_NULL_IF_ERROR(left, 0)
     parsing_node *center=NULL;
     token current=get_current_token(parse);
-    if (current.type==OPERATOR_TOKEN && is_unary_operator_token(current)) {
+    if (current.type==OPERATOR_TOKEN && is_comparison_operator(current.operation)) {
         center = operator_token_to_parsing_node(current);
         RETURN_NULL_IF_ERROR(center, 1, left);
         center->left=left;
@@ -377,6 +377,7 @@ parsing_node * parse_primary(parser * parse) {
     else if (current.type==OPENING_PARENTHESE_TOKEN) {
         advance(parse);
         result=parse_expression(parse);
+
         RETURN_NULL_IF_ERROR(result, 1, result)
         token t=get_current_token(parse);
         if (t.type!=CLOSING_PARENTHESE_TOKEN) {
