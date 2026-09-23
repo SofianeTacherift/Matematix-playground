@@ -163,25 +163,37 @@ instructions_block *compile_expression_nb(compiler *compiler, instructions_block
 instructions_block  *compile_expression(compiler *compiler, instructions_block *block, parsing_node *node) {
     if (node==NULL) {return NULL;}
     const instructions_block *start_block = block;
-
     switch (node->type) {
         case BINARY_NODE:
             if (!is_logical_binary_node(node) && !is_binary_comparison_node(node)) {
-                compile_binary(compiler, block, node);
+                compile_arithmetic_binary(compiler, block, node);
             }
             else {
                 instructions_block *b_true = new_boolean_block_push(true);
                 instructions_block *b_false = new_boolean_block_push(false);
+                b_false->type=FALSE_INSTRUCTION_CONST;
                 add_instruction(b_false->instructions, (instruction) {.type = GOTO});
                 b_false->next=b_true;
                 compile_logical_expression(compiler, block, node, b_true, b_false);
             }
             block=last_instruction_block_from_instruction(block);
             return block;
+        case UNARY_NODE:
+            if (node->operation==LOGICAL_NOT_OPERATOR) {
+                instructions_block *b_true = new_boolean_block_push(true);
+                instructions_block *b_false = new_boolean_block_push(false);
+                b_true->type=FALSE_INSTRUCTION_CONST;
+                add_instruction(b_true->instructions, (instruction) {.type = GOTO});
+                b_true->next=b_false;
+                compile_logical_expression(compiler, block, node->right, b_false, b_true);
+            }
+            else {
+                // compile unary
+            }
         default:
             compile_primary(compiler, block, node);
-            return block;
     }
+    return last_instruction_block_from_instruction(block);
 }
 
 
@@ -195,12 +207,16 @@ void compile_single_condition(compiler *compiler, instructions_block *block, par
     if (is_binary_comparison_node(node)) {
         block=compile_expression_nb(compiler, block, node->left);
         block=compile_expression_nb(compiler, block, node->right);
-
         int operator = (inverse_condition) ? inverse_comparison_operator(node->operation) : node->operation;
-
         int type = comparison_operator_to_instruction_type(operator);
         comparison.type = type;
         add_instruction(block->instructions, comparison);
+    }
+    else if (node->type==UNARY_NODE && node->operation==LOGICAL_NOT_OPERATOR) {
+        instructions_block *end =compile_expression_nb(compiler, block, node);
+        add_instruction(end->instructions, (instruction) {.type = ICONST_INSTRUCTION, .operand1 = 0});
+        comparison.type= (inverse_condition) ? IF_CMPEQ : IF_CMPNE;
+        add_instruction(end->instructions, comparison);
     }
     else {
         instructions_block *end =compile_expression(compiler, block, node);
@@ -213,7 +229,6 @@ void compile_single_condition(compiler *compiler, instructions_block *block, par
 
 instructions_block *map_conditions_instructions_block(p_node_instructions_hash_map *map, compiler *compiler, parsing_node *current , p_node_jump_hash_map *jumps, instructions_block *true_block, instructions_block *false_block) {
     instructions_block *result = new_instructions_block();
-
     const jump_infos *infos_ptr =  get_from_p_node_jump_hash_map(jumps, current);
     if (infos_ptr==NULL) {
         display_node(current);
@@ -277,18 +292,15 @@ void compile_logical_expression(compiler *compiler, instructions_block *block, p
         most_left=most_left->left;
     }
 
-
     block->next=map_conditions_instructions_block(map_node_instructions_block,compiler, most_left, jumps, true_block, false_block);
 
 
 
 }
 
-void compile_binary(compiler * compiler , instructions_block *block, parsing_node *node) {
-
+void compile_arithmetic_binary(compiler * compiler , instructions_block *block, parsing_node *node) {
     block=compile_expression_nb(compiler,block, node->left);
     block=compile_expression_nb(compiler,block, node->right);
-
     int instruction_type = binary_node_to_instruction_type(node);
     add_instruction(block->instructions, (instruction) {.type = instruction_type});
 }

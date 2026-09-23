@@ -18,8 +18,12 @@ int binary_node_to_instruction_type(parsing_node *node) {
     switch (node->operation) {
         case ADD_OPERATOR:
             return BINARY_ADD_INSTRUCTION;
+        case SUB_OPERATOR:
+            return BINARY_SUB_INSTRUCTION;
         case MULTIPLY_OPERATOR:
             return BINARY_MULT_INSTRUCTION;
+        case DIVIDE_OPERATOR:
+            return BINARY_DIVIDE_INSTRUCTION;
         default:
             return NONE_INSTRUCTION;
     }

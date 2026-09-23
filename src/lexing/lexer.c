@@ -188,7 +188,7 @@ token minus_to_token(lexer *lexer) {
     token_array_list *tokens_list = lexer->tokens_list;
 
     if (tokens_list->size==0 || involve_unary_minus(tokens_list->elements[tokens_list->size-1])) {
-        return tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=UNARY_MINUS_OPERATOR , .line=line, .character=character};
+         return (token) {.type=OPERATOR_TOKEN, .operation=UNARY_MINUS_OPERATOR , .line=line, .character=character};
     }
     return (token) {.type=OPERATOR_TOKEN, .operation=SUB_OPERATOR, .line=line, .character=character};
 

@@ -106,7 +106,7 @@ token binary_operator_to_token(char c) {
 
 
 bool involve_unary_minus(token previous_token) {
-    return (!is_num_token(previous_token) && previous_token.type!=IDENTIFIER_TOKEN);
+    return (!is_num_token(previous_token)  && previous_token.type!=IDENTIFIER_TOKEN && previous_token.type!=CLOSING_PARENTHESE_TOKEN);
 }
 
 bool is_num_token(token t) {

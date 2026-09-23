@@ -64,8 +64,5 @@ instructions_block *last_instruction_block_from_instruction(instructions_block *
 instructions_block *new_boolean_block_push(bool t) {
     instructions_block *result=new_instructions_block();
     add_instruction(result->instructions , (instruction) {.type = ICONST_INSTRUCTION , .operand1 = t ? 1 : 0} );
-    if (!t) {
-        result->type=FALSE_INSTRUCTION_CONST;
-    }
     return result;
 }

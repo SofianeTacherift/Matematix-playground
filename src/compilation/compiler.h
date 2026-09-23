@@ -39,7 +39,7 @@ void compile_const(compiler *compiler,instructions_block *block, parsing_node *n
 void compile_variable(compiler *compiler, instructions_block *block, parsing_node *node);
 void compile_primary(compiler *compiler, instructions_block *block,parsing_node *node);
 instructions_block *compile_expression(compiler *compiler,instructions_block *block, parsing_node *node);
-void compile_binary(compiler *compiler,instructions_block *block, parsing_node *node);
+void compile_arithmetic_binary(compiler *compiler,instructions_block *block, parsing_node *node);
 void compile_affectation(compiler *compiler,instructions_block *block,  parsing_node *node);
 void compile_instruction(compiler *compiler, instructions_block *block,parsing_node *node);
 void link_instructions_blocks(compiler *compiler);
