@@ -151,10 +151,18 @@ void compile_primary(compiler *compiler, instructions_block *block, parsing_node
 }
 
 
+
+instructions_block *compile_expression_nb(compiler *compiler, instructions_block *block, parsing_node *node) {
+    instructions_block *end = compile_expression(compiler, block, node);
+    if (end!=block) {
+        end->next=new_instructions_block();
+        end=end->next;
+    }
+    return end;
+}
 instructions_block  *compile_expression(compiler *compiler, instructions_block *block, parsing_node *node) {
     if (node==NULL) {return NULL;}
     const instructions_block *start_block = block;
-
 
     switch (node->type) {
         case BINARY_NODE:
@@ -168,7 +176,6 @@ instructions_block  *compile_expression(compiler *compiler, instructions_block *
                 b_false->next=b_true;
                 compile_logical_expression(compiler, block, node, b_true, b_false);
             }
-
             block=last_instruction_block_from_instruction(block);
             return block;
         default:
@@ -186,8 +193,8 @@ HASH_MAP(parsing_node*, instructions_block*, p_node, instructions)
 void compile_single_condition(compiler *compiler, instructions_block *block, parsing_node *node, bool inverse_condition) {
     instruction comparison= {0};
     if (is_binary_comparison_node(node)) {
-        block=compile_expression(compiler, block, node->left);
-        block=compile_expression(compiler, block, node->right);
+        block=compile_expression_nb(compiler, block, node->left);
+        block=compile_expression_nb(compiler, block, node->right);
 
         int operator = (inverse_condition) ? inverse_comparison_operator(node->operation) : node->operation;
 
@@ -195,10 +202,8 @@ void compile_single_condition(compiler *compiler, instructions_block *block, par
         comparison.type = type;
         add_instruction(block->instructions, comparison);
     }
-
     else {
         instructions_block *end =compile_expression(compiler, block, node);
-
         add_instruction(end->instructions, (instruction) {.type = ICONST_INSTRUCTION, .operand1 = 0});
         comparison.type= (inverse_condition) ? IF_CMPEQ : IF_CMPNE;
         add_instruction(end->instructions, comparison);
@@ -239,8 +244,6 @@ instructions_block *map_conditions_instructions_block(p_node_instructions_hash_m
         result_end->jump = (instructions_block *) *result_ptr;
     }
 
-
-
     if (result_end!=result) {
         result_end->next=new_instructions_block();
         result_end=result_end->next;
@@ -248,12 +251,7 @@ instructions_block *map_conditions_instructions_block(p_node_instructions_hash_m
     result_end->next=next_block;
 
 
-
-
-
-
-
-    put_to_p_node_instructions_hash_map(map, current, result_end);
+    put_to_p_node_instructions_hash_map(map, current, result);
 
     return result;
 
@@ -288,8 +286,8 @@ void compile_logical_expression(compiler *compiler, instructions_block *block, p
 
 void compile_binary(compiler * compiler , instructions_block *block, parsing_node *node) {
 
-    block=compile_expression(compiler,block, node->left);
-    block=compile_expression(compiler,block, node->right);
+    block=compile_expression_nb(compiler,block, node->left);
+    block=compile_expression_nb(compiler,block, node->right);
 
     int instruction_type = binary_node_to_instruction_type(node);
     add_instruction(block->instructions, (instruction) {.type = instruction_type});
@@ -301,8 +299,7 @@ void compile_binary(compiler * compiler , instructions_block *block, parsing_nod
 void compile_affectation(compiler *compiler, instructions_block *block,  parsing_node *node) {
     str_size_t_hash_map *variables = compiler->variables;
 
-    instructions_block *end=compile_expression(compiler, block, node->right);
-
+    instructions_block *end=compile_expression_nb(compiler, block, node->right);
 
     char * var_name = node->left->string_val;
     const size_t *index=get_from_str_size_t_hash_map(variables, var_name);
@@ -313,10 +310,6 @@ void compile_affectation(compiler *compiler, instructions_block *block,  parsing
     }
     else {
         res_index=*index;
-    }
-    if (block!=end) {
-        end->next=new_instructions_block();
-        end=end->next;
     }
     add_instruction(end->instructions, (instruction) {.type = OSTORE_INSTRUCTION, .operand1 = res_index });
 }
