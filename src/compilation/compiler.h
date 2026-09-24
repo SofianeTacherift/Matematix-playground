@@ -38,15 +38,14 @@ void compile_scope(compiler *compiler, instructions_block *block,  parsing_node 
 void compile_const(compiler *compiler,instructions_block *block, parsing_node *node);
 void compile_variable(compiler *compiler, instructions_block *block, parsing_node *node);
 void compile_primary(compiler *compiler, instructions_block *block,parsing_node *node);
+void compile_logical_expression(compiler *compiler, instructions_block *block, parsing_node *node, instructions_block *true_block, instructions_block *false_block);
 instructions_block *compile_expression(compiler *compiler,instructions_block *block, parsing_node *node);
 void compile_arithmetic_binary(compiler *compiler,instructions_block *block, parsing_node *node);
 void compile_affectation(compiler *compiler,instructions_block *block,  parsing_node *node);
 void compile_instruction(compiler *compiler, instructions_block *block,parsing_node *node);
 void link_instructions_blocks(compiler *compiler);
-
+instructions_block *compile_if_statement(compiler *compiler, instructions_block *block, parsing_node *node);
 void compile_(compiler *compiler);
-
-void compile_logical_expression(compiler *compiler, instructions_block *block, parsing_node *node, instructions_block *true_block, instructions_block *false_block) ;
 
 
 #endif //MATEMATIX_COMPILATOR_H

@@ -345,7 +345,16 @@ void free_tree_node(parsing_node *n, bool free_next ) {
 }
 
 
-
+parsing_node *next_non_conditional_node(parsing_node *n) {
+    parsing_node *current=n;
+    if (n->type==IF_NODE) {
+        current=current->next;
+    }
+    while (current && (current->type==ELSE_NODE || current->type==ELIF_NODE)) {
+        current=current->next;
+    }
+    return current;
+}
 
 
 
@@ -466,6 +475,8 @@ parsing_node * most_left_non_logical_operand_node(parsing_node *node, p_node_p_n
         return NULL;
     }
 
+
+
     if (node->type!=BINARY_NODE || (node->operation!=LOGICAL_OR_OPERATOR && node->operation!=LOGICAL_AND_OPERATOR )) {
         return node;
     }
@@ -493,8 +504,7 @@ void map_most_not_logical_node_left(parsing_node *condition, p_node_p_node_hash_
 HASH_MAP(parsing_node *, size_t, p_node, size_t)
 
 
-void map_condition_jumps_recursive(parsing_node *node, parsing_node *last_or, parsing_node *last_and, parsing_node* parent, p_node_p_node_hash_map *most_left_node_map, p_node_size_t_hash_map *levels, p_node_jump_hash_map *jumps_map) {
-
+void map_condition_jumps_recursive(parsing_node *node, parsing_node *last_or, parsing_node *last_and, parsing_node* parent, p_node_p_node_hash_map *most_left_node_map, p_node_size_t_hash_map *levels, p_node_jump_hash_map *jumps_map ) {
     put_to_p_node_size_t_hash_map(levels, node, * (get_from_p_node_size_t_hash_map(levels, parent)) +1);
 
     if (node->type==BINARY_NODE && (node->operation==LOGICAL_OR_OPERATOR || node->operation==LOGICAL_AND_OPERATOR)) {
@@ -504,7 +514,7 @@ void map_condition_jumps_recursive(parsing_node *node, parsing_node *last_or, pa
         map_condition_jumps_recursive(node->right, last_or, last_and, node , most_left_node_map, levels, jumps_map);
     }
     else {
-        bool jump_if= parent==NULL || parent->operation==LOGICAL_OR_OPERATOR; // if parent type is logical and, we jump only if the condition is false so we must store it
+        bool jump_if= parent==NULL || parent->operation==LOGICAL_OR_OPERATOR; // if parent type is logical or, we suppose we will jump if the condition if true
         parsing_node *last_checkpoint = (jump_if) ? last_and: last_or;
         parsing_node *next_condition_root = (jump_if) ? last_or : last_and;
 
@@ -520,12 +530,11 @@ void map_condition_jumps_recursive(parsing_node *node, parsing_node *last_or, pa
         size_t jump_node_level = jump_node_level_ptr ? *jump_node_level_ptr  : 0;
         size_t next_condition_level = next_condition_level_ptr ? *next_condition_level_ptr : 0;
         if (jump_node_level<next_condition_level || (jump_node_level==next_condition_level && jump_if)) {
-            infos=(jump_infos) {.jump_if = jump_if, .jump_node = jump_node, .next_node = next_condition}; // T
+            infos=(jump_infos) {.jump_if = jump_if, .jump_node = jump_node, .next_node = next_condition}; // However sometimes, it is better to jump if the condition is false for a logical or
         }
         else {
             infos=(jump_infos) {.jump_if =  !jump_if,  .jump_node =next_condition,  .next_node =  jump_node};
         }
-
         put_to_p_node_jump_hash_map(jumps_map, node, infos );
     }
 }

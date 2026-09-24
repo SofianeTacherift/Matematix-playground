@@ -89,8 +89,12 @@ void compile_main_scope(compiler *compiler, parsing_node *node) {
                 compile_instruction(compiler,block, current);
                 break;
         }
+        print_instruction_block_recursive(*block);
         block=last_instruction_block_from_instruction(block);
-        current=current->next;
+        if (is_conditional_node(current)) {
+            current=next_non_conditional_node(current);
+        }
+        else {current=current->next;}
     }
     add_instructions_block(compiler->instructions_blocks_list, *start);
 }
@@ -176,8 +180,7 @@ instructions_block  *compile_expression(compiler *compiler, instructions_block *
                 b_false->next=b_true;
                 compile_logical_expression(compiler, block, node, b_true, b_false);
             }
-            block=last_instruction_block_from_instruction(block);
-            return block;
+            break;
         case UNARY_NODE:
             if (node->operation==LOGICAL_NOT_OPERATOR) {
                 instructions_block *b_true = new_boolean_block_push(true);
@@ -190,8 +193,10 @@ instructions_block  *compile_expression(compiler *compiler, instructions_block *
             else {
                 // compile unary
             }
+            break;
         default:
             compile_primary(compiler, block, node);
+            break;
     }
     return last_instruction_block_from_instruction(block);
 }
@@ -282,6 +287,24 @@ void print_node_instruction(parsing_node *node , instructions_block *block) {
     printf("\n");
 }
 
+
+instructions_block *compile_const_push_logical_expression(compiler *compiler, instructions_block *block, parsing_node *node) {
+    bool logical_not = node->type==UNARY_NODE && node->operation==LOGICAL_NOT_OPERATOR;
+
+    instructions_block *true_block= logical_not ?  new_boolean_block_push(false) : new_boolean_block_push(true);
+    instructions_block *false_block = logical_not ? new_boolean_block_push(true) : new_boolean_block_push(false);
+
+    false_block->next=true_block;
+    add_instruction(false_block->instructions, (instruction) { .type = GOTO} );
+    false_block->type=FALSE_INSTRUCTION_CONST;
+
+
+    compile_logical_expression(compiler, block, logical_not ? node->right : node, true_block, false_block);
+    return false_block;
+
+
+}
+
 void compile_logical_expression(compiler *compiler, instructions_block *block, parsing_node *node, instructions_block *true_block, instructions_block *false_block)  {
 
     p_node_jump_hash_map *jumps = map_condition_jumps(node);
@@ -291,11 +314,7 @@ void compile_logical_expression(compiler *compiler, instructions_block *block, p
     while (  is_logical_binary_node(most_left) ) {
         most_left=most_left->left;
     }
-
     block->next=map_conditions_instructions_block(map_node_instructions_block,compiler, most_left, jumps, true_block, false_block);
-
-
-
 }
 
 void compile_arithmetic_binary(compiler * compiler , instructions_block *block, parsing_node *node) {
@@ -332,6 +351,9 @@ void compile_instruction(compiler * compiler, instructions_block *block, parsing
     switch (node->type) {
         case AFFECTATION_NODE:
             compile_affectation(compiler, block, node);
+            break;
+        case IF_NODE:
+            compile_if_statement(compiler, block, node);
             break;
     }
 }
@@ -389,8 +411,67 @@ void link_instructions_blocks(compiler *compiler) {
     }
 }
 
-void compile_if_statement(compiler *compiler, instructions_block *block, parsing_node *node) {
+instructions_block *compile_conditional_node(compiler *compiler, instructions_block *block, parsing_node *node, instructions_block *jump) {
+    if (node->type==IF_NODE || node->type==ELIF_NODE) {
+        instructions_block *true_branch=new_instructions_block();
+        if (node->true_condition->type==OPENING_SCOPE_NODE) {
+            compile_scope(compiler, true_branch, node->true_condition);
+        }
+        else {
+            compile_instruction(compiler, true_branch, node->true_condition);
+        }
+        add_instruction(true_branch->instructions, (instruction) {.type = GOTO});
+
+        instructions_block *false_branch=new_instructions_block();
+        instructions_block *end_block=last_instruction_block_from_instruction(block);
+
+        compile_const_push_logical_expression(compiler, block, node->condition);
+
+
+        end_block=last_instruction_block_from_instruction(end_block);
+
+
+
+        instructions_block *comparison_block = new_instructions_block();
+        add_instruction(comparison_block->instructions, (instruction) {.type = ICONST_INSTRUCTION, .operand1 = 0});
+        add_instruction(comparison_block->instructions, (instruction) {.type = IF_CMPEQ});
+
+        end_block->next=comparison_block;
+
+
+
+
+
+        true_branch->jump=jump;
+        true_branch->next=false_branch;
+        comparison_block->jump=false_branch;
+        comparison_block->next=true_branch;
+
+        return false_branch;
+    }
+
+    // else
+
+    instructions_block *branch = new_instructions_block();
+    block->next=branch;
+    branch->next=jump;
+    return jump;
+
+}
+
+instructions_block *compile_if_statement(compiler *compiler, instructions_block *block, parsing_node *node) {
     instructions_block *jump = new_instructions_block();
+
+    instructions_block *curr_instruction_block=compile_conditional_node(compiler, block, node, jump);
+
+    node=node->next;
+    while (node &&  (node->type==ELIF_NODE || node->type==ELSE_NODE)) {
+        curr_instruction_block=compile_conditional_node(compiler, curr_instruction_block, node, jump);
+        node=node->next;
+    }
+    print_instruction_block_recursive(*curr_instruction_block);
+    curr_instruction_block->next=jump;
+    return jump;
 
 }
 
