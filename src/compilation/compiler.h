@@ -44,7 +44,7 @@ void compile_arithmetic_binary(compiler *compiler,instructions_block *block, par
 void compile_affectation(compiler *compiler,instructions_block *block,  parsing_node *node);
 void compile_instruction(compiler *compiler, instructions_block *block,parsing_node *node);
 void link_instructions_blocks(compiler *compiler);
-instructions_block *compile_if_statement(compiler *compiler, instructions_block *block, parsing_node *node);
+instructions_block *compile_if_statement(compiler *compiler, instructions_block *block, parsing_node *current);
 void compile_(compiler *compiler);
 
 

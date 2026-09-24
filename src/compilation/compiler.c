@@ -89,7 +89,6 @@ void compile_main_scope(compiler *compiler, parsing_node *node) {
                 compile_instruction(compiler,block, current);
                 break;
         }
-        print_instruction_block_recursive(*block);
         block=last_instruction_block_from_instruction(block);
         if (is_conditional_node(current)) {
             current=next_non_conditional_node(current);
@@ -102,6 +101,7 @@ void compile_main_scope(compiler *compiler, parsing_node *node) {
 void compile_scope(compiler *compiler,instructions_block *block, parsing_node *node) {
     size_t original_index=compiler->variables->size;
     parsing_node *current=node->right;
+
     while (current !=NULL) {
         switch (current->type) {
             case OPENING_SCOPE_NODE:
@@ -112,7 +112,10 @@ void compile_scope(compiler *compiler,instructions_block *block, parsing_node *n
                 break;
         }
         block=last_instruction_block_from_instruction(block);
-        current=current->next;
+        if (is_conditional_node(current)) {
+            current=next_non_conditional_node(current);
+        }
+        else {current=current->next;}
     }
     remove_from_str_size_t_hash_map_if_value_greater_than(compiler->variables, original_index-1);
 }
@@ -355,6 +358,8 @@ void compile_instruction(compiler * compiler, instructions_block *block, parsing
         case IF_NODE:
             compile_if_statement(compiler, block, node);
             break;
+        default:
+            break;
     }
 }
 
@@ -420,15 +425,18 @@ instructions_block *compile_conditional_node(compiler *compiler, instructions_bl
         else {
             compile_instruction(compiler, true_branch, node->true_condition);
         }
-        add_instruction(true_branch->instructions, (instruction) {.type = GOTO});
+
+
 
         instructions_block *false_branch=new_instructions_block();
-        instructions_block *end_block=last_instruction_block_from_instruction(block);
+
+
+
+
 
         compile_const_push_logical_expression(compiler, block, node->condition);
+        instructions_block *end_block=last_instruction_block_from_instruction(block);
 
-
-        end_block=last_instruction_block_from_instruction(end_block);
 
 
 
@@ -442,8 +450,16 @@ instructions_block *compile_conditional_node(compiler *compiler, instructions_bl
 
 
 
-        true_branch->jump=jump;
-        true_branch->next=false_branch;
+
+        instructions_block *true_branch_end = last_instruction_block_from_instruction(true_branch);
+
+
+        if (node->next && (node->next->type==ELIF_NODE || node->next->type==ELSE_NODE)) {
+            add_instruction(true_branch_end->instructions, (instruction) {.type = GOTO});
+            true_branch_end->jump=jump;
+
+        }
+        true_branch_end->next=false_branch;
         comparison_block->jump=false_branch;
         comparison_block->next=true_branch;
 
@@ -461,16 +477,21 @@ instructions_block *compile_conditional_node(compiler *compiler, instructions_bl
 
 instructions_block *compile_if_statement(compiler *compiler, instructions_block *block, parsing_node *node) {
     instructions_block *jump = new_instructions_block();
+    parsing_node *current=node;
+    instructions_block *curr_instruction_block=compile_conditional_node(compiler, block, current, jump);
 
-    instructions_block *curr_instruction_block=compile_conditional_node(compiler, block, node, jump);
-
-    node=node->next;
-    while (node &&  (node->type==ELIF_NODE || node->type==ELSE_NODE)) {
-        curr_instruction_block=compile_conditional_node(compiler, curr_instruction_block, node, jump);
-        node=node->next;
+    current=current->next;
+    while (current &&  (current->type==ELIF_NODE || current->type==ELSE_NODE)) {
+        curr_instruction_block=compile_conditional_node(compiler, curr_instruction_block, current, jump);
+        current=current->next;
     }
-    print_instruction_block_recursive(*curr_instruction_block);
+
+    printf("_____________________________\n");
+    curr_instruction_block=last_instruction_block_from_instruction(curr_instruction_block);
     curr_instruction_block->next=jump;
+
+
+
     return jump;
 
 }
