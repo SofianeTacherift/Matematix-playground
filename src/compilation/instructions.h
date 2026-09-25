@@ -18,6 +18,8 @@ typedef enum {
     BINARY_SUB_INSTRUCTION,
     BINARY_MULT_INSTRUCTION,
     BINARY_DIVIDE_INSTRUCTION,
+    BINARY_POWER_INSTRUCTION,
+    UNARY_MINUS_INSTRUCTION,
     GOTO,
     IF_CMPEQ,
     IF_CMPNE,
@@ -37,6 +39,8 @@ static char * INSTRUCTION_TYPE_STR[] = {
     "BINARY_SUB",
      "BINARY_MULT",
     "BINARY_DIVIDE",
+    "BINARY_POWER",
+    "UNARY_MINUS",
     "GOTO",
     "IF_CMPEQ",
     "IF_CMPNE",
@@ -58,7 +62,9 @@ ARRAY_LIST(instruction, instruction)
 
 // functions
 
-int binary_node_to_instruction_type(parsing_node *node);
+instruction_type binary_arithmetic_node_to_instruction_type(parsing_node *node);
+
+instruction_type unary_arithmetic_node_to_instruction_type( parsing_node *node);
 
 int comparison_operator_to_instruction_type(int t);
 

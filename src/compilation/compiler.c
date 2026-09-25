@@ -75,6 +75,7 @@ compiler *new_compiler(parsing_node *head) {
 }
 
 
+
 void compile_main_scope(compiler *compiler, parsing_node *node) {
 
     parsing_node *current=node;
@@ -194,7 +195,7 @@ instructions_block  *compile_expression(compiler *compiler, instructions_block *
                 compile_logical_expression(compiler, block, node->right, b_false, b_true);
             }
             else {
-                // compile unary
+                compile_arithmetic_unary(compiler, block, node);
             }
             break;
         default:
@@ -320,13 +321,19 @@ void compile_logical_expression(compiler *compiler, instructions_block *block, p
     block->next=map_conditions_instructions_block(map_node_instructions_block,compiler, most_left, jumps, true_block, false_block);
 }
 
-void compile_arithmetic_binary(compiler * compiler , instructions_block *block, parsing_node *node) {
-    block=compile_expression_nb(compiler,block, node->left);
+
+void compile_arithmetic_unary(compiler *compiler, instructions_block *block, parsing_node *node) {
     block=compile_expression_nb(compiler,block, node->right);
-    int instruction_type = binary_node_to_instruction_type(node);
+    int instruction_type = unary_arithmetic_node_to_instruction_type(node);
     add_instruction(block->instructions, (instruction) {.type = instruction_type});
 }
 
+void compile_arithmetic_binary(compiler * compiler , instructions_block *block, parsing_node *node) {
+    block=compile_expression_nb(compiler,block, node->left);
+    block=compile_expression_nb(compiler,block, node->right);
+    int instruction_type = binary_arithmetic_node_to_instruction_type(node);
+    add_instruction(block->instructions, (instruction) {.type = instruction_type});
+}
 
 
 
@@ -449,8 +456,6 @@ instructions_block *compile_conditional_node(compiler *compiler, instructions_bl
         add_instruction(comparison_block->instructions, (instruction) {.type = IF_CMPEQ});
 
         end_block->next=comparison_block;
-
-
 
 
 

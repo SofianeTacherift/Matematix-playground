@@ -14,7 +14,7 @@ static int comparison_operator_to_instr_type_buffer[] = {
 };
 
 
-int binary_node_to_instruction_type(parsing_node *node) {
+instruction_type binary_arithmetic_node_to_instruction_type(parsing_node *node) {
     switch (node->operation) {
         case ADD_OPERATOR:
             return BINARY_ADD_INSTRUCTION;
@@ -24,6 +24,18 @@ int binary_node_to_instruction_type(parsing_node *node) {
             return BINARY_MULT_INSTRUCTION;
         case DIVIDE_OPERATOR:
             return BINARY_DIVIDE_INSTRUCTION;
+        case POWER_OPERATOR:
+            return BINARY_POWER_INSTRUCTION;
+
+        default:
+            return NONE_INSTRUCTION;
+    }
+}
+
+instruction_type unary_arithmetic_node_to_instruction_type( parsing_node *node) {
+    switch (node->operation) {
+        case UNARY_MINUS_OPERATOR:
+            return UNARY_MINUS_INSTRUCTION;
         default:
             return NONE_INSTRUCTION;
     }
