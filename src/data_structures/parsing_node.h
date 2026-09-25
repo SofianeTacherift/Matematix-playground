@@ -128,7 +128,7 @@ void display_node_readable(parsing_node *n);
 void display_tree_node_readable(parsing_node *n, int indentation);
 void free_tree_node(parsing_node *n, bool free_next);
 bool is_binary_comparison_node(parsing_node *node);
-parsing_node *next_non_conditional_node(parsing_node *n);
+parsing_node *skip_if_statement(parsing_node *n);
 parsing_node_linked_list *new_parsing_node_linked_list(void);
 bool is_conditional_node(parsing_node *node);
 void add_parsing_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node);

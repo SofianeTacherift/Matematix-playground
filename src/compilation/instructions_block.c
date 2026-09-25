@@ -52,7 +52,7 @@ void print_instructions_block_readable(instructions_block block, size_t instruct
 
 }
 
-instructions_block *last_instruction_block_from_instruction(instructions_block *start) {
+instructions_block *last_instruction_block_from_instruction_block(instructions_block *start) {
     instructions_block *current=start;
     while (current->next!=NULL) {
         current=current->next;

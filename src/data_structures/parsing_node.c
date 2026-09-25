@@ -345,7 +345,7 @@ void free_tree_node(parsing_node *n, bool free_next ) {
 }
 
 
-parsing_node *next_non_conditional_node(parsing_node *n) {
+parsing_node *skip_if_statement(parsing_node *n) {
     parsing_node *current=n;
     if (n->type==IF_NODE) {
         current=current->next;

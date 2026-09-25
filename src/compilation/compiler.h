@@ -42,6 +42,7 @@ void compile_logical_expression(compiler *compiler, instructions_block *block, p
 instructions_block *compile_expression(compiler *compiler,instructions_block *block, parsing_node *node);
 void compile_arithmetic_binary(compiler *compiler,instructions_block *block, parsing_node *node);
 void compile_affectation(compiler *compiler,instructions_block *block,  parsing_node *node);
+instructions_block *compile_while(compiler *compiler, instructions_block *block, parsing_node *node);
 void compile_instruction(compiler *compiler, instructions_block *block,parsing_node *node);
 void link_instructions_blocks(compiler *compiler);
 instructions_block *compile_if_statement(compiler *compiler, instructions_block *block, parsing_node *current);

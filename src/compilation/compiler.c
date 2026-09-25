@@ -89,9 +89,9 @@ void compile_main_scope(compiler *compiler, parsing_node *node) {
                 compile_instruction(compiler,block, current);
                 break;
         }
-        block=last_instruction_block_from_instruction(block);
-        if (is_conditional_node(current)) {
-            current=next_non_conditional_node(current);
+        block=last_instruction_block_from_instruction_block(block);
+        if (current->type==IF_NODE) {
+            current=skip_if_statement(current);
         }
         else {current=current->next;}
     }
@@ -111,9 +111,9 @@ void compile_scope(compiler *compiler,instructions_block *block, parsing_node *n
                 compile_instruction(compiler,block, current);
                 break;
         }
-        block=last_instruction_block_from_instruction(block);
-        if (is_conditional_node(current)) {
-            current=next_non_conditional_node(current);
+        block=last_instruction_block_from_instruction_block(block);
+        if (current->type==IF_NODE) {
+            current=skip_if_statement(current);
         }
         else {current=current->next;}
     }
@@ -201,7 +201,7 @@ instructions_block  *compile_expression(compiler *compiler, instructions_block *
             compile_primary(compiler, block, node);
             break;
     }
-    return last_instruction_block_from_instruction(block);
+    return last_instruction_block_from_instruction_block(block);
 }
 
 
@@ -244,7 +244,7 @@ instructions_block *map_conditions_instructions_block(p_node_instructions_hash_m
     jump_infos infos = *infos_ptr;
 
     compile_single_condition(compiler, result, current, !infos.jump_if);
-     instructions_block *result_end=last_instruction_block_from_instruction(result);
+     instructions_block *result_end=last_instruction_block_from_instruction_block(result);
     parsing_node *next=infos.next_node;
 
     instructions_block *next_block=NULL;
@@ -336,6 +336,8 @@ void compile_affectation(compiler *compiler, instructions_block *block,  parsing
     instructions_block *end=compile_expression_nb(compiler, block, node->right);
 
     char * var_name = node->left->string_val;
+
+
     const size_t *index=get_from_str_size_t_hash_map(variables, var_name);
     size_t res_index=0;
     if (index==NULL) {
@@ -345,6 +347,7 @@ void compile_affectation(compiler *compiler, instructions_block *block,  parsing
     else {
         res_index=*index;
     }
+
     add_instruction(end->instructions, (instruction) {.type = OSTORE_INSTRUCTION, .operand1 = res_index });
 }
 
@@ -358,6 +361,8 @@ void compile_instruction(compiler * compiler, instructions_block *block, parsing
         case IF_NODE:
             compile_if_statement(compiler, block, node);
             break;
+        case WHILE_NODE:
+            compile_while(compiler, block, node);
         default:
             break;
     }
@@ -435,8 +440,7 @@ instructions_block *compile_conditional_node(compiler *compiler, instructions_bl
 
 
         compile_const_push_logical_expression(compiler, block, node->condition);
-        instructions_block *end_block=last_instruction_block_from_instruction(block);
-
+        instructions_block *end_block=last_instruction_block_from_instruction_block(block);
 
 
 
@@ -451,7 +455,7 @@ instructions_block *compile_conditional_node(compiler *compiler, instructions_bl
 
 
 
-        instructions_block *true_branch_end = last_instruction_block_from_instruction(true_branch);
+        instructions_block *true_branch_end = last_instruction_block_from_instruction_block(true_branch);
 
 
         if (node->next && (node->next->type==ELIF_NODE || node->next->type==ELSE_NODE)) {
@@ -476,7 +480,7 @@ instructions_block *compile_conditional_node(compiler *compiler, instructions_bl
         compile_instruction(compiler, branch, node->true_condition);
     }
 
-    instructions_block *branch_end = last_instruction_block_from_instruction(branch);
+    instructions_block *branch_end = last_instruction_block_from_instruction_block(branch);
     block->next=branch;
     branch_end->next=jump;
     return jump;
@@ -494,17 +498,48 @@ instructions_block *compile_if_statement(compiler *compiler, instructions_block 
         current=current->next;
     }
 
-    curr_instruction_block=last_instruction_block_from_instruction(curr_instruction_block);
+    curr_instruction_block=last_instruction_block_from_instruction_block(curr_instruction_block);
     if (curr_instruction_block!=jump) {
         curr_instruction_block->next=jump;
     }
-
 
 
     return jump;
 
 }
 
+instructions_block *compile_while(compiler *compiler, instructions_block *block, parsing_node *node) {
+
+
+    instructions_block *condition=new_instructions_block();
+    compile_const_push_logical_expression(compiler, condition, node->condition);
+    instructions_block *condition_end = last_instruction_block_from_instruction_block(condition);
+
+    instructions_block *verification = new_instructions_block();
+    add_instruction(verification->instructions, (instruction) {.type = ICONST_INSTRUCTION, .operand1 = 0});
+    add_instruction(verification->instructions, (instruction) {.type = IF_CMPEQ});
+
+
+    instructions_block *true_block = new_instructions_block();
+    compile_scope(compiler, true_block, node->true_condition);
+
+    instructions_block *true_block_end =last_instruction_block_from_instruction_block(true_block);
+    add_instruction(true_block_end->instructions, (instruction) {.type = GOTO});
+
+    instructions_block *result=new_instructions_block();
+
+    block->next=condition;
+    condition_end->next=verification;
+    verification->jump=result;
+    verification->next=true_block;
+    true_block_end->next=result;
+    true_block_end->jump=condition;
+    true_block_end->next=result;
+    return result;
+
+
+
+}
 
 
 

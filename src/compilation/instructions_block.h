@@ -33,7 +33,7 @@ void print_instruction_block(instructions_block block);
 
 void print_instruction_block_recursive(instructions_block block);
 
-instructions_block *last_instruction_block_from_instruction(instructions_block *current);
+instructions_block *last_instruction_block_from_instruction_block(instructions_block *current);
 
 instructions_block *new_boolean_block_push(bool t);
 
