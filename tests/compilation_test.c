@@ -93,6 +93,11 @@ int main(int argc, char ** argv) {
 
     compiler *compiler = new_compiler(res);
     compile_main_scope(compiler, res);
+
+    if (compiler->status!=0) {
+        printf("Error during compilation : %s\n", compiler->error_message);
+        return 1;
+    }
     link_instructions_blocks(compiler);
 
 

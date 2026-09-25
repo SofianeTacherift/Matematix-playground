@@ -28,6 +28,7 @@ typedef struct compiler {
     instructions_block_array_list *instructions_blocks_list;
     char error_message[1024];
     jmp_buf error_jmp;
+    int status;
 } compiler;
 
 
@@ -35,10 +36,11 @@ typedef struct compiler {
 
 
 compiler *new_compiler(parsing_node *head);
+void compile_code(compiler *compiler, parsing_node *node);
 void compile_main_scope(compiler *compiler,  parsing_node *node);
 void compile_scope(compiler *compiler, instructions_block *block,  parsing_node *node);
 void compile_const(compiler *compiler,instructions_block *block, parsing_node *node);
-void compile_variable(compiler *compiler, instructions_block *block, parsing_node *node);
+void compile_variable_load(compiler *compiler, instructions_block *block, parsing_node *node);
 void compile_primary(compiler *compiler, instructions_block *block,parsing_node *node);
 void compile_logical_expression(compiler *compiler, instructions_block *block, parsing_node *node, instructions_block *true_block, instructions_block *false_block);
 instructions_block *compile_expression(compiler *compiler,instructions_block *block, parsing_node *node);

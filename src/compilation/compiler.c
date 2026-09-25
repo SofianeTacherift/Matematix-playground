@@ -74,7 +74,12 @@ compiler *new_compiler(parsing_node *head) {
     return res;
 }
 
-
+void compile_code(compiler *compiler, parsing_node *node) {
+    const int val=setjmp(compiler->error_jmp);
+    if (val!=0) {
+        compile_main_scope(compiler, node);
+    }
+}
 
 void compile_main_scope(compiler *compiler, parsing_node *node) {
 
@@ -139,19 +144,20 @@ void compile_const(compiler *compiler, instructions_block *block, parsing_node*n
     add_instruction(block->instructions, result);
 }
 
-void compile_variable(compiler *compiler, instructions_block *block, parsing_node *node) {
+void compile_variable_load(compiler *compiler, instructions_block *block, parsing_node *node) {
     const size_t *index = get_from_str_size_t_hash_map(compiler->variables, node->string_val);
     if (index!=NULL) {
         instruction res= {.type = OLOAD_INSTRUCTION , .operand1 = *index };
         add_instruction(block->instructions, res);
     }
     else {
-        // to complete
+        compiler->status=1;
+        snprintf(compiler->error_message, sizeof compiler->error_message, "Variable %s used but not declared", node->string_val);
     }
 }
 void compile_primary(compiler *compiler, instructions_block *block, parsing_node *node) {
     if (node->type==VARIABLE_NODE) {
-        compile_variable(compiler, block, node);
+        compile_variable_load(compiler, block, node);
     }
     else {
         compile_const(compiler, block, node);
