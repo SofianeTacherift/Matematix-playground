@@ -466,11 +466,19 @@ instructions_block *compile_conditional_node(compiler *compiler, instructions_bl
         return false_branch;
     }
 
-    // else
 
     instructions_block *branch = new_instructions_block();
+    // else case
+    if (node->true_condition->type==OPENING_SCOPE_NODE) {
+        compile_scope(compiler, branch, node->true_condition);
+    }
+    else {
+        compile_instruction(compiler, branch, node->true_condition);
+    }
+
+    instructions_block *branch_end = last_instruction_block_from_instruction(branch);
     block->next=branch;
-    branch->next=jump;
+    branch_end->next=jump;
     return jump;
 
 }
@@ -486,9 +494,10 @@ instructions_block *compile_if_statement(compiler *compiler, instructions_block 
         current=current->next;
     }
 
-    printf("_____________________________\n");
     curr_instruction_block=last_instruction_block_from_instruction(curr_instruction_block);
-    curr_instruction_block->next=jump;
+    if (curr_instruction_block!=jump) {
+        curr_instruction_block->next=jump;
+    }
 
 
 
