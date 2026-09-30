@@ -67,9 +67,9 @@ int main(int argc, char ** argv) {
     }
 
 
+    free_parsing_result_members(parsing_res);
 
-    free_tree_node(res, true);
-    free_token_array_list(parsing_res.lexing_res.tokens);
+
 
 
     return 0;

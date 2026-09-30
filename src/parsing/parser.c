@@ -56,6 +56,12 @@ DEFINE_BINARY_PARSING_FUNCTION(parse_power, (current_token.operation==POWER_OPER
 
 
 
+void free_parsing_result_members(parsing_result parsing_res) {
+    free_lexing_result_members(parsing_res.lexing_res);
+    free_tree_node(parsing_res.head, true);
+    free_parsing_error_array_list(parsing_res.errors);
+
+}
 
 bool is_an_token_of_type(token t, ...) {
     va_list args;
@@ -81,7 +87,7 @@ token get_current_token(parser *parse) {
 }
 
 token get_next_token(parser *parse) {
-    if (parse->current_index+1<parse->tokens->size) {
+    if (parse!=NULL &&  parse->current_index+1<parse->tokens->size) {
         return parse->tokens->elements[parse->current_index+1];
     }
     return (token) {.type=EOF_TOKEN}; 
@@ -112,7 +118,7 @@ parser * new_parser(token_array_list * tokens) {
 parsing_result parse_from_file(FILE *file) {
     parsing_result parsing_res = {0};
 
-    lexing_result lexing_res = lex_code_from_file(5000, file);
+    lexing_result lexing_res = lex_code_from_file(file);
     parsing_res.lexing_res=lexing_res;
     if (lexing_res.lexing_status==LEXING_ERROR) {
         return parsing_res;
@@ -121,6 +127,7 @@ parsing_result parse_from_file(FILE *file) {
     parsing_res.head=parse_main_scope(parser);
     parsing_res.parsing_status=parser->parsing_status;
     parsing_res.errors=parser->parsing_errors;
+    free(parser);
     return parsing_res;
 
 }
@@ -168,8 +175,8 @@ parsing_node_linked_list * parse_scope(parser * parse) {
     }
 
     if (current.type!=CLOSING_SCOPE_TOKEN && parse->parsing_status!=PARSING_ERROR) {
-        write_in_error_buffer(parse, current, "expected }");
-        parse->parsing_status=PARSING_ERROR;
+        add_parsing_error_to_parser(parse, current, "expected }");
+
         free_parsing_node_linked_list(scope);
         return NULL;
     }
@@ -288,9 +295,8 @@ parsing_node *parse_instruction(parser *parser) {
     RETURN_NULL_IF_ERROR(res, 0)
     current_token=get_current_token(parser);
     if (current_token.type!=DELIMITER_TOKEN) {
-        write_in_error_buffer(parser, current_token, "(INSTRUCTION) expected ';'");
-        parser->parsing_status=PARSING_ERROR;
-        free(res);
+        add_parsing_error_to_parser(parser, current_token, "(INSTRUCTION) expected ';'");
+        free_tree_node(res, false);
         res=NULL;
     }
     advance(parser);
@@ -320,7 +326,9 @@ parsing_node * parse_identifier(parser * parse) {
     parsing_node * res = new_parsing_node();
     token current = get_current_token(parse);
     res->type=VARIABLE_NODE;
-    res->string_val=current.string_val;
+    size_t len = strlen(current.string_val);
+    res->string_val=malloc(sizeof(char)*len+1);
+    memcpy(res->string_val, current.string_val, len+1 );
     advance(parse);
     return res;
 }
@@ -399,7 +407,7 @@ parsing_node * parse_primary(parser * parse) {
         token t=get_current_token(parse);
         if (t.type!=CLOSING_PARENTHESE_TOKEN) {
             parse->parsing_status=PARSING_ERROR;
-            write_in_error_buffer(parse, t, "(PRIMARY) expected ')'");
+            add_parsing_error_to_parser(parse, t, "(PRIMARY) expected ')'");
             free(result);
             return NULL;
         }
@@ -407,9 +415,7 @@ parsing_node * parse_primary(parser * parse) {
         advance(parse);
     }
     else {
-  
-        write_in_error_buffer(parse, current, "(PRIMARY) expected a number, an identifier, an unary, or  an opening parenthese");
-        parse->parsing_status=PARSING_ERROR;
+        add_parsing_error_to_parser(parse, current, "(PRIMARY) expected a number, an identifier, an unary, or  an opening parenthese");
         return NULL;
     }
     RETURN_NULL_IF_ERROR(result, 0)
@@ -420,7 +426,7 @@ parsing_node * parse_primary(parser * parse) {
 
 
 
-void write_in_error_buffer(parser *parse, token t, char * message) {
+void add_parsing_error_to_parser(parser *parse, token t, char * message) {
     parse->parsing_status=PARSING_ERROR;
     parsing_error error = {.token=t};
     snprintf(error.message, sizeof(error.message), message);

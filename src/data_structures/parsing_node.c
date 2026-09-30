@@ -330,18 +330,25 @@ void free_tree_node(parsing_node *n, bool free_next ) {
     if (n==NULL) {
         return;
     }
+    if (free_next) {
+        free_tree_node(n->next, free_next);
+    }
     parsing_node *left =n->left;
     parsing_node *right = n->right;
 
     if (is_conditional_node(n)) {
         free_tree_node(n->condition, free_next);
         free_tree_node(n->true_condition, free_next);
+
     }
     else {
-        free(n);
         free_tree_node(left, free_next);
         free_tree_node(right, free_next);
     }
+    if (n->type==VARIABLE_NODE) {
+        free(n->string_val);
+    }
+    free(n);
 }
 
 
@@ -390,7 +397,7 @@ void add_parsing_node_to_linked_list(parsing_node_linked_list * list, parsing_no
 }
 
 void merge_linked_lists(parsing_node_linked_list * list, parsing_node_linked_list *to_add) {
-    if (list==NULL || to_add==NULL || to_add->head==NULL && to_add->end==NULL) {
+    if (list==NULL || to_add==NULL || (to_add->head==NULL && to_add->end==NULL)) {
         return;
     }
     

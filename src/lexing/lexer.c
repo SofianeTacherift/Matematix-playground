@@ -7,9 +7,7 @@
 #include "token.h"
 #include "operators.h"
 
-
-
-
+#define BYTES_NUMBER_READ 128000
 
 
 lexer * new_lexer(token_array_list *list) {
@@ -23,7 +21,19 @@ lexer * new_lexer(token_array_list *list) {
 
 void set_lexer_code_buffer(lexer *lexer, char* buffer, int size) {
     lexer->code_buffer=buffer;
-    lexer->buffer_size=size;
+    lexer->end_index=size;
+}
+
+void free_lexing_result_members(lexing_result lexing_res) {
+    apply_token_operation(lexing_res.tokens, free_token_members);
+    free_token_array_list(lexing_res.tokens);
+}
+
+size_t read_from_lexe_input_file(lexer *lexer) {
+    const size_t n_read = fread(lexer->code_buffer, sizeof(char), BYTES_NUMBER_READ, lexer->input_file);
+    lexer->end_index=n_read;
+    lexer->reading_index=0;
+    return n_read;
 }
 
 bool start_new_token(char c) {
@@ -54,15 +64,13 @@ bool start_new_token(char c) {
 
 void lex_number(lexer *lexer) {
     char * code = lexer->code_buffer;
-    int start = lexer->reading_index;
-    int i=start;
+    int str_index=0;
     int line=lexer->current_line;
     int character=lexer->current_char;
-    char * number =malloc(sizeof(char)*30);
+    char *number =malloc(sizeof(char)*30);
     int type=INT_TOKEN;
-    while (i<lexer->buffer_size && isdigit(code[i]) || code[i]=='.') {
-        int current_index=i-start;
-        char charI=code[i];
+    while (lexer->reading_index<lexer->end_index && (isdigit(code[lexer->reading_index]) || code[lexer->reading_index]=='.')) {
+        char charI=code[lexer->reading_index];
         if (charI=='.') {
             if (type==DOUBLE_TOKEN) {
                 lexer->lexing_status=LEXING_ERROR;
@@ -71,20 +79,24 @@ void lex_number(lexer *lexer) {
             }
             type=DOUBLE_TOKEN;
         } 
-        number[current_index]=code[i];
-        i++;
+        number[str_index]=code[lexer->reading_index];
+        str_index++;
+        lexer->reading_index++;
+        if (lexer->reading_index>=lexer->end_index) {
+            read_from_lexe_input_file(lexer);
+        }
     }
 
-    int number_end_index=i-start;
+    int number_end_index=str_index;
     number[number_end_index]='\0';
     token t;
     t.line=line;
     t.character=character;
     t.operation=NONE_OPERATOR;
 
-    if ((i<lexer->buffer_size && code[i]=='f')) {
+    if ((str_index<lexer->end_index && code[str_index]=='f')) {
         type=FLOAT_TOKEN;
-        i++;
+        str_index++;
     }
     t.type=type;
     switch (type)
@@ -99,7 +111,6 @@ void lex_number(lexer *lexer) {
         t.double_val=atof(number);
         break;
     }
-    advance_n(lexer, i-start);
     add_token(lexer->tokens_list, t);
     free(number);
 
@@ -108,27 +119,29 @@ void lex_number(lexer *lexer) {
 void lex_string(lexer *lexer) {
     char *code =lexer->code_buffer;
     int start = lexer->reading_index;
-    int str_end = lexer->buffer_size;
 
-    int i=start;
+    int i=0;
     int current_len = 32;
     char * str =malloc(sizeof(char)*current_len);
     int line=lexer->current_line;
     int character=lexer->current_char;
 
-    while (i<str_end && !start_new_token(code[i])) {
-        int current_index=i-start;
-        if (current_index>current_len) {
+    while (lexer->reading_index<lexer->end_index && !start_new_token(code[lexer->reading_index])) {
+        if (i>current_len) {
             str=realloc(str, current_len*2*sizeof(char));
             current_len*=2;
         }
-        str[current_index]=code[i];
+        str[i]=code[lexer->reading_index];
 
         i++;
+        advance_check_ln(lexer);
+        if (lexer->reading_index>=lexer->end_index) {
+            read_from_lexe_input_file(lexer);
+        }
+
 
     }
-    advance_n(lexer, i-start);
-    str[i-start]='\0';
+    str[i]='\0';
     token t= {0};
     if (strcmp("while", str)==0) {
         t.type=WHILE_TOKEN; t.line=line, t.character=character;
@@ -146,6 +159,10 @@ void lex_string(lexer *lexer) {
 
     else {
         t.string_val=str; t.type=IDENTIFIER_TOKEN ; t.line=line; t.character=character;
+    }
+
+    if (t.type!=IDENTIFIER_TOKEN) {
+        free(str);
     }
     t.operation=NONE_OPERATOR;
     add_token(lexer->tokens_list, t);
@@ -219,7 +236,7 @@ int lex_comparison(lexer *lexe) {
 
     char *code = lexe->code_buffer;
     int start = lexe->reading_index;
-    int end = lexe->buffer_size;
+    int end = lexe->end_index;
 
 
     if (start<end-1 && code[start+1]=='=') {
@@ -287,7 +304,7 @@ void lex_code(lexer *lexer) {
 
     char * code = lexer->code_buffer;
 
-    while (lexer->reading_index<lexer->buffer_size) {
+    while (lexer->reading_index<lexer->end_index) {
         char charI=code[lexer->reading_index];
         switch (charI) {
             case '=':
@@ -305,7 +322,7 @@ void lex_code(lexer *lexer) {
                 lex_operator(lexer);
                 break;
             case '!':
-                if (lexer->reading_index < lexer->buffer_size-1 && lexer->code_buffer[lexer->reading_index+1]=='=') {
+                if (lexer->reading_index < lexer->end_index-1 && lexer->code_buffer[lexer->reading_index+1]=='=') {
                     add_token(lexer->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=NOT_EQUALS_OPERATOR   , .character=lexer->current_char, .line=lexer->current_line});
                     advance_n(lexer, 2);
                 }
@@ -359,7 +376,6 @@ void lex_code(lexer *lexer) {
             return;
         }
     }
-    add_token(lexer->tokens_list, (token) {.type=EOF_TOKEN, .line=lexer->current_line, .character=lexer->current_char});
 
 
 }
@@ -375,22 +391,21 @@ int find_last_sliceable_index(const char * buffer, const int last_valid_index) {
 }
 
 
-lexing_result lex_code_from_file(int buffer_size, FILE *file) {
-    char buffer[buffer_size];
+lexing_result lex_code_from_file(FILE *file) {
+    char buffer[  BYTES_NUMBER_READ ];
     token_array_list *tokens = new_token_array_list();
     lexer *lexer=new_lexer(tokens);
-    size_t n_read;
-    set_lexer_code_buffer(lexer, buffer, buffer_size);
-    while ((n_read=fread(buffer, sizeof(char), buffer_size, file))!=0) {
-        int end=find_last_sliceable_index(buffer, n_read-1);
-        lexer->buffer_size=end+1;
-        lexer->reading_index=0;
+    lexer->input_file=file;
+    set_lexer_code_buffer(lexer, buffer, BYTES_NUMBER_READ);
+    while ( read_from_lexe_input_file(lexer)!=0 ) {
         lex_code(lexer);
     }
+    add_token(lexer->tokens_list, (token) {.type=EOF_TOKEN, .line=lexer->current_line, .character=lexer->current_char});
     lexing_result res = (lexing_result) {.lexing_status = lexer->lexing_status, .tokens = tokens};
     free(lexer);
     return res;
 }
+
 
 
 void write_in_lexing_error_buffer(lexer *lexe, char *message) {

@@ -126,7 +126,7 @@ bool is_unary_operator_token(token t) {
 }
 
 
-void free_token_elements(token t) {
+void free_token_members(token t) {
     if (t.type==IDENTIFIER_TOKEN) {
         free(t.string_val);
     }

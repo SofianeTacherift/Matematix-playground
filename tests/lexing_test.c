@@ -18,14 +18,14 @@ int main(int argc, char **argv) {
 
     printf("path= \"\"\"%s\"\"\"\n", path);
 
-    lexing_result lexing_result = lex_code_from_file( 1024 , file);
+    lexing_result lexing_result = lex_code_from_file(  file);
 
     token_array_list * list = lexing_result.tokens;
 
     printf("result = \n");
     print_token_list(list);
-    apply_token_operation(list, free_token_elements);
-    free_token_array_list(list);
+
+    free_lexing_result_members(lexing_result);
 
 
 

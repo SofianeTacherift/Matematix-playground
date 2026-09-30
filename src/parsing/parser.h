@@ -48,6 +48,8 @@ token get_next_token(parser *parse);
 token advance(parser *parse);
 _Bool has_parsing_error(parser *parse);
 
+void free_parsing_result_members(parsing_result);
+
 parser *new_parser(token_array_list *tokens);
 parsing_result parse_from_file(FILE *file);
 parsing_node *parse_main_scope(parser *parse);
@@ -67,7 +69,7 @@ parsing_node *parse_power(parser * parse);
 parsing_node *parse_unary(parser *parse);
 parsing_node *parse_primary(parser *parse);
 parsing_node *parse_instruction(parser *parser);
-void write_in_error_buffer(parser *parse, token current, char *message);
+void add_parsing_error_to_parser(parser *parse, token current, char *message);
 void free_nodes(int count, ...);
 
 #endif
