@@ -2,6 +2,7 @@
 // Created by sofiane on 13/09/2026.
 //
 #include "instructions.h"
+#include <stdio.h>
 
 
 static int comparison_operator_to_instr_type_buffer[] = {
@@ -11,6 +12,28 @@ static int comparison_operator_to_instr_type_buffer[] = {
     IF_CMPGTE,
     IF_CMPLT,
     IF_CMPTLTE,
+};
+
+static int instruction_operands_number[] = {
+    0,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0
 };
 
 
@@ -76,6 +99,17 @@ void print_instruction_readable(instruction instruction) {
     }
     printf("\n");
 
+}
+
+void save_instruction(instruction t, FILE *file) {
+    size_t instruction_bytes[3];
+    instruction_bytes[0]=t.type;
+    instruction_bytes[1]=t.operand1;
+    instruction_bytes[2]=t.operand2;
+
+
+    const size_t n= (size_t) instruction_operands_number[t.type]+1;
+    size_t a=fwrite(instruction_bytes, sizeof(size_t), n, file);
 }
 
 

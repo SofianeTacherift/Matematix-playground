@@ -16,8 +16,8 @@
 #define ARRAY_LIST(T, TYPE_ALIAS) \
     \
     typedef struct LIST_NAME(TYPE_ALIAS) { \
-    int size; \
-    int capacity; \
+    size_t size; \
+    size_t capacity; \
     T* elements; \
     } LIST_NAME(TYPE_ALIAS); \
     \
@@ -32,12 +32,8 @@
         init_##TYPE_ALIAS##_list(ARRAY_LIST);\
         return ARRAY_LIST; \
     }\
-    static void free_##TYPE_ALIAS##_array_list( LIST_NAME(TYPE_ALIAS) * list) { \
-        free(list->elements);\
-        free(list); \
-    } \
     static void add_##TYPE_ALIAS(LIST_NAME(TYPE_ALIAS)* list, T element) { \
-        int size = list->size;\
+        size_t size = list->size;\
         if (size>=list->capacity) { \
             list->elements=realloc(list->elements, 2*list->capacity*sizeof(T));\
             list->capacity*=2; \
@@ -46,15 +42,15 @@
         list->size++;\
     } \
     \
-    static void add_##TYPE_ALIAS##_at(LIST_NAME(TYPE_ALIAS)*list, T element, int index) {\
-        int size = list->size;\
+    static void add_##TYPE_ALIAS##_at(LIST_NAME(TYPE_ALIAS)*list, T element, size_t index) {\
+        size_t size = list->size;\
         if (size>=list->capacity) { \
             list->elements=realloc(list->elements, 2*list->capacity*sizeof(T));\
             list->capacity*=2; \
         }\
         T* source=list->elements+index; \
         T* destination=source+1;\
-        int copy_size = size-index; \
+        size_t copy_size = size-index; \
         memmove(destination, source, copy_size*sizeof(T) );\
         *(list->elements+index)=element; \
         list->size++; \
@@ -65,9 +61,9 @@
         list->size = max(list->size-1, 0); \
     } \
     \
-    static void delete_##TYPE_ALIAS(LIST_NAME(TYPE_ALIAS) * list, int index) { \
+    static void delete_##TYPE_ALIAS(LIST_NAME(TYPE_ALIAS) * list, size_t index) { \
         if (index>=list->size || index<0) {return;} \
-        int size = list->size-(index+1);\
+        size_t size = list->size-(index+1);\
         T* source = list->elements+(index+1); \
         T* destination =list->elements+index;\
         memmove(destination, source, size*sizeof(T)); \
@@ -75,7 +71,7 @@
     } \
     \
     static void apply_##TYPE_ALIAS##_operation(LIST_NAME(TYPE_ALIAS)* list, void (*ptr) (T) ) { \
-        for (int i=0;i<list->size;i++) {\
+        for (size_t i=0;i<list->size;i++) {\
             ptr(list->elements[i]);\
         }\
     }\
@@ -90,5 +86,18 @@
         }\
         return list->elements+(list->size-1);\
     }\
+    \
+    static void free_##TYPE_ALIAS##_array_list(LIST_NAME(TYPE_ALIAS) *list) {\
+        free(list->elements);\
+        free(list);\
+    }\
+    \
+    \
+    \
+    \
+    \
+    \
+    \
+    \
 
 #endif 

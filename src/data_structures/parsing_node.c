@@ -549,7 +549,6 @@ p_node_jump_hash_map *map_condition_jumps(parsing_node *root) {
     free_p_node_p_node_hash_map(most_left);
     free_p_node_size_t_hash_map(levels);
     return res;
-
 }
 
 

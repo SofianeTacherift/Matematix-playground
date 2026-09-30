@@ -54,6 +54,11 @@ DEFINE_BINARY_PARSING_FUNCTION(parse_power, (current_token.operation==POWER_OPER
 
 
 
+void free_parser(parser *parser) {
+    free_parsing_error_array_list(parser->parsing_errors);
+    free(parser);
+}
+
 bool is_an_token_of_type(token t, ...) {
     va_list args;
     va_start(args, t);
@@ -91,6 +96,13 @@ token advance(parser *parse ) {
 
 bool has_parsing_error(parser *parse) {
     return parse->parsing_status==PARSING_ERROR;
+}
+
+void print_parser_errors(parser *parser) {
+    for (size_t i=0; i<parser->parsing_errors->size; i++) {
+        parsing_error error = parser->parsing_errors->elements[i];
+        fprintf(stderr, "Error during parsing at line %d character %d : %s", error.token.line+1, error.token.character+1, error.message  );
+    }
 }
 
 

@@ -8,6 +8,7 @@
 
 
 #define copy_to_size_t(dest, src, type)     memcpy( ((char*) (&dest)) + (sizeof(size_t) - sizeof(src) ),  &src , sizeof(src));
+
 HASH_MAP(instructions_block *, size_t, instructions_block, size_t)
 
 
@@ -68,7 +69,7 @@ void print_entry(char * s, size_t i) {
 compiler *new_compiler(parsing_node *head) {
     compiler *res = calloc(1,sizeof(compiler));
     if (res!=NULL) {
-        res->instructions_blocks_list=new_instructions_block_array_list();
+        res->instruction_blocks_list=new_instructions_block_array_list();
         res->variables=new_str_size_t_hash_map(hash_str, equals_str, print_entry);
     }
     return res;
@@ -76,7 +77,7 @@ compiler *new_compiler(parsing_node *head) {
 
 void compile_code(compiler *compiler, parsing_node *node) {
     const int val=setjmp(compiler->error_jmp);
-    if (val!=0) {
+    if (val==0) {
         compile_main_scope(compiler, node);
     }
 }
@@ -101,7 +102,8 @@ void compile_main_scope(compiler *compiler, parsing_node *node) {
         }
         else {current=current->next;}
     }
-    add_instructions_block(compiler->instructions_blocks_list, *start);
+    add_instruction(block->instructions, (instruction) {.type = END_INSTRUCTION});
+    add_instructions_block(compiler->instruction_blocks_list, start);
 }
 
 void compile_scope(compiler *compiler,instructions_block *block, parsing_node *node) {
@@ -176,7 +178,6 @@ instructions_block *compile_expression_nb(compiler *compiler, instructions_block
 }
 instructions_block  *compile_expression(compiler *compiler, instructions_block *block, parsing_node *node) {
     if (node==NULL) {return NULL;}
-    const instructions_block *start_block = block;
     switch (node->type) {
         case BINARY_NODE:
             if (!is_logical_binary_node(node) && !is_binary_comparison_node(node)) {
@@ -292,7 +293,7 @@ void print_node_instruction(parsing_node *node , instructions_block *block) {
     display_node(node);
 
     printf("\ninstructions :\n");
-    print_instruction_block(*block);
+    print_instruction_block(block);
 
     printf("\n");
 }
@@ -384,7 +385,7 @@ void compile_instruction(compiler * compiler, instructions_block *block, parsing
 void print_instruction_block_size_t(instructions_block *b, size_t t) {
     if (b->instructions->size>1 && b->instructions->elements[0].type==ICONST_INSTRUCTION) {
         printf("\n\n\n  ------------------------\n");
-        print_instruction_block(*b);
+        print_instruction_block(b);
         printf("%zu\n", t);
         printf("-------------------------------");
     }
@@ -408,8 +409,8 @@ instructions_block_size_t_hash_map *map_instruction_block_index(instructions_blo
 
 
 void link_instructions_blocks(compiler *compiler) {
-    for (size_t i =0; i<compiler->instructions_blocks_list->size; i++) {
-        instructions_block *start = &compiler->instructions_blocks_list->elements[i];
+    for (size_t i =0; i<compiler->instruction_blocks_list->size; i++) {
+        instructions_block *start = compiler->instruction_blocks_list->elements[i];
         instructions_block_size_t_hash_map *indexs = map_instruction_block_index(start);
         instructions_block *current = start;
         while (current!=NULL) {
@@ -548,8 +549,35 @@ instructions_block *compile_while(compiler *compiler, instructions_block *block,
     true_block_end->next=result;
     return result;
 
+}
 
+void save_compiler_result(compiler *compiler, FILE *dest) {
+    for (size_t i =0 ; i<compiler->instruction_blocks_list->size; i++) {
+        instructions_block *block = compiler->instruction_blocks_list->elements[0];
+        do {
+            save_instruction_block(block, dest);
+            if (block->next!=NULL) {
+                block=block->next;
+            }
 
+        } while (block->next!=NULL);
+    }
+}
+
+void free_compiler(compiler *compiler) {
+    free_str_size_t_hash_map(compiler->variables);
+    free(compiler);
+}
+
+void free_instruction_block_ptr_array_list(instructions_block_array_list *list) {
+    for (int i=0; i<list->size; i++) {
+        instructions_block *current = list->elements[i];
+        while (current!=NULL) {
+            instructions_block *to_free=current;
+            current=current->next;
+            free_instruction_block(to_free);
+        }
+    }
 }
 
 

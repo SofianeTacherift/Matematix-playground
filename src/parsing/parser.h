@@ -24,7 +24,6 @@ typedef struct parsing_error {
 ARRAY_LIST(parsing_error, parsing_error)
 
 typedef struct parser {
-
     token_array_list *tokens;
     int current;
     parsing_error_array_list *parsing_errors;
@@ -58,5 +57,7 @@ parsing_node *parse_primary(parser *parse);
 parsing_node *parse_instruction(parser *parser);
 void write_in_error_buffer(parser *parse, token current, char *message);
 void free_nodes(int count, ...);
+void free_parser(parser *parser) ;
+void print_parser_errors(parser *parser) ;
 
 #endif

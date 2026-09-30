@@ -86,7 +86,7 @@ int main(int argc, char ** argv) {
 
 
     free_tree_node(res, true);
-    free_token_array_list(list);
+    free_token_array_list(list, free_token_elements);
 
     return 0;
     

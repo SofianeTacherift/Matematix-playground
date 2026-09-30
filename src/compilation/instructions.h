@@ -26,7 +26,8 @@ typedef enum {
     IF_CMPGT,
     IF_CMPLT,
     IF_CMPGTE,
-    IF_CMPTLTE
+    IF_CMPTLTE,
+    END_INSTRUCTION
 } instruction_type;
 
 static char * INSTRUCTION_TYPE_STR[] = {
@@ -47,7 +48,8 @@ static char * INSTRUCTION_TYPE_STR[] = {
     "IF_CMPGT",
     "IF_CMPLT",
     "IF_CMPGTE",
-    "IF_CMPTLTE"
+    "IF_CMPTLTE",
+    "END"
 };
 
 
@@ -56,6 +58,8 @@ typedef struct {
     size_t operand1;
     size_t operand2;
 } instruction;
+
+
 
 ARRAY_LIST(instruction, instruction)
 
@@ -67,6 +71,8 @@ instruction_type binary_arithmetic_node_to_instruction_type(parsing_node *node);
 instruction_type unary_arithmetic_node_to_instruction_type( parsing_node *node);
 
 int comparison_operator_to_instruction_type(int t);
+
+void save_instruction(instruction t, FILE *file);
 
 
 void print_instruction_readable(instruction instruction);

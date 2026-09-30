@@ -102,17 +102,23 @@ int main(int argc, char ** argv) {
 
 
 
-    printf("\n\n\ncompilation result (%d):\n", compiler->instructions_blocks_list->size);
+    printf("\n\n\ncompilation result (%d):\n", compiler->instruction_blocks_list->size);
 
-    instructions_block_array_list *instructions_block = compiler->instructions_blocks_list;
+    instructions_block_array_list *instructions_block = compiler->instruction_blocks_list;
     for (size_t i = 0 ; i<instructions_block->size; i++) {
         print_instruction_block_recursive(instructions_block->elements[i]);
     }
     for (size_t i = 0 ; i<instructions_block->size; i++) {
-        print_instructions_block_readable(instructions_block->elements[i],0);
+        print_instruction_block_readable_recursive(instructions_block->elements[i],0);
     }
     free_tree_node(res, true);
+    free_parser(parse);
+
+    apply_token_operation(list, free_token_elements);
     free_token_array_list(list);
+    free_instruction_block_ptr_array_list( compiler->instruction_blocks_list);
+    free_compiler(compiler);
+    free(lexer);
     return 0;
 
 }

@@ -14,18 +14,18 @@
 #include "instructions.h"
 #include <setjmp.h>
 
-#include "instructions_block.h"
+#include "instruction_block.h"
 
 
 HASH_MAP(char *, size_t, str, size_t)
 HASH_SET(char*, str)
 
 
-ARRAY_LIST(instructions_block, instructions_block)
+ARRAY_LIST(instructions_block*, instructions_block)
 
 typedef struct compiler {
     str_size_t_hash_map *variables;
-    instructions_block_array_list *instructions_blocks_list;
+    instructions_block_array_list *instruction_blocks_list;
     char error_message[1024];
     jmp_buf error_jmp;
     int status;
@@ -33,7 +33,7 @@ typedef struct compiler {
 
 
 
-
+void save_compiler_result(compiler *compiler, FILE *dest);
 
 compiler *new_compiler(parsing_node *head);
 void compile_code(compiler *compiler, parsing_node *node);
@@ -52,6 +52,9 @@ void compile_instruction(compiler *compiler, instructions_block *block,parsing_n
 void link_instructions_blocks(compiler *compiler);
 instructions_block *compile_if_statement(compiler *compiler, instructions_block *block, parsing_node *current);
 void compile_(compiler *compiler);
+void free_compiler(compiler *compiler);
+
+void free_instruction_block_ptr_array_list( instructions_block_array_list *list);
 
 
 #endif //MATEMATIX_COMPILATOR_H

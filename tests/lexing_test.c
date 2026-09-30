@@ -12,22 +12,22 @@ int main(int argc, char **argv) {
     char *path = argv[1];
     FILE *file = fopen(path, "r");
     if (file==NULL) {
-        printf("Error : can't find file %s.\n", path);
+        perror("open file");
         return 1;
     }
 
 
     printf("path= \"\"\"%s\"\"\"\n", path);
 
-    char buffer[1024];
+    lexing_result lexing_result = lex_code_from_file( 1024 , file);
 
-
-    lexer *lexer = new_lexer();
-
-    lex_code_from_file(lexer, buffer, sizeof(buffer), file);
-
-    token_array_list * list = lexer->tokens_list;
+    token_array_list * list = lexing_result.tokens;
 
     printf("result = \n");
     print_token_list(list);
+    apply_token_operation(list, free_token_elements);
+    free_token_array_list(list);
+
+
+
 }
