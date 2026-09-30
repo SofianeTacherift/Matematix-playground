@@ -32,37 +32,20 @@ int main(int argc, char ** argv) {
     char buffer[1024];
 
 
-    lexer *lexer = new_lexer();
-
-    lex_code_from_file(lexer, buffer, sizeof(buffer), file);
-
-    token_array_list * list = lexer->tokens_list;
-
-
-    printf("\ntokens list : ");
-    print_token_list(list);
-    printf("\n");
-
-    if (list==NULL) {
-        printf("error during lexing, exit\n");
-        return 2;
+    parsing_result parsing_res = parse_from_file(file);
+    lexing_result lexing_res = parsing_res.lexing_res;
+    parsing_node *res = parsing_res.head;
+    if (lexing_res.lexing_status==LEXING_ERROR) {
+        fprintf(stderr, "%s\n",lexing_res.error_buffer);
+        return 1;
     }
-
-
- 
-
-
-
-    parser *parse= new_parser(list);
-
-    parsing_node * res = parse_main_scope(parse);
-
-
 
 
     printf("parsing result :\n");
 
-    if (parse->parsing_status==NO_PARSING_ERROR) {
+
+    if (parsing_res.parsing_status==NO_PARSING_ERROR) {
+
         display_tree_node(res);
 
         printf("\n\n");
@@ -77,8 +60,8 @@ int main(int argc, char ** argv) {
 
     }
     else {
-        for (int i=0; i<parse->parsing_errors->size; i++) {
-            parsing_error error = parse->parsing_errors->elements[i];
+        for (int i=0; i<parsing_res.errors->size; i++) {
+            parsing_error error = parsing_res.errors->elements[i];
             printf("error during parsing line %d character %d : %s \n", error.token.line+1, error.token.character+1, error.message);
         }
     }
@@ -86,7 +69,8 @@ int main(int argc, char ** argv) {
 
 
     free_tree_node(res, true);
-    free_token_array_list(list);
+    free_token_array_list(parsing_res.lexing_res.tokens);
+
 
     return 0;
     

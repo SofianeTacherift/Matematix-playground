@@ -69,20 +69,20 @@
             CELL_TYPE_NAME(TYPE_ALIAS) *sentinel = malloc(sizeof(CELL_TYPE_NAME(TYPE_ALIAS))); \
             for (size_t i=0; i<old_capacity; i++) {\
                 sentinel->next=set->buckets[i];\
-                CELL_TYPE_NAME(TYPE_ALIAS) *current = sentinel;\
-                while (current->next!=NULL ) {\
-                    size_t new_index = set->hash_function(current->next->value) % set->capacity;\
+                CELL_TYPE_NAME(TYPE_ALIAS) *current_index = sentinel;\
+                while (current_index->next!=NULL ) {\
+                    size_t new_index = set->hash_function(current_index->next->value) % set->capacity;\
                     if (new_index!=i) {\
-                        CELL_TYPE_NAME(TYPE_ALIAS) *to_move = current->next;\
-                        current->next=to_move->next;\
+                        CELL_TYPE_NAME(TYPE_ALIAS) *to_move = current_index->next;\
+                        current_index->next=to_move->next;\
                         if (to_move==set->buckets[i]) {\
                             set->buckets[i]=to_move->next;\
                         }\
                         to_move->next=set->buckets[new_index];\
                         set->buckets[new_index]=to_move;\
                     }\
-                    if (current->next!=NULL) {\
-                    current=current->next;\
+                    if (current_index->next!=NULL) {\
+                    current_index=current_index->next;\
                     }\
                 }\
             }\
@@ -101,11 +101,11 @@
             }\
             else if (set->equals_function(set->buckets[index]->value, element)) {return false;} \
             else {\
-                CELL_TYPE_NAME(TYPE_ALIAS) *current=set->buckets[index];\
-                while (current->next!=NULL && !set->equals_function(element, current->next->value)) {current=current->next;}\
-                if (current->next==NULL) {\
+                CELL_TYPE_NAME(TYPE_ALIAS) *current_index=set->buckets[index];\
+                while (current_index->next!=NULL && !set->equals_function(element, current_index->next->value)) {current_index=current_index->next;}\
+                if (current_index->next==NULL) {\
                     result=create_cell(element, TYPE_ALIAS);\
-                    current->next=result;\
+                    current_index->next=result;\
                 }\
             }\
             if (result!=NULL) {set->size++;}\
@@ -132,11 +132,11 @@
                 set->buckets[index]=removed->next;\
             }\
             else {\
-                CELL_TYPE_NAME(TYPE_ALIAS) *current = head;\
-                while (current->next!=NULL && !set->equals_function(current->next->value, element)) {current=current->next;}\
-                if (current->next!=NULL) {\
-                    removed=current->next;\
-                    current->next=removed->next;\
+                CELL_TYPE_NAME(TYPE_ALIAS) *current_index = head;\
+                while (current_index->next!=NULL && !set->equals_function(current_index->next->value, element)) {current_index=current_index->next;}\
+                if (current_index->next!=NULL) {\
+                    removed=current_index->next;\
+                    current_index->next=removed->next;\
                 } \
             }\
             if (removed!=NULL) {set->size--; free(removed);}\
@@ -146,18 +146,18 @@
         static bool hash_set_contains_##TYPE_ALIAS (HASH_SET_TYPE_NAME(TYPE_ALIAS) *set, T element)  {\
             long hash = set->hash_function(element);\
             size_t index = hash % set->capacity;\
-            CELL_TYPE_NAME(TYPE_ALIAS) * current = set->buckets[index];\
-            while (current!=NULL && current->value!=element) {current=current->next;}\
-            return current!=NULL;\
+            CELL_TYPE_NAME(TYPE_ALIAS) * current_index = set->buckets[index];\
+            while (current_index!=NULL && current_index->value!=element) {current_index=current_index->next;}\
+            return current_index!=NULL;\
         }\
         \
         \
         static void free_##TYPE_ALIAS##_hash_set(HASH_SET_TYPE_NAME(TYPE_ALIAS) *set) {\
             for (size_t i=0; i<set->capacity; i++) {\
-                CELL_TYPE_NAME(TYPE_ALIAS) *current = set->buckets[i];\
-                while (current!=NULL) {\
-                    CELL_TYPE_NAME(TYPE_ALIAS) *to_free=current;\
-                    current=current->next;\
+                CELL_TYPE_NAME(TYPE_ALIAS) *current_index = set->buckets[i];\
+                while (current_index!=NULL) {\
+                    CELL_TYPE_NAME(TYPE_ALIAS) *to_free=current_index;\
+                    current_index=current_index->next;\
                     free(to_free);\
                 }\
             }\
@@ -176,10 +176,10 @@
                printf("set[ "); \
                printf("capacity:%zu - size:%zu - { ",set->capacity, set->size);\
                for (size_t i=0; i<set->capacity && c<set->size; i++ ) {\
-                    CELL_TYPE_NAME(TYPE_ALIAS) *current = set->buckets[i];\
-                    while (current!=NULL) {\
+                    CELL_TYPE_NAME(TYPE_ALIAS) *current_index = set->buckets[i];\
+                    while (current_index!=NULL) {\
                         c++;\
-                        set->print_function(current->value); \
+                        set->print_function(current_index->value); \
                         if (c==set->size) {printf(" ");break;}\
                         if (c<set->size) {\
                         printf(" , "); \
@@ -189,7 +189,7 @@
                         }\
                         \
                         \
-                        current=current->next;\
+                        current_index=current_index->next;\
                     }\
                 }\
                 printf(" }]\n");\

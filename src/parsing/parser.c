@@ -20,7 +20,7 @@
     } \
  \
 
- #define print_current_token(PARSER) print_token(get_current_token(PARSER)); printf("\n");
+#define print_current_token(PARSER) print_token(get_current_token(PARSER)); printf("\n");
 
 #define DEFINE_BINARY_PARSING_FUNCTION(NAME, CONDITION, PARSING_FUNC_LEFT, PARSING_FUNC_RIGHT) parsing_node * NAME (parser *parse) { \
     parsing_node *left= PARSING_FUNC_LEFT(parse); \
@@ -74,21 +74,21 @@ bool is_an_token_of_type(token t, ...) {
 
 
 token get_current_token(parser *parse) {
-    if (parse->current<parse->tokens->size) {
-        return parse->tokens->elements[parse->current];
+    if (parse->current_index<parse->tokens->size) {
+        return parse->tokens->elements[parse->current_index];
     }
     return (token) {.type=EOF_TOKEN};
 }
 
 token get_next_token(parser *parse) {
-    if (parse->current+1<parse->tokens->size) {
-        return parse->tokens->elements[parse->current+1];
+    if (parse->current_index+1<parse->tokens->size) {
+        return parse->tokens->elements[parse->current_index+1];
     }
     return (token) {.type=EOF_TOKEN}; 
 }
 
 token advance(parser *parse ) {
-    parse->current++;
+    parse->current_index++;
     return get_current_token(parse);
 }
 
@@ -101,7 +101,7 @@ bool has_parsing_error(parser *parse) {
 parser * new_parser(token_array_list * tokens) {
     parser *result=calloc(1, sizeof(parser));
     result->parsing_errors=new_parsing_error_array_list();
-    result->current=0;
+    result->current_index=0;
     result->tokens=tokens;
     return result;
 }
@@ -109,11 +109,20 @@ parser * new_parser(token_array_list * tokens) {
 
 
 
-parsing_node  *parse_from_file(FILE *file) {
-    lexing_result lexing_res = lex_code_from_file(5000, file);
-    if (lexing_res.lexing_status==LEXING_ERROR) {
+parsing_result parse_from_file(FILE *file) {
+    parsing_result parsing_res = {0};
 
+    lexing_result lexing_res = lex_code_from_file(5000, file);
+    parsing_res.lexing_res=lexing_res;
+    if (lexing_res.lexing_status==LEXING_ERROR) {
+        return parsing_res;
     }
+    parser *parser = new_parser(lexing_res.tokens);
+    parsing_res.head=parse_main_scope(parser);
+    parsing_res.parsing_status=parser->parsing_status;
+    parsing_res.errors=parser->parsing_errors;
+    return parsing_res;
+
 }
 
 
