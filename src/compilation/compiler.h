@@ -11,17 +11,17 @@
 #include "parser.h"
 #include "hash_set.h"
 #include "hash_map.h"
-#include "instructions.h"
+#include "instruction.h"
 #include <setjmp.h>
 
-#include "instructions_block.h"
+#include "instruction_block.h"
 
 
 HASH_MAP(char *, size_t, str, size_t)
 HASH_SET(char*, str)
 
 
-ARRAY_LIST(instructions_block, instructions_block)
+ARRAY_LIST(instruction_block, instructions_block)
 
 typedef struct compiler {
     str_size_t_hash_map *variables;
@@ -38,19 +38,19 @@ typedef struct compiler {
 compiler *new_compiler(parsing_node *head);
 void compile_code(compiler *compiler, parsing_node *node);
 void compile_main_scope(compiler *compiler,  parsing_node *node);
-void compile_scope(compiler *compiler, instructions_block *block,  parsing_node *node);
-void compile_const(compiler *compiler,instructions_block *block, parsing_node *node);
-void compile_variable_load(compiler *compiler, instructions_block *block, parsing_node *node);
-void compile_primary(compiler *compiler, instructions_block *block,parsing_node *node);
-void compile_logical_expression(compiler *compiler, instructions_block *block, parsing_node *node, instructions_block *true_block, instructions_block *false_block);
-instructions_block *compile_expression(compiler *compiler,instructions_block *block, parsing_node *node);
-void compile_arithmetic_binary(compiler *compiler,instructions_block *block, parsing_node *node);
-void compile_arithmetic_unary(compiler *compiler,instructions_block *block, parsing_node *node);
-void compile_affectation(compiler *compiler,instructions_block *block,  parsing_node *node);
-instructions_block *compile_while(compiler *compiler, instructions_block *block, parsing_node *node);
-void compile_instruction(compiler *compiler, instructions_block *block,parsing_node *node);
+void compile_scope(compiler *compiler, instruction_block *block,  parsing_node *node);
+void compile_const(compiler *compiler,instruction_block *block, parsing_node *node);
+void compile_variable_load(compiler *compiler, instruction_block *block, parsing_node *node);
+void compile_primary(compiler *compiler, instruction_block *block,parsing_node *node);
+void compile_logical_expression(compiler *compiler, instruction_block *block, parsing_node *node, instruction_block *true_block, instruction_block *false_block);
+instruction_block *compile_expression(compiler *compiler,instruction_block *block, parsing_node *node);
+void compile_arithmetic_binary(compiler *compiler,instruction_block *block, parsing_node *node);
+void compile_arithmetic_unary(compiler *compiler,instruction_block *block, parsing_node *node);
+void compile_affectation(compiler *compiler,instruction_block *block,  parsing_node *node);
+instruction_block *compile_while(compiler *compiler, instruction_block *block, parsing_node *node);
+void compile_instruction(compiler *compiler, instruction_block *block,parsing_node *node);
 void link_instructions_blocks(compiler *compiler);
-instructions_block *compile_if_statement(compiler *compiler, instructions_block *block, parsing_node *current);
+instruction_block *compile_if_statement(compiler *compiler, instruction_block *block, parsing_node *current);
 void compile_(compiler *compiler);
 
 

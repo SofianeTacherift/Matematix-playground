@@ -7,8 +7,8 @@
 
 
 #define DELIMITATION ';'
-#define NOT_USED_RES_I -2
-#define LEXING_ERROR -1
+#define LEXING_SUCCESS 0
+#define LEXING_ERROR 1
 
 typedef struct lexer {
     token_array_list *tokens_list;
@@ -24,12 +24,18 @@ typedef struct lexer {
     int lexing_status;
 } lexer;
 
+typedef struct lexing_result {
+    char error_buffer[1024];
+    int lexing_status;
+    token_array_list *tokens;
+}lexing_result;
+
 
 static char ERROR_BUFFER[1024];
 
 
 
-lexer * new_lexer(void);
+lexer * new_lexer(token_array_list *);
 
 void set_lexer_code_buffer(lexer *, char*, int);
 
@@ -52,7 +58,7 @@ token minus_to_token(lexer *lexer);
 
 void lex_code(lexer *lexer );
 
-void lex_code_from_file(lexer *lexer,char *buffer, int buffer_size, FILE *file);
+lexing_result lex_code_from_file(int buffer_size, FILE *file);
 
 void write_in_lexing_error_buffer(lexer *lexe, char *message);
 

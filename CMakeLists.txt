@@ -2,13 +2,17 @@ cmake_minimum_required(VERSION 3.15)
 project(matematix C)
 
 set(CMAKE_C_STANDARD 11)
-add_compile_options(-Og -Wall -Wextra -g)
+
+
+add_compile_options(-Og -Wall -Wextra -g -fsanitize=address -fno-omit-frame-pointer)
+add_link_options(-fsanitize=address)
 
 include_directories(
         src/data_structures
         src/lexing
         src/parsing
         src/compilation
+        src/execution
 )
 
 
@@ -37,6 +41,19 @@ add_executable(compilation_test.out
         src/data_structures/parsing_node.c
         src/data_structures/operators.c
         src/compilation/compiler.c
-        src/compilation/instructions.c
-        src/compilation/instructions_block.c
+        src/compilation/instruction.c
+        src/compilation/instruction_block.c
 )
+
+#add_executable(matpx.out
+#        src/compilation/matpx.c
+#        src/lexing/lexer.c
+#        src/data_structures/token.c
+#        src/parsing/parser.c
+#        src/data_structures/parsing_node.c
+#        src/data_structures/operators.c
+#        src/compilation/compiler.c
+#        src/compilation/instruction.c
+#        src/compilation/instruction_block.c
+#)
+

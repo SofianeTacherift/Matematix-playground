@@ -12,17 +12,16 @@
 
 
 
-lexer * new_lexer() {
+lexer * new_lexer(token_array_list *list) {
     lexer *res = calloc(1,sizeof(lexer));
     if (res!=NULL) {
-        res->tokens_list=new_token_array_list();
-        res->lexing_status=NOT_USED_RES_I;
+        res->tokens_list=list;
+        res->lexing_status=LEXING_SUCCESS;
     }
     return res;
 }
 
 void set_lexer_code_buffer(lexer *lexer, char* buffer, int size) {
-    free(lexer->code_buffer);
     lexer->code_buffer=buffer;
     lexer->buffer_size=size;
 }
@@ -102,6 +101,7 @@ void lex_number(lexer *lexer) {
     }
     advance_n(lexer, i-start);
     add_token(lexer->tokens_list, t);
+    free(number);
 
 }
 
@@ -289,7 +289,6 @@ void lex_code(lexer *lexer) {
 
     while (lexer->reading_index<lexer->buffer_size) {
         char charI=code[lexer->reading_index];
-        int res=0;
         switch (charI) {
             case '=':
             case '<':
@@ -337,7 +336,6 @@ void lex_code(lexer *lexer) {
                 break;
             case ' ':
             case '\n':
-                res=0;;
                 advance_check_ln(lexer);
                 break;
             default:
@@ -377,8 +375,11 @@ int find_last_sliceable_index(const char * buffer, const int last_valid_index) {
 }
 
 
-void lex_code_from_file(lexer *lexer,char *buffer, int buffer_size, FILE *file) {
-    int n_read;
+lexing_result lex_code_from_file(int buffer_size, FILE *file) {
+    char buffer[buffer_size];
+    token_array_list *tokens = new_token_array_list();
+    lexer *lexer=new_lexer(tokens);
+    size_t n_read;
     set_lexer_code_buffer(lexer, buffer, buffer_size);
     while ((n_read=fread(buffer, sizeof(char), buffer_size, file))!=0) {
         int end=find_last_sliceable_index(buffer, n_read-1);
@@ -386,10 +387,16 @@ void lex_code_from_file(lexer *lexer,char *buffer, int buffer_size, FILE *file) 
         lexer->reading_index=0;
         lex_code(lexer);
     }
-
+    lexing_result res = (lexing_result) {.lexing_status = lexer->lexing_status, .tokens = tokens};
+    free(lexer);
+    return res;
 }
 
 
 void write_in_lexing_error_buffer(lexer *lexe, char *message) {
     snprintf(lexe->error_buffer, sizeof(lexe->error_buffer),"Error during lexing at line %d character %d : %s.\n",lexe->current_line+1, lexe->current_char+1, message );
 }
+
+
+
+

@@ -1,7 +1,7 @@
 //
 // Created by sofiane on 13/09/2026.
 //
-#include "instructions.h"
+#include "instruction.h"
 
 
 static int comparison_operator_to_instr_type_buffer[] = {

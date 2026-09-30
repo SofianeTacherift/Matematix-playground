@@ -125,3 +125,9 @@ bool is_unary_operator_token(token t) {
     return t.type=OPERATOR_TOKEN && is_unary_operator(t.operation);
 }
 
+
+void free_token_elements(token t) {
+    if (t.type==IDENTIFIER_TOKEN) {
+        free(t.string_val);
+    }
+}

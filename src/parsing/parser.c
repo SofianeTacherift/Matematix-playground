@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <linux/limits.h>
 
+#include "lexer.h"
+
 
 #define P_NEW_LINE printf("\n");
 
@@ -51,6 +53,7 @@ DEFINE_BINARY_PARSING_FUNCTION(parse_logical_and, (current_token.operation==LOGI
 DEFINE_BINARY_PARSING_FUNCTION(parse_additive, (current_token.operation==ADD_OPERATOR || current_token.operation==SUB_OPERATOR) , parse_multiplicative, parse_multiplicative)
 DEFINE_BINARY_PARSING_FUNCTION(parse_multiplicative, (current_token.operation==MULTIPLY_OPERATOR || current_token.operation==DIVIDE_OPERATOR) , parse_power, parse_power)
 DEFINE_BINARY_PARSING_FUNCTION(parse_power, (current_token.operation==POWER_OPERATOR),parse_primary, parse_power)
+
 
 
 
@@ -106,7 +109,12 @@ parser * new_parser(token_array_list * tokens) {
 
 
 
+parsing_node  *parse_from_file(FILE *file) {
+    lexing_result lexing_res = lex_code_from_file(5000, file);
+    if (lexing_res.lexing_status==LEXING_ERROR) {
 
+    }
+}
 
 
 parsing_node * parse_main_scope(parser *parse) {

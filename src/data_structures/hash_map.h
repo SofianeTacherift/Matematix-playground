@@ -239,7 +239,7 @@ return removed_count;\
             while (current!=NULL) {\
                 ENTRY_NAME(K_ALIAS, V_ALIAS) *next=current->next;\
                 free(current);\
-                current=current->next;\
+                current=next;\
             }\
         }\
         free(map);\
