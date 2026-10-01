@@ -440,6 +440,7 @@ void free_parsing_node_linked_list(parsing_node_linked_list* list) {
         current=current->next;
         free_tree_node(to_free, false);
     }
+    free(list);
 
 }
 

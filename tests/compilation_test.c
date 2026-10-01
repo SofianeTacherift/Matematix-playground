@@ -38,7 +38,7 @@ int main(int argc, char ** argv) {
     lexing_result lexing_res = parsing_res.lexing_res;
 
     if (lexing_res.lexing_status==LEXING_ERROR) {
-        fprintf(stderr, "%s\n",lexing_res.error_buffer);
+        fprintf(stderr, "%s\n",lexing_res.error_message);
         free_compilation_result_members(compilation_res);
         return 1;
     }
@@ -51,7 +51,7 @@ int main(int argc, char ** argv) {
         free_compilation_result_members(compilation_res);
         return 2;
     }
-    if (compilation_res.status==COMPILATION_ERROR) {
+    if (compilation_res.compilation_status==COMPILATION_ERROR) {
         fprintf(stderr, "%s\n", compilation_res.error_message);
         free_compilation_result_members(compilation_res);
         return 3;

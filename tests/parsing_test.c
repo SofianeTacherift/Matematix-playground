@@ -36,7 +36,7 @@ int main(int argc, char ** argv) {
     lexing_result lexing_res = parsing_res.lexing_res;
     parsing_node *res = parsing_res.head;
     if (lexing_res.lexing_status==LEXING_ERROR) {
-        fprintf(stderr, "%s\n",lexing_res.error_buffer);
+        fprintf(stderr, "%s\n",lexing_res.error_message);
         return 1;
     }
 

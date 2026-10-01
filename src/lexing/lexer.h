@@ -27,7 +27,7 @@ typedef struct lexer {
 } lexer;
 
 typedef struct lexing_result {
-    char error_buffer[1024];
+    char error_message[1024];
     int lexing_status;
     token_array_list *tokens;
 }lexing_result;

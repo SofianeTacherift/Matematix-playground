@@ -22,19 +22,18 @@ HASH_MAP(char *, size_t, str, size_t)
 
 
 
-
 size_t remove_from_str_size_t_hash_map_if_value_greater_than(str_size_t_hash_map *map, size_t n) {
     size_t removed_count = 0;
     for (size_t i = 0; i < map->capacity; i++) {
         str_size_t_entry *head = map->buckets[i];
-        while (head != ((void *) 0) && head->value> n) {
+        while (head != NULL && head->value> n) {
             map->buckets[i] = head->next;
             free(head);
             head = map->buckets[i];
             map->size--;
             removed_count++;
         }
-        if (head != ((void *) 0)) {
+        if (head != NULL) {
             str_size_t_entry *current = head;
             while (current->next != ((void *) 0)) {
                 str_size_t_entry *next = current->next;
@@ -57,9 +56,9 @@ bool equals_str(char *s1, char *s2) {
 long hash_str(char  *p) {
     char *str=p;
     long hash=0;
-    int len=strlen(str);
-    for (int i=0; i<len;i++) {
-        int charI=str[i];
+    size_t len=strlen(str);
+    for (size_t i=0; i<len;i++) {
+        int charI= (int) str[i];
         hash=31*hash+charI;
     }
     return hash;
@@ -86,6 +85,7 @@ void free_compiler(compiler *compiler) {
     free(compiler);
 }
 
+
 compilation_result compile_from_file(FILE *file) {
     parsing_result parsing_res = parse_from_file(file);
     lexing_result lexing_result = parsing_res.lexing_res;
@@ -99,17 +99,17 @@ compilation_result compile_from_file(FILE *file) {
     parsing_node *head = parsing_res.head;
     compiler *compiler = new_compiler(res_list);
 
-    compile_main_scope(compiler, head);
-
+    compile_code(compiler, head);
+    compilation_res.instructions_block_arrays=compiler->instructions_blocks_list;
     if (compiler->status==COMPILATION_ERROR) {
-        compilation_res.status=COMPILATION_ERROR;
+        compilation_res.compilation_status=COMPILATION_ERROR;
         memcpy(compilation_res.error_message, compiler->error_message, sizeof compiler->error_message);
     }
     else {
-        compilation_res.status=COMPILATION_SUCCESS;
-        compilation_res.instructions_block_arrays=compiler->instructions_blocks_list;
+        compilation_res.compilation_status=COMPILATION_SUCCESS;
+        link_instructions_blocks(compiler);
     }
-    link_instructions_blocks(compiler);
+
     free_compiler(compiler);
     return compilation_res;
 
@@ -124,14 +124,39 @@ void free_compilation_result_members(compilation_result compilation_res) {
 
 }
 
+bool has_compilation_errors(compilation_result compilation_res) {
+    return compilation_res.compilation_status==COMPILATION_ERROR || compilation_res.parsing_res.parsing_status==PARSING_ERROR || compilation_res.parsing_res.lexing_res.lexing_status==LEXING_ERROR;
+}
+
+void print_compilation_errors(compilation_result compilation_res, FILE *file) {
+    if (file==NULL) return;
+
+    parsing_result parsing_res = compilation_res.parsing_res;
+    lexing_result lexing_res = parsing_res.lexing_res;
+    if (lexing_res.lexing_status==LEXING_ERROR) {
+        fprintf(file, "%s\n",lexing_res.error_message);
+    }
+    else if (parsing_res.parsing_status==PARSING_ERROR) {
+        for (size_t i=0; i<parsing_res.errors->size; i++) {
+            parsing_error error = parsing_res.errors->elements[i];
+            fprintf(file, "parsing error at line %d character %d %s\n", error.token.line+1, error.token.character+1, error.message );
+        }
+    }
+    else if (compilation_res.compilation_status==COMPILATION_ERROR) {
+        fprintf(file, "%s\n", compilation_res.error_message);
+    }
+
+}
+
+
 
 
 void compile_code(compiler *compiler, parsing_node *node) {
     const int val=setjmp(compiler->error_jmp);
-    if (val!=0) {
+    if (val==0) {
         compile_main_scope(compiler, node);
     }
-    compiler->status=COMPILATION_ERROR;
+    else {compiler->status=COMPILATION_ERROR;}
 }
 
 void compile_main_scope(compiler *compiler, parsing_node *node) {
@@ -139,6 +164,7 @@ void compile_main_scope(compiler *compiler, parsing_node *node) {
     parsing_node *current=node;
     instruction_block *block=new_instructions_block();
     instruction_block *start=block;
+    add_instructions_block(compiler->instructions_blocks_list, start);
     while (current!=NULL) {
         switch (current->type) {
             case OPENING_SCOPE_NODE:
@@ -158,7 +184,7 @@ void compile_main_scope(compiler *compiler, parsing_node *node) {
     add_instruction(block->next->instructions, (instruction) {.type = RETURN_INSTRUCTION});
 
 
-    add_instructions_block(compiler->instructions_blocks_list, start);
+
 }
 
 void compile_scope(compiler *compiler,instruction_block *block, parsing_node *node) {
@@ -209,8 +235,9 @@ void compile_variable_load(compiler *compiler, instruction_block *block, parsing
         add_instruction(block->instructions, res);
     }
     else {
-        compiler->status=1;
+        compiler->status=COMPILATION_ERROR;
         snprintf(compiler->error_message, sizeof compiler->error_message, "Variable %s used but not declared", node->string_val);
+        longjmp(compiler->error_jmp, 2);
     }
 }
 
@@ -301,8 +328,10 @@ void compile_arithmetic_unary(compiler *compiler, instruction_block *block, pars
 }
 
 void compile_arithmetic_binary(compiler * compiler , instruction_block *block, parsing_node *node) {
+
     block=compile_expression_nb(compiler,block, node->left);
     block=compile_expression_nb(compiler,block, node->right);
+
     int instruction_type = binary_arithmetic_node_to_instruction_type(node);
     add_instruction(block->instructions, (instruction) {.type = instruction_type});
 }
@@ -575,8 +604,6 @@ instruction_block *compile_while(compiler *compiler, instruction_block *block, p
     true_block_end->next=result;
     return result;
 }
-
-
 
 
 

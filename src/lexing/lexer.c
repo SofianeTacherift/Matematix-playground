@@ -96,9 +96,8 @@ void lex_number(lexer *lexer) {
     t.character=character;
     t.operation=NONE_OPERATOR;
 
-    if ((str_index<lexer->end_index && code[str_index]=='f')) {
+    if ((lexer->reading_index<lexer->end_index && code[lexer->reading_index]=='f')) {
         type=FLOAT_TOKEN;
-        str_index++;
     }
     t.type=type;
     switch (type)
@@ -120,7 +119,6 @@ void lex_number(lexer *lexer) {
 
 void lex_string(lexer *lexer) {
     char *code =lexer->code_buffer;
-    int start = lexer->reading_index;
 
     int i=0;
     int current_len = 32;
@@ -128,7 +126,7 @@ void lex_string(lexer *lexer) {
     int line=lexer->current_line;
     int character=lexer->current_char;
 
-    while (lexer->reading_index<lexer->end_index && !start_new_token(code[lexer->reading_index])) {
+    while (lexer->reading_index<lexer->end_index && !start_new_token(code[lexer->reading_index]) && code[lexer->reading_index]!='\n') {
         if (i>current_len) {
             str=realloc(str, current_len*2*sizeof(char));
             current_len*=2;

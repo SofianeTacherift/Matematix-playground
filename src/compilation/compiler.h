@@ -22,12 +22,12 @@
 
 
 
-
 ARRAY_LIST(instruction_block*, instructions_block)
+
 
 typedef struct compiler {
     struct str_size_t_hash_map *variables;
-    instructions_block_array_list *instructions_blocks_list;
+    struct instructions_block_array_list *instructions_blocks_list;
     char error_message[1024];
     jmp_buf error_jmp;
     int status;
@@ -35,18 +35,23 @@ typedef struct compiler {
 
 typedef struct compilation_result {
     parsing_result parsing_res;
-    instructions_block_array_list *instructions_block_arrays;
+    struct instructions_block_array_list *instructions_block_arrays;
     char error_message[1024];
-    int status;
+    int compilation_status;
 } compilation_result;
 
 
 
 
 
-compiler *new_compiler(instructions_block_array_list *result_list);
+compiler *new_compiler(struct instructions_block_array_list *result_list);
 compilation_result compile_from_file(FILE *file);
 void free_compilation_result_members(compilation_result );
+
+bool has_compilation_errors(compilation_result compilation_res);
+
+void print_compilation_errors(compilation_result compilation_res, FILE *file);
+
 
 void compile_code(compiler *compiler, parsing_node *node);
 void compile_main_scope(compiler *compiler,  parsing_node *node);
