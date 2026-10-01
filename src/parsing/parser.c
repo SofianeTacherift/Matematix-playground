@@ -59,7 +59,9 @@ DEFINE_BINARY_PARSING_FUNCTION(parse_power, (current_token.operation==POWER_OPER
 void free_parsing_result_members(parsing_result parsing_res) {
     free_lexing_result_members(parsing_res.lexing_res);
     free_tree_node(parsing_res.head, true);
-    free_parsing_error_array_list(parsing_res.errors);
+    if (parsing_res.errors!=NULL) {
+        free_parsing_error_array_list(parsing_res.errors);
+    }
 
 }
 

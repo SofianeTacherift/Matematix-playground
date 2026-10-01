@@ -117,8 +117,10 @@ compilation_result compile_from_file(FILE *file) {
 
 void free_compilation_result_members(compilation_result compilation_res) {
     free_parsing_result_members(compilation_res.parsing_res);
-    apply_instructions_block_operation(compilation_res.instructions_block_arrays, free_instruction_block_recursive);
-    free_instructions_block_array_list(compilation_res.instructions_block_arrays);
+    if (compilation_res.instructions_block_arrays!=NULL) {
+        apply_instructions_block_operation(compilation_res.instructions_block_arrays, free_instruction_block_recursive);
+        free_instructions_block_array_list(compilation_res.instructions_block_arrays);
+    }
 
 }
 

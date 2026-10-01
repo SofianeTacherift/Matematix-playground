@@ -39,6 +39,7 @@ int main(int argc, char ** argv) {
 
     if (lexing_res.lexing_status==LEXING_ERROR) {
         fprintf(stderr, "%s\n",lexing_res.error_buffer);
+        free_compilation_result_members(compilation_res);
         return 1;
     }
     if (parsing_res.parsing_status==PARSING_ERROR) {
@@ -47,12 +48,15 @@ int main(int argc, char ** argv) {
             fprintf(stderr, "parsing error at line %d character %d %s\n", error.token.line+1, error.token.character+1, error.message );
 
         }
+        free_compilation_result_members(compilation_res);
         return 2;
     }
     if (compilation_res.status==COMPILATION_ERROR) {
         fprintf(stderr, "%s\n", compilation_res.error_message);
+        free_compilation_result_members(compilation_res);
         return 3;
     }
+
 
     print_instruction_block_recursive(compilation_res.instructions_block_arrays->elements[0]);
     print_instruction_block_readable(compilation_res.instructions_block_arrays->elements[0], 0);

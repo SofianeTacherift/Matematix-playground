@@ -25,8 +25,10 @@ void set_lexer_code_buffer(lexer *lexer, char* buffer, int size) {
 }
 
 void free_lexing_result_members(lexing_result lexing_res) {
-    apply_token_operation(lexing_res.tokens, free_token_members);
-    free_token_array_list(lexing_res.tokens);
+    if (lexing_res.tokens!=NULL) {
+        apply_token_operation(lexing_res.tokens, free_token_members);
+        free_token_array_list(lexing_res.tokens);
+    }
 }
 
 size_t read_from_lexe_input_file(lexer *lexer) {
