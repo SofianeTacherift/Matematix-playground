@@ -17,25 +17,37 @@
 #include "instruction_block.h"
 
 
-HASH_MAP(char *, size_t, str, size_t)
-HASH_SET(char*, str)
+#define COMPILATION_SUCCESS 0;
+#define COMPILATION_ERROR 1
 
 
-ARRAY_LIST(instruction_block, instructions_block)
+
+
+ARRAY_LIST(instruction_block*, instructions_block)
 
 typedef struct compiler {
-    str_size_t_hash_map *variables;
+    struct str_size_t_hash_map *variables;
     instructions_block_array_list *instructions_blocks_list;
     char error_message[1024];
     jmp_buf error_jmp;
     int status;
 } compiler;
 
+typedef struct compilation_result {
+    parsing_result parsing_res;
+    instructions_block_array_list *instructions_block_arrays;
+    char error_message[1024];
+    int status;
+} compilation_result;
 
 
 
 
-compiler *new_compiler(parsing_node *head);
+
+compiler *new_compiler(instructions_block_array_list *result_list);
+compilation_result compile_from_file(FILE *file);
+void free_compilation_result_members(compilation_result );
+
 void compile_code(compiler *compiler, parsing_node *node);
 void compile_main_scope(compiler *compiler,  parsing_node *node);
 void compile_scope(compiler *compiler, instruction_block *block,  parsing_node *node);

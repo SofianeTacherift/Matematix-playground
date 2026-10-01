@@ -26,7 +26,8 @@ typedef enum {
     IF_CMPGT,
     IF_CMPLT,
     IF_CMPGTE,
-    IF_CMPTLTE
+    IF_CMPTLTE,
+    RETURN_INSTRUCTION
 } instruction_type;
 
 static char * INSTRUCTION_TYPE_STR[] = {
@@ -47,7 +48,8 @@ static char * INSTRUCTION_TYPE_STR[] = {
     "IF_CMPGT",
     "IF_CMPLT",
     "IF_CMPGTE",
-    "IF_CMPTLTE"
+    "IF_CMPTLTE",
+    "RETURN"
 };
 
 

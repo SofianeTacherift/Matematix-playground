@@ -37,7 +37,7 @@ static char ERROR_BUFFER[1024];
 
 
 
-lexer * new_lexer(token_array_list *);
+static lexer * new_lexer(token_array_list *);
 
 void free_lexing_result_members(lexing_result lexing_res) ;
 

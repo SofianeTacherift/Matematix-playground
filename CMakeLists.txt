@@ -4,8 +4,16 @@ project(matematix C)
 set(CMAKE_C_STANDARD 11)
 
 
-add_compile_options(-Og -Wall -Wextra -g -fsanitize=address -fno-omit-frame-pointer)
-add_link_options(-fsanitize=address)
+option(SANITIZE_ADRESS "active adress sanitizer" FALSE)
+
+
+add_compile_options(-Og -Wall -Wextra -g )
+
+if( SANITIZE_ADRESS)
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
+endif( SANITIZE_ADRESS)
+
 
 include_directories(
         src/data_structures

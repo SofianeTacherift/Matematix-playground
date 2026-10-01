@@ -36,10 +36,10 @@
         if (res!=NULL) {\
         res->key=key;\
         res->value=value;\
+        res->next=NULL;\
         }\
         return res;\
     }\
-    \
     \
     \
     \
@@ -55,6 +55,20 @@
     } HASH_MAP_NAME(K_ALIAS, V_ALIAS);\
     \
     \
+    \
+    static void CONCAT_MACROS(free_, HASH_MAP_NAME(K_ALIAS, V_ALIAS) ) ( HASH_MAP_NAME(K_ALIAS, V_ALIAS) * map ){\
+        for (size_t i=0; i<map->capacity ; i++) {\
+            ENTRY_NAME(K_ALIAS, V_ALIAS) *current = map->buckets[i];\
+            while (current!=NULL) {\
+                ENTRY_NAME(K_ALIAS, V_ALIAS) *next=current->next;\
+                free(current);\
+                current=next;\
+            }\
+        }\
+        free(map->buckets);\
+        free(map);\
+    }\
+\
 static size_t CONCAT_MACROS( CONCAT_MACROS(remove_from_,HASH_MAP_NAME(K_ALIAS, V_ALIAS)), _if_condition) (HASH_MAP_NAME(K_ALIAS, V_ALIAS) *map,  bool (*condition_function) (K, V) ) {\
 size_t original_size=map->size;\
 size_t removed_count=0;\
@@ -189,24 +203,24 @@ return removed_count;\
         size_t old_capacity=map->capacity;\
         map->capacity*=2;\
         map->buckets=realloc(map->buckets, map->capacity * sizeof(ENTRY_NAME(K_ALIAS, V_ALIAS)*));\
-        memset(map->buckets+old_capacity, 0, map->capacity - old_capacity);\
+        memset(map->buckets+old_capacity, 0, (map->capacity - old_capacity) * sizeof(ENTRY_NAME(K_ALIAS, V_ALIAS) *)  ) ;\
         ENTRY_NAME(K_ALIAS, V_ALIAS) *sentinel=calloc(1, sizeof( ENTRY_NAME(K_ALIAS, V_ALIAS)));\
         for (size_t i =0 ; i<old_capacity; i++) {\
             sentinel->next = map->buckets[i];\
-            ENTRY_NAME(K_ALIAS, V_ALIAS) *current_index=sentinel;\
-            while (current_index->next!=NULL) {\
-                ENTRY_NAME(K_ALIAS, V_ALIAS) *next_entry = current_index->next;\
+            ENTRY_NAME(K_ALIAS, V_ALIAS) *current_entry=sentinel;\
+            while (current_entry->next!=NULL) {\
+                ENTRY_NAME(K_ALIAS, V_ALIAS) *next_entry = current_entry->next;\
                 size_t index = map->hash_function(next_entry->key) % map->capacity;\
                 if (index!=i) {\
                     if (next_entry==map->buckets[i]) {\
                         map->buckets[i]=next_entry->next;\
                     }\
-                    current_index->next=next_entry->next;\
+                    current_entry->next=next_entry->next;\
                     next_entry->next=map->buckets[index];\
                     map->buckets[index]=next_entry;\
                 }\
-                else if (current_index->next!=NULL) {\
-                    current_index=current_index->next;\
+                else if (current_entry->next!=NULL) {\
+                    current_entry=current_entry->next;\
                 }\
             }\
             sentinel->next=NULL;\
@@ -233,17 +247,6 @@ return removed_count;\
         printf("} ]\n");\
     }\
     \
-    static void CONCAT_MACROS(free_, HASH_MAP_NAME(K_ALIAS, V_ALIAS) ) ( HASH_MAP_NAME(K_ALIAS, V_ALIAS) * map ){\
-        for (size_t i=0; i<map->capacity ; i++) {\
-            ENTRY_NAME(K_ALIAS, V_ALIAS) *current_index = map->buckets[i];\
-            while (current_index!=NULL) {\
-                ENTRY_NAME(K_ALIAS, V_ALIAS) *next=current_index->next;\
-                free(current_index);\
-                current_index=next;\
-            }\
-        }\
-        free(map);\
-    }\
     \
     \
     \

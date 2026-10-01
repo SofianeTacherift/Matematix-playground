@@ -31,88 +31,37 @@ int main(int argc, char ** argv) {
     }
 
 
-    printf("path= \"\"\"%s\"\"\"\n", path);
+    printf("path= \"\"\"%s\"\"\"\n\n", path);
 
-    char buffer[1024];
+    compilation_result compilation_res = compile_from_file(file);
+    parsing_result parsing_res = compilation_res.parsing_res;
+    lexing_result lexing_res = parsing_res.lexing_res;
 
-
-    lexer *lexer = new_lexer();
-
-    lex_code_from_file(lexer, buffer, sizeof(buffer), file);
-
-    token_array_list * list = lexer->tokens_list;
-
-
-    printf("\ntokens list : ");
-    print_token_list(list);
-    printf("\n");
-
-    if (list==NULL) {
-        printf("error during lexing, exit\n");
-        return 2;
+    if (lexing_res.lexing_status==LEXING_ERROR) {
+        fprintf(stderr, "%s\n",lexing_res.error_buffer);
+        return 1;
     }
+    if (parsing_res.parsing_status==PARSING_ERROR) {
+        for (size_t i=0; i<parsing_res.errors->size; i++) {
+            parsing_error error = parsing_res.errors->elements[i];
+            fprintf(stderr, "parsing error at line %d character %d %s\n", error.token.line+1, error.token.character+1, error.message );
 
-
-
-
-
-
-    parser *parse= new_parser(list);
-
-    parsing_node * res = parse_main_scope(parse);
-
-
-
-
-    printf("parsing result :\n");
-
-    if (parse->parsing_status==NO_PARSING_ERROR) {
-        display_tree_node(res);
-
-        printf("\n\n");
-
-        printf("parsing result (readable) :\n");
-
-        display_tree_node_readable(res, 0);
-
-
-
-        printf("\n");
-
-    }
-    else {
-        for (int i=0; i<parse->parsing_errors->size; i++) {
-            parsing_error error = parse->parsing_errors->elements[i];
-            printf("error during parsing line %d character %d : %s \n", error.token.line+1, error.token.character+1, error.message);
         }
         return 2;
     }
-
-    
-
-
-    compiler *compiler = new_compiler(res);
-    compile_main_scope(compiler, res);
-
-    if (compiler->status!=0) {
-        printf("Error during compilation : %s\n", compiler->error_message);
-        return 1;
+    if (compilation_res.status==COMPILATION_ERROR) {
+        fprintf(stderr, "%s\n", compilation_res.error_message);
+        return 3;
     }
-    link_instructions_blocks(compiler);
+
+    print_instruction_block_recursive(compilation_res.instructions_block_arrays->elements[0]);
+    print_instruction_block_readable(compilation_res.instructions_block_arrays->elements[0], 0);
+
+
+    free_compilation_result_members(compilation_res);
 
 
 
-    printf("\n\n\ncompilation result (%d):\n", compiler->instructions_blocks_list->size);
-
-    instructions_block_array_list *instructions_block = compiler->instructions_blocks_list;
-    for (size_t i = 0 ; i<instructions_block->size; i++) {
-        print_instruction_block_recursive(instructions_block->elements[i]);
-    }
-    for (size_t i = 0 ; i<instructions_block->size; i++) {
-        print_instructions_block_readable(instructions_block->elements[i],0);
-    }
-    free_tree_node(res, true);
-    free_token_array_list(list);
     return 0;
 
 }

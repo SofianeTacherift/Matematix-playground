@@ -10,7 +10,7 @@
 #define BYTES_NUMBER_READ 128000
 
 
-lexer * new_lexer(token_array_list *list) {
+static lexer * new_lexer(token_array_list *list) {
     lexer *res = calloc(1,sizeof(lexer));
     if (res!=NULL) {
         res->tokens_list=list;

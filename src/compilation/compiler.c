@@ -8,14 +8,18 @@
 
 
 #define copy_to_size_t(dest, src, type)     memcpy( ((char*) (&dest)) + (sizeof(size_t) - sizeof(src) ),  &src , sizeof(src));
+
+
+
+
 HASH_MAP(instruction_block *, size_t, instructions_block, size_t)
+HASH_MAP(char *, size_t, str, size_t)
 
 
 
 
-bool greater_than(size_t value, size_t n) {
-    return value>n;
-}
+
+
 
 
 
@@ -23,7 +27,7 @@ size_t remove_from_str_size_t_hash_map_if_value_greater_than(str_size_t_hash_map
     size_t removed_count = 0;
     for (size_t i = 0; i < map->capacity; i++) {
         str_size_t_entry *head = map->buckets[i];
-        while (head != ((void *) 0) && greater_than(head->value, n)) {
+        while (head != ((void *) 0) && head->value> n) {
             map->buckets[i] = head->next;
             free(head);
             head = map->buckets[i];
@@ -34,7 +38,7 @@ size_t remove_from_str_size_t_hash_map_if_value_greater_than(str_size_t_hash_map
             str_size_t_entry *current = head;
             while (current->next != ((void *) 0)) {
                 str_size_t_entry *next = current->next;
-                if (greater_than (head->next->value, n)) {
+                if (head->next->value > n) {
                     current->next = current->next->next;
                     free(next);
                     map->size--;
@@ -65,20 +69,67 @@ void print_entry(char * s, size_t i) {
     printf("%s : %zu", s, i);
 }
 
-compiler *new_compiler(parsing_node *head) {
+
+
+
+compiler *new_compiler(instructions_block_array_list *result_list) {
     compiler *res = calloc(1,sizeof(compiler));
     if (res!=NULL) {
-        res->instructions_blocks_list=new_instructions_block_array_list();
+        res->instructions_blocks_list=result_list;
         res->variables=new_str_size_t_hash_map(hash_str, equals_str, print_entry);
     }
     return res;
 }
+
+void free_compiler(compiler *compiler) {
+    free_str_size_t_hash_map(compiler->variables);
+    free(compiler);
+}
+
+compilation_result compile_from_file(FILE *file) {
+    parsing_result parsing_res = parse_from_file(file);
+    lexing_result lexing_result = parsing_res.lexing_res;
+
+    compilation_result compilation_res = {.parsing_res = parsing_res};
+    if (lexing_result.lexing_status==LEXING_ERROR || parsing_res.parsing_status==PARSING_ERROR) {
+        return compilation_res;
+    }
+
+    instructions_block_array_list *res_list= new_instructions_block_array_list();
+    parsing_node *head = parsing_res.head;
+    compiler *compiler = new_compiler(res_list);
+
+    compile_main_scope(compiler, head);
+
+    if (compiler->status==COMPILATION_ERROR) {
+        compilation_res.status=COMPILATION_ERROR;
+        memcpy(compilation_res.error_message, compiler->error_message, sizeof compiler->error_message);
+    }
+    else {
+        compilation_res.status=COMPILATION_SUCCESS;
+        compilation_res.instructions_block_arrays=compiler->instructions_blocks_list;
+    }
+    link_instructions_blocks(compiler);
+    free_compiler(compiler);
+    return compilation_res;
+
+}
+
+void free_compilation_result_members(compilation_result compilation_res) {
+    free_parsing_result_members(compilation_res.parsing_res);
+    apply_instructions_block_operation(compilation_res.instructions_block_arrays, free_instruction_block_recursive);
+    free_instructions_block_array_list(compilation_res.instructions_block_arrays);
+
+}
+
+
 
 void compile_code(compiler *compiler, parsing_node *node) {
     const int val=setjmp(compiler->error_jmp);
     if (val!=0) {
         compile_main_scope(compiler, node);
     }
+    compiler->status=COMPILATION_ERROR;
 }
 
 void compile_main_scope(compiler *compiler, parsing_node *node) {
@@ -101,7 +152,11 @@ void compile_main_scope(compiler *compiler, parsing_node *node) {
         }
         else {current=current->next;}
     }
-    add_instructions_block(compiler->instructions_blocks_list, *start);
+    block->next=new_instructions_block();
+    add_instruction(block->next->instructions, (instruction) {.type = RETURN_INSTRUCTION});
+
+
+    add_instructions_block(compiler->instructions_blocks_list, start);
 }
 
 void compile_scope(compiler *compiler,instruction_block *block, parsing_node *node) {
@@ -125,6 +180,7 @@ void compile_scope(compiler *compiler,instruction_block *block, parsing_node *no
     }
     remove_from_str_size_t_hash_map_if_value_greater_than(compiler->variables, original_index-1);
 }
+
 
 
 void compile_const(compiler *compiler, instruction_block *block, parsing_node*node) {
@@ -155,6 +211,7 @@ void compile_variable_load(compiler *compiler, instruction_block *block, parsing
         snprintf(compiler->error_message, sizeof compiler->error_message, "Variable %s used but not declared", node->string_val);
     }
 }
+
 void compile_primary(compiler *compiler, instruction_block *block, parsing_node *node) {
     if (node->type==VARIABLE_NODE) {
         compile_variable_load(compiler, block, node);
@@ -211,6 +268,43 @@ instruction_block  *compile_expression(compiler *compiler, instruction_block *bl
     return last_instruction_block_from_instruction_block(block);
 }
 
+void compile_affectation(compiler *compiler, instruction_block *block,  parsing_node *node) {
+    str_size_t_hash_map *variables = compiler->variables;
+
+    instruction_block *end=compile_expression_nb(compiler, block, node->right);
+
+    char * var_name = node->left->string_val;
+
+
+    const size_t *index=get_from_str_size_t_hash_map(variables, var_name);
+    size_t res_index=0;
+    if (index==NULL) {
+        res_index = compiler-> variables->size;
+        put_to_str_size_t_hash_map(variables, var_name, res_index);
+    }
+    else {
+        res_index=*index;
+    }
+
+    add_instruction(end->instructions, (instruction) {.type = OSTORE_INSTRUCTION, .operand1 = res_index });
+}
+
+
+
+
+void compile_arithmetic_unary(compiler *compiler, instruction_block *block, parsing_node *node) {
+    block=compile_expression_nb(compiler,block, node->right);
+    int instruction_type = unary_arithmetic_node_to_instruction_type(node);
+    add_instruction(block->instructions, (instruction) {.type = instruction_type});
+}
+
+void compile_arithmetic_binary(compiler * compiler , instruction_block *block, parsing_node *node) {
+    block=compile_expression_nb(compiler,block, node->left);
+    block=compile_expression_nb(compiler,block, node->right);
+    int instruction_type = binary_arithmetic_node_to_instruction_type(node);
+    add_instruction(block->instructions, (instruction) {.type = instruction_type});
+}
+
 
 HASH_MAP(parsing_node*, instruction_block*, p_node, instructions)
 
@@ -245,13 +339,11 @@ void compile_single_condition(compiler *compiler, instruction_block *block, pars
 instruction_block *map_conditions_instructions_block(p_node_instructions_hash_map *map, compiler *compiler, parsing_node *current , p_node_jump_hash_map *jumps, instruction_block *true_block, instruction_block *false_block) {
     instruction_block *result = new_instructions_block();
     const jump_infos *infos_ptr =  get_from_p_node_jump_hash_map(jumps, current);
-    if (infos_ptr==NULL) {
-        display_node(current);
-    }
+
     jump_infos infos = *infos_ptr;
 
     compile_single_condition(compiler, result, current, !infos.jump_if);
-     instruction_block *result_end=last_instruction_block_from_instruction_block(result);
+    instruction_block *result_end=last_instruction_block_from_instruction_block(result);
     parsing_node *next=infos.next_node;
 
     instruction_block *next_block=NULL;
@@ -292,7 +384,7 @@ void print_node_instruction(parsing_node *node , instruction_block *block) {
     display_node(node);
 
     printf("\ninstructions :\n");
-    print_instruction_block(*block);
+    print_instruction_block(block);
 
     printf("\n");
 }
@@ -325,44 +417,16 @@ void compile_logical_expression(compiler *compiler, instruction_block *block, pa
         most_left=most_left->left;
     }
     block->next=map_conditions_instructions_block(map_node_instructions_block,compiler, most_left, jumps, true_block, false_block);
-}
 
-
-void compile_arithmetic_unary(compiler *compiler, instruction_block *block, parsing_node *node) {
-    block=compile_expression_nb(compiler,block, node->right);
-    int instruction_type = unary_arithmetic_node_to_instruction_type(node);
-    add_instruction(block->instructions, (instruction) {.type = instruction_type});
-}
-
-void compile_arithmetic_binary(compiler * compiler , instruction_block *block, parsing_node *node) {
-    block=compile_expression_nb(compiler,block, node->left);
-    block=compile_expression_nb(compiler,block, node->right);
-    int instruction_type = binary_arithmetic_node_to_instruction_type(node);
-    add_instruction(block->instructions, (instruction) {.type = instruction_type});
+    free_p_node_jump_hash_map(jumps);
+    free_p_node_instructions_hash_map(map_node_instructions_block);
 }
 
 
 
-void compile_affectation(compiler *compiler, instruction_block *block,  parsing_node *node) {
-    str_size_t_hash_map *variables = compiler->variables;
-
-    instruction_block *end=compile_expression_nb(compiler, block, node->right);
-
-    char * var_name = node->left->string_val;
 
 
-    const size_t *index=get_from_str_size_t_hash_map(variables, var_name);
-    size_t res_index=0;
-    if (index==NULL) {
-        res_index = compiler-> variables->size;
-        put_to_str_size_t_hash_map(variables, var_name, res_index);
-    }
-    else {
-        res_index=*index;
-    }
 
-    add_instruction(end->instructions, (instruction) {.type = OSTORE_INSTRUCTION, .operand1 = res_index });
-}
 
 
 
@@ -384,55 +448,16 @@ void compile_instruction(compiler * compiler, instruction_block *block, parsing_
 void print_instruction_block_size_t(instruction_block *b, size_t t) {
     if (b->instructions->size>1 && b->instructions->elements[0].type==ICONST_INSTRUCTION) {
         printf("\n\n\n  ------------------------\n");
-        print_instruction_block(*b);
+        print_instruction_block(b);
         printf("%zu\n", t);
         printf("-------------------------------");
     }
 }
 
 
-instructions_block_size_t_hash_map *map_instruction_block_index(instruction_block *start) {
-    instructions_block_size_t_hash_map *map = new_instructions_block_size_t_hash_map( hash_instruction_block_address , equals_instruction_block_address, print_instruction_block_size_t );
-    size_t count=0;
-    instruction_block *current= start;
-    while (current!=NULL) {
-        put_to_instructions_block_size_t_hash_map(map, current, count);
-        count+=current->instructions->size;
-        current=current->next;
-
-    }
-    return map;
-}
 
 
 
-
-void link_instructions_blocks(compiler *compiler) {
-    for (size_t i =0; i<compiler->instructions_blocks_list->size; i++) {
-        instruction_block *start = &compiler->instructions_blocks_list->elements[i];
-        instructions_block_size_t_hash_map *indexs = map_instruction_block_index(start);
-        instruction_block *current = start;
-        while (current!=NULL) {
-            if (current->type==FALSE_INSTRUCTION_CONST) {
-                current->jump=current->next->next;
-            }
-
-            if (current->jump!=NULL) {
-                const size_t *index_ptr =  get_from_instructions_block_size_t_hash_map(indexs, current->jump);
-
-                if (index_ptr!=NULL) {
-                    const size_t index = *index_ptr;
-                    instruction_array_list *list = current->instructions;
-                    (list->elements+list->size-1)->operand1=index;
-                }
-            }
-
-
-            current=current->next;
-        }
-        free_instructions_block_size_t_hash_map(indexs);
-    }
-}
 
 instruction_block *compile_conditional_node(compiler *compiler, instruction_block *block, parsing_node *node, instruction_block *jump) {
     if (node->type==IF_NODE || node->type==ELIF_NODE) {
@@ -547,11 +572,51 @@ instruction_block *compile_while(compiler *compiler, instruction_block *block, p
     true_block_end->jump=condition;
     true_block_end->next=result;
     return result;
-
-
-
 }
 
+
+
+
+
+
+instructions_block_size_t_hash_map *map_instruction_block_index(instruction_block *start) {
+    instructions_block_size_t_hash_map *map = new_instructions_block_size_t_hash_map( hash_instruction_block_address , equals_instruction_block_address, print_instruction_block_size_t );
+    size_t count=0;
+    instruction_block *current= start;
+    while (current!=NULL) {
+        put_to_instructions_block_size_t_hash_map(map, current, count);
+        count+=current->instructions->size;
+        current=current->next;
+
+    }
+    return map;
+}
+
+
+void link_instructions_blocks(compiler *compiler) {
+    for (size_t i =0; i<compiler->instructions_blocks_list->size; i++) {
+        instruction_block *start = compiler->instructions_blocks_list->elements[i];
+        instructions_block_size_t_hash_map *indexs = map_instruction_block_index(start);
+        instruction_block *current = start;
+        while (current!=NULL) {
+            if (current->type==FALSE_INSTRUCTION_CONST) {
+                current->jump=current->next->next;
+            }
+
+            if (current->jump!=NULL) {
+                const size_t *index_ptr =  get_from_instructions_block_size_t_hash_map(indexs, current->jump);
+
+                if (index_ptr!=NULL) {
+                    const size_t index = *index_ptr;
+                    instruction_array_list *list = current->instructions;
+                    (list->elements+list->size-1)->operand1=index;
+                }
+            }
+            current=current->next;
+        }
+        free_instructions_block_size_t_hash_map(indexs);
+    }
+}
 
 
 
