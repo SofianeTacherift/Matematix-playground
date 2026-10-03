@@ -87,3 +87,10 @@ void free_instruction_block_recursive(instruction_block *block) {
     free(block);
 
 }
+
+void save_instruction_block_recursive(const instruction_block *block, const FILE *file) {
+    if (block==NULL || file==NULL) return;
+    save_instruction_list(block->instructions->elements, block->instructions->size, file);
+    save_instruction_block_recursive(block->next, file);
+
+}

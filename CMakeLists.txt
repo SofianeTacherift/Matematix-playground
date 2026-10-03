@@ -53,15 +53,15 @@ add_executable(compilation_test.out
         src/compilation/instruction_block.c
 )
 
-#add_executable(matpx.out
-#        src/compilation/matpx.c
-#        src/lexing/lexer.c
-#        src/data_structures/token.c
-#        src/parsing/parser.c
-#        src/data_structures/parsing_node.c
-#        src/data_structures/operators.c
-#        src/compilation/compiler.c
-#        src/compilation/instruction.c
-#        src/compilation/instruction_block.c
-#)
+add_executable(matpx.out
+        src/compilation/matpx.c
+        src/lexing/lexer.c
+        src/data_structures/token.c
+        src/parsing/parser.c
+        src/data_structures/parsing_node.c
+        src/data_structures/operators.c
+        src/compilation/compiler.c
+        src/compilation/instruction.c
+        src/compilation/instruction_block.c
+)
 

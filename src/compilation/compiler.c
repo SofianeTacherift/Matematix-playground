@@ -17,7 +17,14 @@ HASH_MAP(char *, size_t, str, size_t)
 
 
 
-
+void save_instruction_block_list(const instructions_block_array_list *list, const FILE *file) {
+    if (file==NULL) {
+        return ;
+    }
+    for (size_t i=0; i<list->size; i++) {
+        save_instruction_block_recursive(list->elements[i], file);
+    }
+}
 
 
 

@@ -62,6 +62,8 @@ typedef struct {
 ARRAY_LIST(instruction, instruction)
 
 
+
+
 // functions
 
 instruction_type binary_arithmetic_node_to_instruction_type(parsing_node *node);
@@ -70,6 +72,7 @@ instruction_type unary_arithmetic_node_to_instruction_type( parsing_node *node);
 
 int comparison_operator_to_instruction_type(int t);
 
+void save_instruction_list(const instruction *elements, const size_t end, FILE *file);
 
 void print_instruction_readable(instruction instruction);
 

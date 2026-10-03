@@ -38,5 +38,6 @@ instruction_block *last_instruction_block_from_instruction_block(instruction_blo
 
 instruction_block *new_boolean_block_push(bool t);
 
+void save_instruction_block_recursive(const instruction_block *block, const FILE *file);
 
 #endif //MATEMATIX_INSTRUCTIONS_BLOCK_H

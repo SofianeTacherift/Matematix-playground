@@ -47,6 +47,7 @@ typedef struct compilation_result {
 compiler *new_compiler(struct instructions_block_array_list *result_list);
 compilation_result compile_from_file(FILE *file);
 void free_compilation_result_members(compilation_result );
+void save_instruction_block_list(const instructions_block_array_list *list, const FILE *file) ;
 
 bool has_compilation_errors(compilation_result compilation_res);
 
