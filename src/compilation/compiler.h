@@ -30,6 +30,7 @@ typedef struct compiler {
     struct instructions_block_array_list *instructions_blocks_list;
     char error_message[1024];
     jmp_buf error_jmp;
+    struct tmp_ptr_array_list *tmp_ptr_list;
     int status;
 } compiler;
 
@@ -70,6 +71,7 @@ void compile_instruction(compiler *compiler, instruction_block *block,parsing_no
 void link_instructions_blocks(compiler *compiler);
 instruction_block *compile_if_statement(compiler *compiler, instruction_block *block, parsing_node *current);
 void compile_(compiler *compiler);
+instruction_block *compile_const_push_logical_expression(compiler *compiler, instruction_block *block, parsing_node *node);
 
 
 #endif //MATEMATIX_COMPILATOR_H

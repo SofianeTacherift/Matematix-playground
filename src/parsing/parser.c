@@ -410,7 +410,8 @@ parsing_node * parse_primary(parser * parse) {
         if (t.type!=CLOSING_PARENTHESE_TOKEN) {
             parse->parsing_status=PARSING_ERROR;
             add_parsing_error_to_parser(parse, t, "(PRIMARY) expected ')'");
-            free(result);
+
+            free_tree_node(result, false);
             return NULL;
         }
         RETURN_NULL_IF_ERROR(result, 0)
