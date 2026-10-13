@@ -10,6 +10,14 @@
 #define BYTES_NUMBER_READ 128000
 
 
+
+
+void advance_n(lexer *, int);
+void advance_check_ln(lexer *lexer) ;
+
+
+
+
 static lexer * new_lexer(token_array_list *list) {
     lexer *res = calloc(1,sizeof(lexer));
     if (res!=NULL) {

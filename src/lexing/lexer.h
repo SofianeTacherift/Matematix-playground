@@ -39,31 +39,13 @@ static char ERROR_BUFFER[1024];
 
 static lexer * new_lexer(token_array_list *);
 
-void free_lexing_result_members(lexing_result lexing_res) ;
-
-void set_lexer_code_buffer(lexer *, char*, int);
-
-void advance_n(lexer *, int);
-
-
-void advance_check_ln(lexer *lexer) ;
-
-void lex_number(lexer *lexer);
-
-void lex_string( lexer *lexer);
-
-bool start_new_token(char c);
-
-bool is_arithmetic_operator(char c);
-
-token minus_to_token(lexer *lexer);
-
-
 
 void lex_code(lexer *lexer );
 
 lexing_result lex_code_from_file(FILE *file);
 
 void write_in_lexing_error_buffer(lexer *lexe, char *message);
+
+void free_lexing_result_members(lexing_result lexing_res) ;
 
 #endif

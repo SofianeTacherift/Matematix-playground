@@ -4,12 +4,35 @@
 
 #include "compiler.h"
 
-#include "stdint.h"
+
+
+
+
+void compile_code(compiler *compiler, parsing_node *node);
+void compile_main_scope(compiler *compiler,  parsing_node *node);
+void compile_scope(compiler *compiler, instruction_block *block,  parsing_node *node);
+void compile_const(compiler *compiler,instruction_block *block, parsing_node *node);
+void compile_variable_load(compiler *compiler, instruction_block *block, parsing_node *node);
+void compile_primary(compiler *compiler, instruction_block *block,parsing_node *node);
+void compile_logical_expression(compiler *compiler, instruction_block *block, parsing_node *node, instruction_block *true_block, instruction_block *false_block);
+instruction_block *compile_expression(compiler *compiler,instruction_block *block, parsing_node *node);
+void compile_arithmetic_binary(compiler *compiler,instruction_block *block, parsing_node *node);
+void compile_arithmetic_unary(compiler *compiler,instruction_block *block, parsing_node *node);
+void compile_affectation(compiler *compiler,instruction_block *block,  parsing_node *node);
+instruction_block *compile_while(compiler *compiler, instruction_block *block, parsing_node *node);
+void compile_instruction(compiler *compiler, instruction_block *block,parsing_node *node);
+void link_instructions_blocks(compiler *compiler);
+instruction_block *compile_if_statement(compiler *compiler, instruction_block *block, parsing_node *current);
+void compile_(compiler *compiler);
+instruction_block *compile_const_push_logical_expression(compiler *compiler, instruction_block *block, parsing_node *node);
+
+
+
+
+
 
 
 #define copy_to_size_t(dest, src, type)     memcpy( ((char*) (&dest)) + (sizeof(size_t) - sizeof(src) ),  &src , sizeof(src));
-
-
 
 
 typedef struct tmp_ptr {
@@ -290,7 +313,6 @@ instruction_block *compile_expression_nb(compiler *compiler, instruction_block *
     return end;
 }
 instruction_block  *compile_expression(compiler *compiler, instruction_block *block, parsing_node *node) {
-    if (node==NULL) {return NULL;}
     switch (node->type) {
         case BINARY_NODE:
             if (!is_logical_binary_node(node) && !is_binary_comparison_node(node)) {

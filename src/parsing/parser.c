@@ -2,12 +2,29 @@
 #include "token.h"
 #include <stdarg.h>
 #include <stdio.h>
-#include <linux/limits.h>
-
-#include "lexer.h"
 
 
-#define P_NEW_LINE printf("\n");
+
+
+parsing_node *parse_main_scope(parser *parse);
+parsing_node_linked_list *parse_scope(parser *parse);
+parsing_node_linked_list *parse_statement(parser *parse);
+parsing_node_linked_list *parse_if_statement(parser *parse);
+parsing_node * parse_conditional_node(parser *parser);
+parsing_node *parse_affectation(parser *parse);
+parsing_node *parse_expression(parser *parse);
+parsing_node *parse_identifier(parser *parse);
+parsing_node *parse_logical_or(parser *parse);
+parsing_node *parse_logical_and(parser *parse);
+parsing_node *parse_comparison(parser *parse);
+parsing_node *parse_additive(parser *parse);
+parsing_node *parse_multiplicative(parser *parse);
+parsing_node *parse_power(parser * parse);
+parsing_node *parse_unary(parser *parse);
+parsing_node *parse_primary(parser *parse);
+parsing_node *parse_instruction(parser *parser);
+void add_parsing_error_to_parser(parser *parse, token current, char *message);
+
 
 #define RETURN_NULL_IF_ERROR(variable, ...) if (variable==NULL) {  \
     free_nodes(__VA_ARGS__); \
