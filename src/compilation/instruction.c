@@ -3,35 +3,8 @@
 //
 #include "instruction.h"
 
-static int operands_per_type[]= {
-    0,
-    1,
-    1,
-    1,
-    1,
-    0, //BINARY_ADD_INSTRUCTION,
-    0, //BINARY_SUB_INSTRUCTION,
-    0, //BINARY_MULT_INSTRUCTION,
-    0, //BINARY_DIVIDE_INSTRUCTION,
-    0, //BINARY_POWER_INSTRUCTION,
-    0, //UNARY_MINUS_INSTRUCTION,
-    1, //GOTO,
-    1, //IF_CMPEQ,
-    1,//IF_CMPNE,
-    1,//IF_CMPGT,
-    1,//IF_CMPLT,
-    1,//IF_CMPGTE,
-    1, //IF_CMPTLTE,
-    0, //RETURN_INSTRUCTION
-};
-static int comparison_operator_to_instr_type_buffer[] = {
-    IF_CMPEQ,
-    IF_CMPNE,
-    IF_CMPGT,
-    IF_CMPGTE,
-    IF_CMPLT,
-    IF_CMPTLTE,
-};
+
+
 
 
 instruction_type binary_arithmetic_node_to_instruction_type(parsing_node *node) {
@@ -102,18 +75,24 @@ void print_instruction_readable(instruction instruction) {
 
 size_t write_instruction_in_buffer(const instruction element, char * dest) {
     size_t written_n=0;
-    memcpy(dest, &element, sizeof element.type);
-    written_n+=sizeof element.type;
+    memcpy(dest, &element.type, sizeof element.type);
+    written_n+=sizeof (instruction_type);
 
     if (operands_per_type[element.type]>=1) {
-        memcpy(dest, & element.operand1, sizeof element.operand1);
-        written_n+=sizeof element.operand1;
+        size_t operand1= element.operand1;
+
+        memcpy(dest+written_n, &operand1, sizeof(size_t));
+        written_n+=sizeof (size_t);
     }
 
     if (operands_per_type[element.type]>=2) {
-        memcpy(dest, & element.operand2, sizeof element.operand2);
+        memcpy(dest+written_n, & element.operand2, sizeof (size_t));
         written_n+=sizeof element.operand2;
     }
+
+    // print_instruction_readable(element);
+    // printf("%zu\n",((size_t *) dest+4 )[0]   ) ;
+    printf("\n");
 
     return written_n;
 
@@ -123,7 +102,8 @@ void save_instruction_list(const instruction *elements, const size_t end, FILE *
     size_t n_written = 0;
     for (size_t i=0; i<end; i++) {
         instruction t = elements[i];
-         n_written+= write_instruction_in_buffer(t, bytes+n_written);
+        n_written+= write_instruction_in_buffer(t, bytes+n_written);
+
     }
     fwrite(bytes, sizeof (char), n_written, file);
     free(bytes);

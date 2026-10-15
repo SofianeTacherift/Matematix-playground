@@ -10,7 +10,9 @@
 
 void compile_code(compiler *compiler, parsing_node *node);
 void compile_main_scope(compiler *compiler,  parsing_node *node);
+
 void compile_scope(compiler *compiler, instruction_block *block,  parsing_node *node);
+
 void compile_const(compiler *compiler,instruction_block *block, parsing_node *node);
 void compile_variable_load(compiler *compiler, instruction_block *block, parsing_node *node);
 void compile_primary(compiler *compiler, instruction_block *block,parsing_node *node);
@@ -22,7 +24,7 @@ void compile_affectation(compiler *compiler,instruction_block *block,  parsing_n
 instruction_block *compile_while(compiler *compiler, instruction_block *block, parsing_node *node);
 void compile_instruction(compiler *compiler, instruction_block *block,parsing_node *node);
 void link_instructions_blocks(compiler *compiler);
-instruction_block *compile_if_statement(compiler *compiler, instruction_block *block, parsing_node *current);
+instruction_block *compile_if_statement(compiler *compiler, instruction_block *block, parsing_node *node);
 void compile_(compiler *compiler);
 instruction_block *compile_const_push_logical_expression(compiler *compiler, instruction_block *block, parsing_node *node);
 
@@ -439,8 +441,6 @@ void map_conditions_instructions_block(instruction_block *prev, p_node_instructi
         const instruction_block **result_ptr = get_from_p_node_instructions_hash_map(map, jump);
         result_end->jump = (instruction_block *) *result_ptr;
     }
-
-
 
 
     put_to_p_node_instructions_hash_map(map, current, result);

@@ -29,7 +29,7 @@ static lexer * new_lexer(token_array_list *list) {
 
 void set_lexer_code_buffer(lexer *lexer, char* buffer, int size) {
     lexer->code_buffer=buffer;
-    lexer->end_index=size;
+    lexer->end_buffer_index=size;
 }
 
 void free_lexing_result_members(lexing_result lexing_res) {
@@ -41,7 +41,7 @@ void free_lexing_result_members(lexing_result lexing_res) {
 
 size_t read_from_lexe_input_file(lexer *lexer) {
     const size_t n_read = fread(lexer->code_buffer, sizeof(char), BYTES_NUMBER_READ, lexer->input_file);
-    lexer->end_index=n_read;
+    lexer->end_buffer_index=n_read;
     lexer->reading_index=0;
     return n_read;
 }
@@ -79,7 +79,7 @@ void lex_number(lexer *lexer) {
     int character=lexer->current_char;
     char *number =malloc(sizeof(char)*30);
     int type=INT_TOKEN;
-    while (lexer->reading_index<lexer->end_index && (isdigit(code[lexer->reading_index]) || code[lexer->reading_index]=='.')) {
+    while (lexer->reading_index<lexer->end_buffer_index && (isdigit(code[lexer->reading_index]) || code[lexer->reading_index]=='.')) {
         char charI=code[lexer->reading_index];
         if (charI=='.') {
             if (type==DOUBLE_TOKEN) {
@@ -92,7 +92,7 @@ void lex_number(lexer *lexer) {
         number[str_index]=code[lexer->reading_index];
         str_index++;
         lexer->reading_index++;
-        if (lexer->reading_index>=lexer->end_index) {
+        if (lexer->reading_index>=lexer->end_buffer_index) {
             read_from_lexe_input_file(lexer);
         }
     }
@@ -104,7 +104,7 @@ void lex_number(lexer *lexer) {
     t.character=character;
     t.operation=NONE_OPERATOR;
 
-    if ((lexer->reading_index<lexer->end_index && code[lexer->reading_index]=='f')) {
+    if ((lexer->reading_index<lexer->end_buffer_index && code[lexer->reading_index]=='f')) {
         type=FLOAT_TOKEN;
     }
     t.type=type;
@@ -134,7 +134,7 @@ void lex_string(lexer *lexer) {
     int line=lexer->current_line;
     int character=lexer->current_char;
 
-    while (lexer->reading_index<lexer->end_index && !start_new_token(code[lexer->reading_index]) && code[lexer->reading_index]!='\n') {
+    while (lexer->reading_index<lexer->end_buffer_index && !start_new_token(code[lexer->reading_index]) && code[lexer->reading_index]!='\n') {
         if (i>current_len) {
             str=realloc(str, current_len*2*sizeof(char));
             current_len*=2;
@@ -143,7 +143,7 @@ void lex_string(lexer *lexer) {
 
         i++;
         advance_check_ln(lexer);
-        if (lexer->reading_index>=lexer->end_index) {
+        if (lexer->reading_index>=lexer->end_buffer_index) {
             read_from_lexe_input_file(lexer);
         }
 
@@ -244,7 +244,7 @@ int lex_comparison(lexer *lexe) {
 
     char *code = lexe->code_buffer;
     int start = lexe->reading_index;
-    int end = lexe->end_index;
+    int end = lexe->end_buffer_index;
 
 
     if (start<end-1 && code[start+1]=='=') {
@@ -312,7 +312,7 @@ void lex_code(lexer *lexer) {
 
     char * code = lexer->code_buffer;
 
-    while (lexer->reading_index<lexer->end_index) {
+    while (lexer->reading_index<lexer->end_buffer_index) {
         char charI=code[lexer->reading_index];
         switch (charI) {
             case '=':
@@ -330,7 +330,7 @@ void lex_code(lexer *lexer) {
                 lex_operator(lexer);
                 break;
             case '!':
-                if (lexer->reading_index < lexer->end_index-1 && lexer->code_buffer[lexer->reading_index+1]=='=') {
+                if (lexer->reading_index < lexer->end_buffer_index-1 && lexer->code_buffer[lexer->reading_index+1]=='=') {
                     add_token(lexer->tokens_list, (token) {.type=OPERATOR_TOKEN, .operation=NOT_EQUALS_OPERATOR   , .character=lexer->current_char, .line=lexer->current_line});
                     advance_n(lexer, 2);
                 }

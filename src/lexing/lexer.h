@@ -17,7 +17,7 @@ typedef struct lexer {
     size_t bytes_read_number;
     char *code_buffer;
 
-    size_t end_index;
+    size_t end_buffer_index;
     size_t reading_index;
 
     int current_line;
