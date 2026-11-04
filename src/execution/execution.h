@@ -15,7 +15,7 @@ typedef struct matematix_object {
     union {
         int int_value;
         double double_value;
-        // void *attributes;
+        void *attributes;
     };
 } matematix_object;
 

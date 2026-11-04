@@ -8,16 +8,7 @@ int main(int argc, char ** argv) {
         return 1;
     }
 
-    // char *path = argv[1];
-    char *file_name = argv[1];
-
-    char *dir = "/home/sofiane/Documents/PROJETS/PROGRAMMING_LANGUAGE/ressources/mxp_files/";
-    char path[strlen(file_name)+strlen(dir)+2];
-
-    memcpy(path+2, file_name, strlen(file_name));
-
-    strcpy(path, dir);
-    strcat(path, file_name);
+    char *path = argv[1];
 
 
     FILE *file = fopen(path, "r");
