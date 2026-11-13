@@ -4,93 +4,85 @@
 
 #include "instruction_block.h"
 
-instruction_block *new_instructions_block() {
-    instruction_block *res=calloc(1, sizeof(instruction_block));
-    res->instructions=new_instruction_array_list();
+InstructionBlock* InstructionBlock_new() {
+    InstructionBlock* res = calloc(1, sizeof(InstructionBlock));
+    res->instructions = InstructionArrayList_new();
     return res;
 }
 
-long hash_instruction_block_address(instruction_block *ptr) {
-    return (long) ptr;
+long InstructionBlock_hash_address(const InstructionBlock* ptr) {
+    return (long)ptr;
 }
 
-bool equals_instruction_block_address(instruction_block *p1, instruction_block *p2) {
-    return p1==p2;
+bool InstructionBlock_equals_address(const InstructionBlock* p1, const InstructionBlock* p2) {
+    return p1 == p2;
 }
 
 
-
-void print_instruction_block(instruction_block *block) {
-    if (block==NULL) {
+void InstructionBlock_print(InstructionBlock* block) {
+    if (block == NULL) {
         printf("NULL\n");
         return;
     }
-    printf("block [ size : %zu address : %p - jump_address : %p - instructions:\n", block->instructions->size, (void*) block, (void*) block->jump);
-    for (size_t i=0; i<block->instructions->size; i++) {
-        print_instruction_readable(block->instructions->elements[i]);
+    printf("block [ size : %zu address : %p - jump_address : %p - instructions:\n", block->instructions->size,
+           (void*)block, (void*)block->jump);
+    for (size_t i = 0; i < block->instructions->size; i++) {
+        Instruction_print_readable(block->instructions->elements[i]);
     }
     printf("\n");
 }
 
 
+void InstructionBlock_print_recursive(InstructionBlock* block) {
+    InstructionBlock_print(block);
 
-void print_instruction_block_recursive(instruction_block *block) {
-    print_instruction_block(block);
-
-    if ( block!=NULL && block->next!=NULL) {
-        print_instruction_block_recursive( block->next);
+    if (block != NULL && block->next != NULL) {
+        InstructionBlock_print_recursive(block->next);
     }
 }
 
 
-
-void print_instruction_block_readable(instruction_block *block, size_t instruction_index) {
-    if (block==NULL) {
+void InstructionBlock_print_readable(InstructionBlock* block, size_t instruction_index) {
+    if (block == NULL) {
         printf("NULL\n");
         return;
     }
-
-    for (size_t i=0; i<block->instructions->size; i++) {
+    for (size_t i = 0; i < block->instructions->size; i++) {
         printf("%zu ", instruction_index);
-        print_instruction_readable(block->instructions->elements[i]);
+        Instruction_print_readable(block->instructions->elements[i]);
         instruction_index++;
     }
-    if (block->next!=NULL) {
-        print_instruction_block_readable(block->next, instruction_index);
+    if (block->next != NULL) {
+        InstructionBlock_print_readable(block->next, instruction_index);
     }
-
 }
 
-instruction_block *last_instruction_block_from_instruction_block(instruction_block *start) {
-    instruction_block *current=start;
-    while (current->next!=NULL) {
-        current=current->next;
+InstructionBlock* last_instruction_block_from_instruction_block(InstructionBlock* start) {
+    InstructionBlock* current = start;
+    while (current->next != NULL) {
+        current = current->next;
     }
     return current;
 }
 
 
-instruction_block *new_boolean_block_push(bool t) {
-    instruction_block *result=new_instructions_block();
-    add_instruction(result->instructions , (instruction) {.type = ICONST_INSTRUCTION , .operand1 = t ? 1 : 0} );
+InstructionBlock* InstructionBlock_new_boolean_push(bool t) {
+    InstructionBlock* result = InstructionBlock_new();
+    InstructionArrayList_add(result->instructions, (Instruction){.type = ICONST_INSTRUCTION, .operand1 = t ? 1 : 0});
     return result;
 }
 
-void free_instruction_block_recursive(instruction_block *block) {
-    if (block==NULL) {
+void InstructionBlock_free_recursive(InstructionBlock* block) {
+    if (block == NULL) {
         return;
     }
-
-    free_instruction_block_recursive(block->next);
-
-    free_instruction_array_list(block->instructions);
+    InstructionBlock_free_recursive(block->next);
+    InstructionArrayList_free(block->instructions);
     free(block);
-
 }
 
-void save_instruction_block_recursive(const instruction_block *block, const FILE *file) {
-    if (block==NULL || file==NULL) return;
-    save_instruction_list(block->instructions->elements, block->instructions->size, file);
-    save_instruction_block_recursive(block->next, file);
+void InstructionBlock_save_recursive(const InstructionBlock* block, const FILE* file) {
+    if (block == NULL || file == NULL) return;
+    Instruction_save_array(block->instructions->elements, block->instructions->size, file);
+    InstructionBlock_save_recursive(block->next, file);
 }
-

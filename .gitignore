@@ -8,3 +8,6 @@
 *.mxp
 cmake-build-debug
 build
+bin
+ignore
+CMakeFiles

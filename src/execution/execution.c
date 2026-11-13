@@ -4,28 +4,35 @@
 
 #include "execution.h"
 
-execution_infos *new_executions_infos() {
-    execution_infos *res = calloc(1, sizeof(execution_infos));
-    if (res!=NULL) {
-        res->instructions=new_instruction_array_list();
-    }
-    return res;
+void InstructionStack_init(InstructionStack* instruction_stack) {
+    instruction_stack->current_instruction_index = 0;
+    InstructionArrayList_init(instruction_stack->instructions);
 }
 
-execution_infos *read_byte_code(FILE *file) {
-    execution_infos *infos  =new_executions_infos();
-    instruction_type current_type;
+void ExecutionContext_init(ExecutionContext* context) {
+    BinMatxObjOperationHashMap_init(&context->binary_operations, MatxObjTypeCombinaison_hash,
+                                    MatxObjTypeCombinaison_equals);
+    InstructionArrayList_init(&context->function);
+}
+
+void ExecutionContext_deinit(ExecutionContext* context) {
+    BinMatxObjOperationHashMap_deinit(&context->binary_operations);
+    InstructionArrayList_deinit(&context->function);
+}
+
+ExecutionContext read_byte_code(FILE* file) {
+    ExecutionContext context;
+    ExecutionContext_init(&context);
+    InstructionType current_type;
     size_t n_read;
-    while  ((n_read= (fread(&current_type, sizeof(instruction_type), 1 , file) )) != 0 )  {
-        instruction current_instruction;
-        current_instruction.type=current_type;
-        size_t operands[] = {0,0};
+    while ((n_read = (fread(&current_type, sizeof(InstructionType), 1, file))) != 0) {
+        Instruction current_instruction;
+        current_instruction.type = current_type;
+        size_t operands[] = {0, 0};
         fread(operands, sizeof(size_t), operands_per_type[current_type], file);
-        current_instruction.operand1=operands[0];
-        current_instruction.operand2=operands[1];
-        add_instruction(infos->instructions, current_instruction);
+        current_instruction.operand1 = operands[0];
+        current_instruction.operand2 = operands[1];
+        InstructionArrayList_add(&context.function, current_instruction);
     }
-    return infos;
+    return context;
 }
-
-

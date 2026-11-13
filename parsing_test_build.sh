@@ -1,4 +1,3 @@
-
 cmake --build build --target parsing_test.out
 
 if [ $# -ge 1 ]

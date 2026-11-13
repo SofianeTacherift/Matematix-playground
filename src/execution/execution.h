@@ -5,29 +5,34 @@
 #ifndef MATEMATIX_EXECUTION_H
 #define MATEMATIX_EXECUTION_H
 
-
-#include "array_list.h"
+#include "spds/array_list.h"
+#include "spds/hash_map.h"
 #include "compiler.h"
+#include "matx_object.h"
 
+typedef struct InstructionStack {
+    InstructionArrayList* instructions;
+    size_t current_instruction_index;
+} InstructionStack;
 
-typedef struct matematix_object {
-    size_t type;
-    union {
-        int int_value;
-        double double_value;
-        void *attributes;
-    };
-} matematix_object;
+typedef struct {
+    MatxObject* objects;
+    size_t current_index;
+} ExecutionStack;
 
-typedef struct execution_infos {
-    instruction_array_list * instructions;
-} execution_infos;
+typedef MatxObject* variable_stack;
 
+typedef struct ExecutionContext {
+    BinMatxObjOperationHashMap binary_operations;
+    InstructionArrayList function;
+} ExecutionContext;
 
+typedef struct ExecutionInstance {
+    ExecutionContext context;
+    InstructionStack instructions_stack;
+};
 
-
-execution_infos *read_byte_code(FILE *file);
-
-
+ExecutionContext read_byte_code(FILE* file);
+void ExecutionContext_deinit(ExecutionContext* context);
 
 #endif //MATEMATIX_EXECUTION_H

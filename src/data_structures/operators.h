@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-typedef enum operators {
+typedef enum Operator {
     NONE_OPERATOR,
     ADD_OPERATOR,
     SUB_OPERATOR,
@@ -20,11 +20,7 @@ typedef enum operators {
     LESS_OR_EQUAL_OPERATOR,
     LOGICAL_OR_OPERATOR,
     LOGICAL_AND_OPERATOR
-} operators;
-
-
-
-
+} Operator;
 
 static char* OPERATORS_STR[] = {
     "NONE_OPERATOR",
@@ -45,13 +41,12 @@ static char* OPERATORS_STR[] = {
     "&"
 };
 
-void print_operator(operators operation);
-bool is_unary_operator(operators operation);
-bool is_logical_binary_operator(operators operator);
-bool is_logical_unary_operator(operators operator);
-bool is_arithmetic_binary_operator(operators operator);
-bool is_comparison_operator(operators operator);
-operators inverse_comparison_operator(int operator);
-
+void Operator_print(Operator operation);
+bool Operator_is_unary(Operator operation);
+bool Operator_is_logical_binary(Operator operator);
+bool Operator_is_logical_unary(Operator operator);
+bool Operator_is_arithmetic_binary(Operator operator);
+bool Operator_is_comparison(Operator operator);
+Operator Operator_inverse_comparison(Operator operator);
 
 #endif

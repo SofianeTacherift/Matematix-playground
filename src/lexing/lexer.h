@@ -3,49 +3,22 @@
 
 #include "token.h"
 #include <stdio.h>
-
-
+#include "spds/array_list.h"
 
 #define DELIMITATION ';'
 #define LEXING_SUCCESS 0
 #define LEXING_ERROR 1
 
-typedef struct lexer {
-    token_array_list *tokens_list;
-    FILE *input_file;
-    int total_bytes_read;
-    size_t bytes_read_number;
-    char *code_buffer;
+ARRAY_LIST(Token, TokenArrayList, TokenArrayList)
 
-    size_t end_buffer_index;
-    size_t reading_index;
-
-    int current_line;
-    int current_char;
-    char error_buffer[1024];
-    int lexing_status;
-} lexer;
-
-typedef struct lexing_result {
+typedef struct LexingResult {
     char error_message[1024];
     int lexing_status;
-    token_array_list *tokens;
-}lexing_result;
+    TokenArrayList* tokens;
+} LexingResult;
 
+LexingResult lex_file(FILE* file);
 
-static char ERROR_BUFFER[1024];
-
-
-
-static lexer * new_lexer(token_array_list *);
-
-
-void lex_code(lexer *lexer );
-
-lexing_result lex_code_from_file(FILE *file);
-
-void write_in_lexing_error_buffer(lexer *lexe, char *message);
-
-void free_lexing_result_members(lexing_result lexing_res) ;
+void LexingResult_deinit(LexingResult lexing_res);
 
 #endif

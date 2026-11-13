@@ -21,6 +21,7 @@ include_directories(
         src/parsing
         src/compilation
         src/execution
+        lib
 )
 
 
@@ -32,6 +33,7 @@ add_executable(parsing_test.out
         src/parsing/parser.c
         src/data_structures/parsing_node.c
         src/data_structures/operators.c
+        src/data_structures/parsing_node_linked_list.c
 )
 
 add_executable(lexing_test.out
@@ -51,6 +53,10 @@ add_executable(compilation_test.out
         src/compilation/compiler.c
         src/compilation/instruction.c
         src/compilation/instruction_block.c
+        src/compilation/parsing_node_utils.c
+        src/compilation/parsing_node_utils.h
+        src/data_structures/parsing_node_linked_list.c
+        src/data_structures/parsing_node_linked_list.h
 )
 
 add_executable(matpx.out
@@ -63,6 +69,10 @@ add_executable(matpx.out
         src/compilation/compiler.c
         src/compilation/instruction.c
         src/compilation/instruction_block.c
+        src/compilation/parsing_node_utils.c
+        src/compilation/parsing_node_utils.h
+        src/data_structures/parsing_node_linked_list.c
+        src/data_structures/parsing_node_linked_list.h
 )
 
 add_executable(execution_test.out
@@ -71,10 +81,16 @@ add_executable(execution_test.out
         src/data_structures/token.c
         src/parsing/parser.c
         src/data_structures/parsing_node.c
+        src/data_structures/parsing_node_linked_list.c
+        src/compilation/parsing_node_utils.c
         src/data_structures/operators.c
         src/compilation/compiler.c
         src/compilation/instruction.c
         src/compilation/instruction_block.c
         src/execution/execution.c
+        src/execution/matx_object.c
+        src/execution/matx_object.h
+        src/execution/matpx_object_operations.c
+        src/execution/matpx_object_operations.h
 )
 

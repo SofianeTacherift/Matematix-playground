@@ -2,26 +2,11 @@
 #define PARSING_NODE_H
 #include "token.h"
 #include "parsing_node.h"
-#include <stdlib.h>
-#include "hash_map.h"
-
-
-
-
-
-
 
 #define PARSING_ERROR 1
 #define NO_PARSING_ERROR 0
 
-
-
-
-
-
-
-
-static char* PARSING_NODE_TYPE_STR[]= {
+static const char* PARSING_NODE_TYPE_STR[] = {
     "NONE_NODE",
     "BINARY",
     "AFFECTATION_TOKEN",
@@ -38,7 +23,7 @@ static char* PARSING_NODE_TYPE_STR[]= {
     "WHILE_NODE"
 };
 
-typedef enum parsing_node_type {
+typedef enum ParsingNodeType {
     NONE_NODE,
     BINARY_NODE,
     AFFECTATION_NODE,
@@ -53,92 +38,55 @@ typedef enum parsing_node_type {
     ELIF_NODE,
     ELSE_NODE,
     WHILE_NODE
+} ParsingNodeType;
 
-
-} parsing_node_type;
-
-
-
-
-
-
-
-
-
-
-typedef struct parsing_node {
-    parsing_node_type type;
-    operators operation;
-    struct parsing_node *previous;
-    struct parsing_node *next;
+typedef struct ParsingNode {
+    ParsingNodeType type;
+    Operator operation;
+    struct ParsingNode* previous;
+    struct ParsingNode* next;
 
     union {
         int int_val;
         float float_val;
         double double_val;
-        char * string_val;
+        char* name;
     };
+
     union {
-        struct { // basic jump_node
-            struct parsing_node *left;
-            struct parsing_node *right;
-        };
-        struct { // conditional_node 
-            struct parsing_node *condition;
-            struct parsing_node  *true_condition;
-            struct parsing_node *jump;
+        struct {
+            // basic jump_node
+            struct ParsingNode* left;
+            struct ParsingNode* right;
         };
 
-
+        struct {
+            // conditional_node
+            struct ParsingNode* condition;
+            struct ParsingNode* true_condition;
+            struct ParsingNode* jump;
+        };
     };
-} parsing_node;
+} ParsingNode;
 
 
-typedef struct jump_infos {
-    parsing_node *jump_node;
-    parsing_node *next_node;
-    bool jump_if;
-    bool invert_condition;
-} jump_infos;
-
-
-typedef struct parsing_node_linked_list {
-    parsing_node *head;
-    parsing_node *end;
-} parsing_node_linked_list;
-
-
-HASH_MAP(parsing_node *, parsing_node*, p_node,p_node )
-HASH_MAP(parsing_node *, jump_infos, p_node, jump)
-
-long hash_node_addr(parsing_node *node);
-bool equals_node_addr(parsing_node *n1, parsing_node *n2);
-void print_node_jump_entry(parsing_node *node, jump_infos infos);
-parsing_node *new_parsing_node(void);
-parsing_node *new_parsing_node_of(int type);
-parsing_node *numerical_token_to_node(token t);
-parsing_node *unary_token_to_node(token t);
-parsing_node *operator_token_to_parsing_node(token t);
-int conditional_token_to_parsing_node_type(token t);
-void print_numerical_node_val(parsing_node *n);
-_Bool is_numerical_node(parsing_node *n);
-void display_node(parsing_node *n);
-void display_tree_node(parsing_node *n);
-void display_node_readable(parsing_node *n);
-void display_tree_node_readable(parsing_node *n, int indentation);
-void free_tree_node(parsing_node *n, bool free_next);
-bool is_binary_comparison_node(parsing_node *node);
-parsing_node *skip_if_statement(parsing_node *n);
-parsing_node_linked_list *new_parsing_node_linked_list(void);
-bool is_conditional_node(parsing_node *node);
-void add_parsing_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node);
-void add_conditional_node_to_linked_list(parsing_node_linked_list *list, parsing_node *node);
-inline bool parsing_node_linked_list_empty(parsing_node_linked_list * list);
-void merge_linked_lists(parsing_node_linked_list * list, parsing_node_linked_list *to_add);
-void free_parsing_node_linked_list(parsing_node_linked_list*);
-void print_parsing_node_linked_list(parsing_node_linked_list * list) ;
-void map_most_not_logical_node_left(parsing_node *condition, p_node_p_node_hash_map *map);
-p_node_jump_hash_map *map_condition_jumps(parsing_node *root);
-
-bool is_logical_binary_node(parsing_node *node);
+long ParsingNode_hash_address(const ParsingNode* node);
+bool ParsingNode_equals_address(const ParsingNode* n1, const ParsingNode* n2);
+ParsingNode* ParsingNode_new(void);
+ParsingNode* ParsingNode_new_from_type(ParsingNodeType type);
+ParsingNode* ParsingNode_new_from_num_token(Token t);
+ParsingNode* ParsingNode_new_from_unary_token(Token t);
+ParsingNode* ParsingNode_new_from_operator_token(Token t);
+ParsingNodeType ParsingNodeType_from_conditional_token(Token t);
+_Bool ParsingNode_is_numerical(ParsingNode* n);
+void ParsingNode_print(ParsingNode* n);
+void ParsingNode_print_recursive(ParsingNode* n);
+void ParsingNode_print_readable(ParsingNode* n);
+void ParsingNode_print_readable_recursive(ParsingNode* n, int indentation);
+void ParsingNode_free_recursive(ParsingNode* n, bool free_next);
+bool ParsingNode_is_binary_comparison(ParsingNode* node);
+bool ParsingNode_is_conditional(ParsingNode* node);
+ParsingNode* skip_if_statement(ParsingNode* n);
+bool ParsingNode_is_logical_binary(ParsingNode* node);
+void free_nodes(int count, ...);
 #endif

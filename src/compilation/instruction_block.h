@@ -8,36 +8,27 @@
 #include "instruction.h"
 
 
-typedef enum instruction_block_type {
+typedef enum InstructionBlockType {
     NORMAL_INSTRUCTION,
     FALSE_INSTRUCTION_CONST
+} InstructionBlockType;
 
-} instruction_block_type;
-typedef struct instruction_block {
-    struct instruction_block *next;
-    struct instruction_block *jump;
-    instruction_block_type type;
-    instruction_array_list * instructions;
-} instruction_block;
+typedef struct InstructionBlock {
+    struct InstructionBlock* next;
+    struct InstructionBlock* jump;
+    InstructionBlockType type;
+    InstructionArrayList* instructions;
+} InstructionBlock;
 
-instruction_block *new_instructions_block();
-
-void free_instruction_block_recursive(instruction_block *block);
-
-long hash_instruction_block_address(instruction_block *ptr);
-
-void print_instruction_block_readable(instruction_block *block, size_t) ;
-
-bool equals_instruction_block_address(instruction_block *p1, instruction_block *p2);
-
-void print_instruction_block(instruction_block *block);
-
-void print_instruction_block_recursive(instruction_block *block);
-
-instruction_block *last_instruction_block_from_instruction_block(instruction_block *current);
-
-instruction_block *new_boolean_block_push(bool t);
-
-void save_instruction_block_recursive(const instruction_block *block, const FILE *file);
+InstructionBlock* InstructionBlock_new();
+void InstructionBlock_free_recursive(InstructionBlock* block);
+long InstructionBlock_hash_address(const InstructionBlock* ptr);
+void InstructionBlock_print_readable(InstructionBlock* block, size_t);
+bool InstructionBlock_equals_address(const InstructionBlock* p1, const InstructionBlock* p2);
+void InstructionBlock_print(InstructionBlock* block);
+void InstructionBlock_print_recursive(InstructionBlock* block);
+InstructionBlock* last_instruction_block_from_instruction_block(InstructionBlock* current);
+InstructionBlock* InstructionBlock_new_boolean_push(bool t);
+void InstructionBlock_save_recursive(const InstructionBlock* block, const FILE* file);
 
 #endif //MATEMATIX_INSTRUCTIONS_BLOCK_H

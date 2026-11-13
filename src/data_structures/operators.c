@@ -1,8 +1,6 @@
 #include "operators.h"
 #include "stdio.h"
 
-
-
 static int inverse_comparison_operator_buffer[] = {
     NOT_EQUALS_OPERATOR,
     EQUALS_OPERATOR,
@@ -12,53 +10,52 @@ static int inverse_comparison_operator_buffer[] = {
     GREATER_THAN_OPERATOR
 };
 
-
-void print_operator(operators operation) {
+void Operator_print(Operator operation) {
     printf("%s", OPERATORS_STR[operation]);
 }
 
-bool is_unary_operator(operators operation) {
-    return operation==UNARY_MINUS_OPERATOR || operation==LOGICAL_NOT_OPERATOR;
+bool Operator_is_unary(Operator operation) {
+    return operation == UNARY_MINUS_OPERATOR || operation == LOGICAL_NOT_OPERATOR;
 }
 
-bool is_logical_binary_operator(operators operator) {
-    return operator==LOGICAL_AND_OPERATOR || operator==LOGICAL_OR_OPERATOR;
+bool Operator_is_logical_binary(Operator operator) {
+    return operator == LOGICAL_AND_OPERATOR || operator == LOGICAL_OR_OPERATOR;
 }
 
-bool is_logical_unary_operator(operators operator) {
-    return operator==LOGICAL_NOT_OPERATOR;
+bool Operator_is_logical_unary(Operator operator) {
+    return operator == LOGICAL_NOT_OPERATOR;
 }
 
-bool is_arithmetic_binary_operator(operators operator) {
+bool Operator_is_arithmetic_binary(Operator operator) {
     switch (operator) {
-        case ADD_OPERATOR:
-        case SUB_OPERATOR:
-        case MULTIPLY_OPERATOR:
-        case DIVIDE_OPERATOR:
-        case POWER_OPERATOR:
-            return true;
-        default:
-            return false;
+    case ADD_OPERATOR:
+    case SUB_OPERATOR:
+    case MULTIPLY_OPERATOR:
+    case DIVIDE_OPERATOR:
+    case POWER_OPERATOR:
+        return true;
+    default:
+        return false;
     }
 }
 
-bool is_comparison_operator(operators operator) {
+bool Operator_is_comparison(Operator operator) {
     switch (operator) {
-        case NOT_EQUALS_OPERATOR:
-        case EQUALS_OPERATOR:
-        case LESS_OR_EQUAL_OPERATOR:
-        case GREATER_OR_EQUAL_OPERATOR:
-        case LESS_THAN_OPERATOR:
-        case GREATER_THAN_OPERATOR:
-            return true;
-        default:
-            return false;
+    case NOT_EQUALS_OPERATOR:
+    case EQUALS_OPERATOR:
+    case LESS_OR_EQUAL_OPERATOR:
+    case GREATER_OR_EQUAL_OPERATOR:
+    case LESS_THAN_OPERATOR:
+    case GREATER_THAN_OPERATOR:
+        return true;
+    default:
+        return false;
     }
 }
 
-operators inverse_comparison_operator(int operator) {
-    const int index= operator-EQUALS_OPERATOR;
-    if (index<0 || index>=sizeof( inverse_comparison_operator_buffer )) {
+Operator Operator_inverse_comparison(Operator operator) {
+    const int index = operator - EQUALS_OPERATOR;
+    if (index < 0 || index >= sizeof(inverse_comparison_operator_buffer)) {
         return NONE_OPERATOR;
     }
     return inverse_comparison_operator_buffer[index];

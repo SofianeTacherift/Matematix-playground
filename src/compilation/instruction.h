@@ -5,8 +5,8 @@
 #ifndef MATEMATIX_INSTRUCTIONS_H
 #define MATEMATIX_INSTRUCTIONS_H
 #include <stdlib.h>
-#include "../data_structures/array_list.h"
-#include "../data_structures/parsing_node.h"
+#include "spds/array_list.h"
+#include "parsing_node.h"
 
 typedef enum {
     NONE_INSTRUCTION,
@@ -28,9 +28,9 @@ typedef enum {
     IF_CMPGTE,
     IF_CMPTLTE,
     RETURN_INSTRUCTION
-} instruction_type;
+} InstructionType;
 
-static int operands_per_type[]= {
+static const int operands_per_type[] = {
     0, // NONE INSTRUCTION
     1, // ICONST
     1, // DCONST
@@ -44,15 +44,15 @@ static int operands_per_type[]= {
     0, //UNARY_MINUS_INSTRUCTION,
     1, //GOTO,
     1, //IF_CMPEQ,
-    1,//IF_CMPNE,
-    1,//IF_CMPGT,
-    1,//IF_CMPLT,
-    1,//IF_CMPGTE,
+    1, //IF_CMPNE,
+    1, //IF_CMPGT,
+    1, //IF_CMPLT,
+    1, //IF_CMPGTE,
     1, //IF_CMPTLTE,
     0, //RETURN_INSTRUCTION
 };
 
-static int comparison_operator_to_instr_type_buffer[] = {
+static const int comparison_operator_to_instr_type_buffer[] = {
     IF_CMPEQ,
     IF_CMPNE,
     IF_CMPGT,
@@ -61,16 +61,15 @@ static int comparison_operator_to_instr_type_buffer[] = {
     IF_CMPTLTE,
 };
 
-
-static char * INSTRUCTION_TYPE_STR[] = {
+static char* INSTRUCTION_TYPE_STR[] = {
     "NONE_INSTRUCTION",
-     "ICONST",
-     "DCONST",
-     "OLOAD",
-     "OSTORE",
-     "BINARY_ADD",
+    "ICONST",
+    "DCONST",
+    "OLOAD",
+    "OSTORE",
+    "BINARY_ADD",
     "BINARY_SUB",
-     "BINARY_MULT",
+    "BINARY_MULT",
     "BINARY_DIVIDE",
     "BINARY_POWER",
     "UNARY_MINUS",
@@ -84,33 +83,20 @@ static char * INSTRUCTION_TYPE_STR[] = {
     "RETURN"
 };
 
-
 typedef struct {
-    instruction_type type;
+    InstructionType type;
     size_t operand1;
     size_t operand2;
-} instruction;
+} Instruction;
 
-ARRAY_LIST(instruction, instruction)
-
-
-
+ARRAY_LIST(Instruction, InstructionArrayList, InstructionArrayList)
 
 // functions
 
-instruction_type binary_arithmetic_node_to_instruction_type(parsing_node *node);
-
-instruction_type unary_arithmetic_node_to_instruction_type( parsing_node *node);
-
-int comparison_operator_to_instruction_type(int t);
-
-void save_instruction_list(const instruction *elements, const size_t end, FILE *file);
-
-void print_instruction_readable(instruction instruction);
-
-
-
-
-
+InstructionType InstructionType_from_binary_arithmetic_node(ParsingNode* node);
+InstructionType InstructionType_from_unary_arithmetic_node(ParsingNode* node);
+int InstructionType_from_comparison_operator(int t);
+void Instruction_save_array(const Instruction* elements, const size_t end, FILE* file);
+void Instruction_print_readable(Instruction instruction);
 
 #endif //MATEMATIX_INSTRUCTIONS_H

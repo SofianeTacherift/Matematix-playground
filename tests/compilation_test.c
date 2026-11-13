@@ -6,58 +6,50 @@
 #include "lexer.h"
 #include "compiler.h"
 
-
-
-int main(int argc, char ** argv) {
-    if (argc<2) {
+int main(int argc, char** argv) {
+    if (argc < 2) {
         printf("parsing_test <file>\n");
         return 1;
     }
 
-    char *path = argv[1];
+    char* path = argv[1];
 
-    FILE *file = fopen(path, "r");
-    if (file==NULL) {
+    FILE* file = fopen(path, "r");
+    if (file == NULL) {
         printf("Error : can't find file '%s'.\n", path);
         return 1;
     }
 
-
     printf("path= \"\"\"%s\"\"\"\n\n", path);
 
-    compilation_result compilation_res = compile_from_file(file);
-    parsing_result parsing_res = compilation_res.parsing_res;
-    lexing_result lexing_res = parsing_res.lexing_res;
+    CompilationResult compilation_res = compile_from_file(file);
+    ParsingResult parsing_res = compilation_res.parsing_res;
+    LexingResult lexing_res = parsing_res.lexing_res;
 
-    if (lexing_res.lexing_status==LEXING_ERROR) {
-        fprintf(stderr, "%s\n",lexing_res.error_message);
-        free_compilation_result_members(compilation_res);
+    if (lexing_res.lexing_status == LEXING_ERROR) {
+        fprintf(stderr, "%s\n", lexing_res.error_message);
+        CompilationResult_deinit(compilation_res);
         return 1;
     }
-    if (parsing_res.parsing_status==PARSING_ERROR) {
-        for (size_t i=0; i<parsing_res.errors->size; i++) {
-            parsing_error error = parsing_res.errors->elements[i];
-            fprintf(stderr, "parsing error at line %d character %d %s\n", error.token.line+1, error.token.character+1, error.message );
-
+    if (parsing_res.parsing_status == PARSING_ERROR) {
+        for (size_t i = 0; i < parsing_res.errors->size; i++) {
+            ParsingError error = parsing_res.errors->elements[i];
+            fprintf(stderr, "parsing error at line %d character %d %s\n", error.token.line + 1,
+                    error.token.character + 1, error.message);
         }
-        free_compilation_result_members(compilation_res);
+        CompilationResult_deinit(compilation_res);
         return 2;
     }
-    if (compilation_res.compilation_status==COMPILATION_ERROR) {
+    if (compilation_res.compilation_status == COMPILATION_ERROR) {
         fprintf(stderr, "%s\n", compilation_res.error_message);
-        free_compilation_result_members(compilation_res);
+        CompilationResult_deinit(compilation_res);
         return 3;
     }
 
+    InstructionBlock_print_recursive(compilation_res.instructions_block_arrays->elements[0]);
+    InstructionBlock_print_readable(compilation_res.instructions_block_arrays->elements[0], 0);
 
-    print_instruction_block_recursive(compilation_res.instructions_block_arrays->elements[0]);
-    print_instruction_block_readable(compilation_res.instructions_block_arrays->elements[0], 0);
-
-
-    free_compilation_result_members(compilation_res);
-
-
+    CompilationResult_deinit(compilation_res);
 
     return 0;
-
 }

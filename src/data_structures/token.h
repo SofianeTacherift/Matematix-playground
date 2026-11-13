@@ -1,12 +1,13 @@
-#include "array_list.h"
-#include <stdio.h>
-#include <stdbool.h>
-#include "operators.h"
+
 
 #ifndef TOKEN_H
 #define TOKEN_H
 
 #define TOKEN_DISPLAY_SIZE() 100
+
+
+#include <stdbool.h>
+#include "operators.h"
 
 
 
@@ -53,12 +54,12 @@ typedef enum {
     OPENING_SCOPE_TOKEN,
     CLOSING_SCOPE_TOKEN,
     EOF_TOKEN
-} token_type;
+} TokenType;
 
 
 typedef struct {
-    token_type type;
-    operators operation;
+    TokenType type;
+    Operator operation;
     union {
     int int_val;
     float float_val;
@@ -68,46 +69,21 @@ typedef struct {
     };
     int line;
     int character;
-} token;
+} Token;
 
-ARRAY_LIST(token, token);
+bool Token_is_unary(Token t);
 
+void Token_print(Token t);
 
+Token Token_make_from_binary_operator(char c);
 
+bool Token_involve_unary_minus(Token previous_token);
 
+bool Token_is_num(Token t);
 
+void Token_deinit(Token t);
 
-static char TOKEN_DISPLAY[TOKEN_DISPLAY_SIZE()];
-
-
-void print_token_in_list(token t);
-
-void print_token_list(token_array_list *list);
-
-_Bool is_unary_operator_token(token t);
-
-void write_in_token_buffer(token t);
-
-void print_token(token t);
-
-
-
-void reverse_number_token_value(token *t);
-
-token binary_operator_to_token(char c);
-
-
-
-bool involve_unary_minus(token previous_token);
-
-bool is_num_token(token t);
-
-bool is_unary_operator_token(token t);
-
-void free_token_members(token t);
-
-
-
+bool is_an_token_of_type(Token t, ...);
 
 
 #endif
