@@ -66,7 +66,8 @@ static void NAMESPACE##_deinit( HASH_SET_NAME *set) {\
                 free(to_free);\
             }\
     }\
-    set->capacity=BASE_HASH_SET_CAPACITY;\
+    free(set->buckets);\
+    set->capacity=0;\
     set->size=0;\
     set->hash_function=NULL;\
     set->equals_function=NULL;\

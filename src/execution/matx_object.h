@@ -5,6 +5,7 @@
 #ifndef MATX_OBJECT_H
 #define MATX_OBJECT_H
 
+#include "operators.h"
 #include <stddef.h>
 #include "spds/hash_map.h"
 
@@ -24,6 +25,7 @@ typedef struct MatematixObject {
 typedef struct BinaryMatxObjectTypeCombinaison {
     size_t type1;
     size_t type2;
+    Operator operation;
 } MatxObjTypeCombinaison;
 
 typedef MatxObject* (*BinMatxObjOperation)(MatxObject*, MatxObject*);

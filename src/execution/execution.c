@@ -5,8 +5,18 @@
 #include "execution.h"
 #include "matpx_object_operations.h"
 #include "instruction_execution.h"
+#include "spds/hash_set.h"
 
 
+HASH_SET(void *, AdressHashSet, AdressEntry, AdressHashSet)
+
+long address_hash(const void * address){
+    return (long) address;
+}
+
+bool address_equals(const void * adress1, const void * adress2){
+    return (long) adress1 == (long) adress2;
+}
 
 InstructionStack* InstructionStack_new(InstructionArrayList* instructions){
     InstructionStack* res = malloc(sizeof(InstructionStack));
@@ -46,11 +56,19 @@ ExecutionInstance* ExecutionInstance_new(ExecutionContext* context){
 }
 
 void VariableStack_free(MatxObject ** vars){
+
+    AdressHashSet address_set;
+    AdressHashSet_init(&address_set, address_hash, address_equals);
     for (size_t i= 0; i<VARIABLE_STACK_LENGTH; i++){
-        free(vars[i]);
+        if (  vars[i]!=NULL && !AdressHashSet_contains(&address_set, (void*) vars[i])){
+            free(vars[i]);
+            AdressHashSet_add(&address_set, (void *) vars[i]);
+        }
     }
     free(vars);
+    AdressHashSet_deinit(&address_set);
 }
+
 void ExecutionInstance_free(ExecutionInstance *instance){
     InstructionStack_free(instance->instructions_stack);
     VariableStack_free(instance->variable_stack);

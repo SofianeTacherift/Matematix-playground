@@ -13,10 +13,10 @@ void MatxObject_print(MatxObject *object){
     if (object==NULL) return;
     switch (object->type){
     case INT_TYPE:
-        printf("MatxObject[ type : INT - value : %d ]", object->int_value);
+        printf("MatxObject[ type : INT - value : %d - refs : %zu]", object->int_value, object->ref_count);
         break;
     case DOUBLE_TYPE:
-        printf("MatxObject[ type : DOUBLE - value : %lf ]", object->double_value);
+        printf("MatxObject[ type : DOUBLE - value : %lf - refs : %zu]", object->double_value, object->ref_count);
         break;
     default:
         break;
@@ -24,7 +24,7 @@ void MatxObject_print(MatxObject *object){
 }
 
 void ExecutionInstance_println(ExecutionInstance *instance){
-    printf("ExecutionInstancet[\n");
+    printf("ExecutionInstance[\n\n");
     MatxObjectArrayList_println(instance->execution_stack, MatxObject_print);
     printf("\nvariables : { ");
    for (size_t i=0 ; i<VARIABLE_STACK_LENGTH; i++){
@@ -69,12 +69,46 @@ void execute_dconst(ExecutionInstance *instance, Instruction instruction){
     ExecutionInstanceInstructionStack_advance(instance);
 }
 
+void execute_oload(ExecutionInstance *instance, Instruction instruction){
+    ExecutionStack *execution_stack = instance->execution_stack;
+    size_t index = instruction.operand1;
+    MatxObject *loaded_object = instance->variable_stack[index];
+    MatxObjectArrayList_add(execution_stack, loaded_object);
+    ExecutionInstanceInstructionStack_advance(instance);
+
+}
 void execute_ostore( ExecutionInstance *instance, Instruction instruction){
     ExecutionStack *execution_stack = instance->execution_stack;
     MatxObject *last_object = execution_stack->elements[execution_stack->size-1];
+    last_object->ref_count++;
     MatxObjectArrayList_pop(execution_stack);
     instance->variable_stack[instruction.operand1]=last_object;
     ExecutionInstanceInstructionStack_advance(instance);
+}
+
+void execute_binary_add(ExecutionInstance *instance, Instruction instruction){
+    ExecutionStack *execution_stack = instance->execution_stack;
+    MatxObject *object2 = execution_stack->elements[execution_stack->size-1];
+    MatxObjectArrayList_pop(execution_stack);
+    MatxObject *object1 = execution_stack->elements[execution_stack->size-1];
+    MatxObjectArrayList_pop(execution_stack);
+    MatxObjTypeCombinaison types  = (MatxObjTypeCombinaison){.type1 = object1->type, .type2 =object2->type, .operation = ADD_OPERATOR};
+
+    BinMatxObjOperationHashMap operations = instance->context->binary_operations;
+    BinMatxObjOperation operation = BinMatxObjOperationHashMap_get_or_default(&operations, types, NULL);
+    if (operation==NULL){
+        instance->error_code=2;
+        return;
+    }
+    MatxObject *res = operation(object1, object2);
+
+    MatxObjectArrayList_add(execution_stack, res);
+    ExecutionInstanceInstructionStack_advance(instance);
+
+    if (object1->ref_count==0) free(object1);
+    if (object2->ref_count==0) free(object2);
+
+
 }
 
 typedef void (*InstructionExecutionFunc) (ExecutionInstance *, Instruction instruction);
@@ -83,8 +117,9 @@ static const InstructionExecutionFunc INSTRUCTION_FUNCTION[] = {
     NULL,
     execute_iconst,
     execute_dconst,
-    NULL,
-    execute_ostore
+    execute_oload,
+    execute_ostore,
+    execute_binary_add
 };
 
 void ExecutionInstance_execute_single_instruction(ExecutionInstance *instance, Instruction instruction){
