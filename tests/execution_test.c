@@ -1,10 +1,10 @@
 //
-// Created by sofiane on 15/10/2026.
+// Created by userdepinfo on 15/11/26.
 //
 
 #include "execution.h"
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv){
     if (argc < 2) {
         printf("parsing_test <file>\n");
         return 1;
@@ -18,8 +18,6 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    ExecutionContext context = read_byte_code(file);
-    InstructionArrayList_apply_operation(&context.function, Instruction_print_readable);
-    ExecutionContext_deinit(&context);
+    execute_from_file(file);
     return 0;
 }

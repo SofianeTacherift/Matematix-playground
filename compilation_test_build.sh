@@ -1,7 +1,7 @@
 
-cmake --build build --target compilation_test.out
+cmake --build build --target compilation_test
 
 if [ $# -ge 1 ]
 then
-    build/compilation_test.out $1
+    build/compilation_test $1
 fi

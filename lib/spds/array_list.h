@@ -14,6 +14,7 @@
 
 #define BASE_ARRAY_LIST_CAPACITY 16
 
+
 #define ARRAY_LIST(T, ARRAY_LIST_NAME, NAMESPACE) \
     \
     typedef struct ARRAY_LIST_NAME { \
@@ -115,5 +116,7 @@
         NAMESPACE##_print(list, print_function);\
         printf("\n");\
     }\
+
+
 
 #endif 

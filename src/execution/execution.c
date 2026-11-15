@@ -1,38 +1,71 @@
 //
-// Created by sofiane on 14/10/2026.
+// Created by userdepinfo on 14/11/26.
 //
 
 #include "execution.h"
+#include "matpx_object_operations.h"
+#include "instruction_execution.h"
 
-void InstructionStack_init(InstructionStack* instruction_stack) {
-    instruction_stack->current_instruction_index = 0;
-    InstructionArrayList_init(instruction_stack->instructions);
+
+
+InstructionStack* InstructionStack_new(InstructionArrayList* instructions){
+    InstructionStack* res = malloc(sizeof(InstructionStack));
+    if (res == NULL) return NULL;
+    res->instructions = instructions;
+    res->current_instruction_index = 0;
+    return res;
 }
 
-void ExecutionContext_init(ExecutionContext* context) {
-    BinMatxObjOperationHashMap_init(&context->binary_operations, MatxObjTypeCombinaison_hash,
-                                    MatxObjTypeCombinaison_equals);
-    InstructionArrayList_init(&context->function);
+void InstructionStack_free(InstructionStack *stack){
+    free(stack);
 }
 
-void ExecutionContext_deinit(ExecutionContext* context) {
-    BinMatxObjOperationHashMap_deinit(&context->binary_operations);
-    InstructionArrayList_deinit(&context->function);
+ExecutionStack* ExecutionStack_new(){
+    ExecutionStack* res = MatxObjectArrayList_new();
+    res->capacity=EXECUTION_STACK_LENGTH;
+    res->elements=realloc(res->elements, res->capacity);
+    return res;
 }
 
-ExecutionContext read_byte_code(FILE* file) {
-    ExecutionContext context;
-    ExecutionContext_init(&context);
-    InstructionType current_type;
-    size_t n_read;
-    while ((n_read = (fread(&current_type, sizeof(InstructionType), 1, file))) != 0) {
-        Instruction current_instruction;
-        current_instruction.type = current_type;
-        size_t operands[] = {0, 0};
-        fread(operands, sizeof(size_t), operands_per_type[current_type], file);
-        current_instruction.operand1 = operands[0];
-        current_instruction.operand2 = operands[1];
-        InstructionArrayList_add(&context.function, current_instruction);
+// VariableStack *VariableStack_new(){
+//     VariableStack *res = MatxObjectArrayList_new();
+//     if (res==NULL) return res;
+//     res->capacity=EXECUTION_STACK_LENGTH;
+//     res->elements=realloc(res->elements, res->capacity);
+//     return res;
+// }
+
+ExecutionInstance* ExecutionInstance_new(ExecutionContext* context){
+    ExecutionInstance* res = calloc(1, sizeof(ExecutionInstance));
+    if (res == NULL) return res;
+    res->context = context;
+    res->instructions_stack = InstructionStack_new(&context->function);
+    res->execution_stack = ExecutionStack_new();
+    res->variable_stack = calloc(VARIABLE_STACK_LENGTH, sizeof(MatxObject *) );
+    return res;
+}
+
+void VariableStack_free(MatxObject ** vars){
+    for (size_t i= 0; i<VARIABLE_STACK_LENGTH; i++){
+        free(vars[i]);
     }
-    return context;
+    free(vars);
+}
+void ExecutionInstance_free(ExecutionInstance *instance){
+    InstructionStack_free(instance->instructions_stack);
+    VariableStack_free(instance->variable_stack);
+    MatxObjectArrayList_free(instance->execution_stack);
+    free(instance);
+}
+
+
+void execute_from_file(FILE* file){
+    ExecutionContext *context = ExecutionContext_new_from_file(file);
+    BinMatxObjOperationHashMap_add_base_operations(&context->binary_operations);
+    ExecutionInstance* instance = ExecutionInstance_new(context);
+    ExecutionInstance_execute(instance);
+    ExecutionContext_deinit(context);
+    free(context);
+    ExecutionInstance_free(instance);
+
 }

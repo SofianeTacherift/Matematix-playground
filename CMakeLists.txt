@@ -26,7 +26,7 @@ include_directories(
 
 
 
-add_executable(parsing_test.out
+add_executable(parsing_test
         tests/parsing_test.c
         src/lexing/lexer.c
         src/data_structures/token.c
@@ -36,14 +36,14 @@ add_executable(parsing_test.out
         src/data_structures/parsing_node_linked_list.c
 )
 
-add_executable(lexing_test.out
+add_executable(lexing_test
         tests/lexing_test.c
         src/lexing/lexer.c
         src/data_structures/token.c
         src/data_structures/operators.c
 )
 
-add_executable(compilation_test.out
+add_executable(compilation_test
         tests/compilation_test.c
         src/lexing/lexer.c
         src/data_structures/token.c
@@ -59,7 +59,7 @@ add_executable(compilation_test.out
         src/data_structures/parsing_node_linked_list.h
 )
 
-add_executable(matpx.out
+add_executable(matpx
         src/compilation/matpx.c
         src/lexing/lexer.c
         src/data_structures/token.c
@@ -75,7 +75,31 @@ add_executable(matpx.out
         src/data_structures/parsing_node_linked_list.h
 )
 
-add_executable(execution_test.out
+add_executable(execution_context_test
+        tests/byte_code_read_test.c
+        src/lexing/lexer.c
+        src/data_structures/token.c
+        src/parsing/parser.c
+        src/data_structures/parsing_node.c
+        src/data_structures/parsing_node_linked_list.c
+        src/compilation/parsing_node_utils.c
+        src/data_structures/operators.c
+        src/compilation/compiler.c
+        src/compilation/instruction.c
+        src/compilation/instruction_block.c
+        src/execution/execution_context.c
+        src/execution/matx_object.c
+        src/execution/matx_object.h
+        src/execution/matpx_object_operations.c
+        src/execution/matpx_object_operations.h
+        src/execution/execution_context.h
+        src/execution/execution.c
+        src/execution/instruction_execution.c
+        src/execution/instruction_execution.h
+        src/execution/instruction_execution.c
+)
+
+add_executable(execution_test
         tests/execution_test.c
         src/lexing/lexer.c
         src/data_structures/token.c
@@ -87,10 +111,14 @@ add_executable(execution_test.out
         src/compilation/compiler.c
         src/compilation/instruction.c
         src/compilation/instruction_block.c
-        src/execution/execution.c
+        src/execution/execution_context.c
         src/execution/matx_object.c
         src/execution/matx_object.h
         src/execution/matpx_object_operations.c
         src/execution/matpx_object_operations.h
+        src/execution/execution_context.h
+        src/execution/execution.c
+        src/execution/instruction_execution.c
+        src/execution/instruction_execution.h
+        src/execution/instruction_execution.c
 )
-

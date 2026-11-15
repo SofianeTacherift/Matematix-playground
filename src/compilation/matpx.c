@@ -18,7 +18,6 @@ bool test_valid_files_names(char* input_file_name, char* output_file_name) {
 }
 
 int main(int argc, char** argv) {
-    printf("%d\n", argc);
     char* args_error_message = "matpx <file.mxp> <file.bmpx>\n";
     if (argc < 3) {
         printf("%s\n", args_error_message);
@@ -28,7 +27,7 @@ int main(int argc, char** argv) {
     char* output_file_name = argv[2];
 
     if (!test_valid_files_names(input_file_name, output_file_name)) {
-        printf("%s\n", args_error_message);
+        printf("Invalid file name.\n" );
         return 1;
     }
 

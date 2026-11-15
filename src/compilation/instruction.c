@@ -45,7 +45,7 @@ void Instruction_print_readable(Instruction instruction) {
         printf(" %d", (int)instruction.operand1);
         break;
     case DCONST_INSTRUCTION:
-        printf(" %lf", (double)instruction.operand1);
+        printf(" %lf",  *((double*)&instruction.operand1));
         break;
     case OLOAD_INSTRUCTION:
     case OSTORE_INSTRUCTION:
@@ -69,7 +69,6 @@ size_t Instruction_write_in_buffer(const Instruction element, char* dest) {
     size_t written_n = 0;
     memcpy(dest, &element.type, sizeof element.type);
     written_n += sizeof(InstructionType);
-
     if (operands_per_type[element.type] >= 1) {
         size_t operand1 = element.operand1;
 
@@ -81,11 +80,6 @@ size_t Instruction_write_in_buffer(const Instruction element, char* dest) {
         memcpy(dest + written_n, &element.operand2, sizeof(size_t));
         written_n += sizeof element.operand2;
     }
-
-    // Instruction_print_readable(element);
-    // printf("%zu\n",((size_t *) dest+4 )[0]   ) ;
-    printf("\n");
-
     return written_n;
 }
 

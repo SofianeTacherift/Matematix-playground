@@ -8,10 +8,12 @@
 #include <stddef.h>
 #include "spds/hash_map.h"
 
+#define INT_TYPE 0
+#define DOUBLE_TYPE 1
+
 typedef struct MatematixObject {
     size_t type;
     size_t ref_count;
-
     union {
         int int_value;
         double double_value;
